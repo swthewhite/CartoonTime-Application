@@ -1,5 +1,17 @@
 package com.alltimes.cartoontime.ui.view
 
+// # Added Imports
+// ## Manifest Import
+import android.Manifest
+// ## PackageManger Import
+import android.content.pm.PackageManager
+// ## Build Import
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+
+// Origin Imports
+
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -21,10 +33,30 @@ import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.ui.theme.CartoonTimeTheme
 
 class MainActivity : ComponentActivity() {
+    private val allPermission =
+        arrayOf(
+            Manifest.permission.BLUETOOTH_CONNECT,
+            Manifest.permission.BLUETOOTH_ADVERTISE
+        )
+
+    private fun haveAllPermissions(): Boolean {
+        return allPermission
+            .all { checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
+    }
+
+    private fun requestMissingPermissions() {
+        if (!haveAllPermissions()) {
+            ActivityCompat.requestPermissions(this, allPermission, 1)
+        }
+    }
+
     private lateinit var viewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        requestMissingPermissions()
+
         setContent {
             CartoonTimeTheme {
                 viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
