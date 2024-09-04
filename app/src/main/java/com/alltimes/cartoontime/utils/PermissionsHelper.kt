@@ -10,7 +10,8 @@ object PermissionsHelper {
     private val requiredPermissions =
         arrayOf(
             Manifest.permission.BLUETOOTH_CONNECT,
-            Manifest.permission.BLUETOOTH_ADVERTISE
+            Manifest.permission.BLUETOOTH_ADVERTISE,
+            Manifest.permission.UWB_RANGING
         )
 
     fun hasAllPermissions(activity: ComponentActivity): Boolean {
