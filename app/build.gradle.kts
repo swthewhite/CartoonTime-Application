@@ -60,6 +60,16 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.uwb)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.firebase.crashlytics.buildtools)
+
+
+    // uwb
+    implementation("androidx.core.uwb:uwb:1.0.0-alpha08")
+    implementation("androidx.core.uwb:uwb-rxjava3:1.0.0-alpha08")
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
