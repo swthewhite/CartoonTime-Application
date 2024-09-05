@@ -12,37 +12,42 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.UUID
 import com.alltimes.cartoontime.data.model.Permissions
-
-val UWB_SERVICE_UUID: UUID = UUID.fromString("8c380000-10bd-4fdb-ba21-1922d6cf860d")
-val CONTROLEE_CHARACTERISTIC_UUID: UUID = UUID.fromString("8c380001-10bd-4fdb-ba21-1922d6cf860d")
-val CONTROLLER_CHARACTERISTIC_UUID: UUID = UUID.fromString("8c380002-10bd-4fdb-ba21-1922d6cf860d")
+import com.alltimes.cartoontime.data.model.BLEConstants
 
 @Suppress("DEPRECATION")
 class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
+    // Context와 BluetoothDevice를 받아서 초기화
     private val context: Context,
     private val bluetoothDevice: BluetoothDevice
 ) {
+    // 연결 상태를 저장하는 MutableStateFlow
     val isConnected = MutableStateFlow(false)
-    val passwordRead = MutableStateFlow<String?>(null)
-    val successfulNameWrites = MutableStateFlow(0)
+    // 읽은 데이터를 저장하는 MutableStateFlow
+    val dataBLERead = MutableStateFlow<String?>(null)
+    // 성공적으로 데이터를 쓴 횟수를 저장하는 MutableStateFlow
+    val successfulDataWrites = MutableStateFlow(0)
+    // GATT 서비스 목록을 저장하는 MutableStateFlow
     val services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
+    // BluetoothGatt 객체를 저장하는 변수
+    private var gatt: BluetoothGatt? = null
 
+    // BluetoothGattCallback을 상속받은 callback 객체
     private val callback = object: BluetoothGattCallback() {
+        // 연결 상태 변경 처리 함수
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             super.onConnectionStateChange(gatt, status, newState)
-            val connected = newState == BluetoothGatt.STATE_CONNECTED
-            if (connected) {
-                //read the list of services
-                services.value = gatt.services
-            }
-            isConnected.value = connected
+            // 연결 상태 변경 처리 함수 호출
+            handleConnectionStateChange(gatt, newState)
         }
 
+        // GATT 서비스 목록을 업데이트하는 함수
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             super.onServicesDiscovered(gatt, status)
+            // GATT 서비스 목록을 업데이트
             services.value = gatt.services
         }
 
+        // 읽은 데이터를 처리하는 함수
         @Deprecated("Deprecated in Java")
         override fun onCharacteristicRead(
             gatt: BluetoothGatt,
@@ -50,25 +55,52 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             status: Int
         ) {
             super.onCharacteristicRead(gatt, characteristic, status)
-            if (characteristic.uuid == CONTROLEE_CHARACTERISTIC_UUID) {
-                passwordRead.value = String(characteristic.value)
-            }
+            // 읽은 데이터가 CONTROLEE_CHARACTERISTIC_UUID인 경우 dataBLERead에 저장
+            handleCharacteristicRead(characteristic)
         }
 
+        // 쓴 데이터를 처리하는 함수
         override fun onCharacteristicWrite(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
             status: Int
         ) {
             super.onCharacteristicWrite(gatt, characteristic, status)
-            if (characteristic.uuid == CONTROLLER_CHARACTERISTIC_UUID) {
-                successfulNameWrites.update { it + 1 }
-            }
+            // 쓴 데이터가 CONTROLLER_CHARACTERISTIC_UUID인 경우 successfulDataWrites를 업데이트
+            handleCharacteristicWrite(characteristic)
         }
     }
 
-    private var gatt: BluetoothGatt? = null
+    // 연결 상태 변경 처리 함수
+    private fun handleConnectionStateChange(gatt: BluetoothGatt, newState: Int) {
+        // 연결 상태가 변경되면 연결 상태를 저장
+        val connected = newState == BluetoothGatt.STATE_CONNECTED
+        isConnected.value = connected
+        // 연결되면 GATT 서비스 목록을 업데이트
+        if (connected) services.value = gatt.services
+    }
 
+    // 특성 읽기 처리 함수
+    private fun handleCharacteristicRead(characteristic: BluetoothGattCharacteristic) {
+        if (characteristic.uuid == BLEConstants.CONTROLEE_CHARACTERISTIC_UUID) {
+            dataBLERead.value = String(characteristic.value)
+        }
+    }
+
+    // 특성 쓰기 처리 함수
+    private fun handleCharacteristicWrite(characteristic: BluetoothGattCharacteristic) {
+        if (characteristic.uuid == BLEConstants.CONTROLLER_CHARACTERISTIC_UUID) {
+            successfulDataWrites.update { it + 1 }
+        }
+    }
+
+    // GATT 연결을 위한 함수
+    @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
+    fun connect() {
+        gatt = bluetoothDevice.connectGatt(context, false, callback)
+    }
+
+    // GATT 연결 해제를 위한 함수
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     fun disconnect() {
         gatt?.disconnect()
@@ -76,30 +108,28 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         gatt = null
     }
 
-    @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
-    fun connect() {
-        gatt = bluetoothDevice.connectGatt(context, false, callback)
-    }
-
+    // GATT 서비스 목록을 찾는 함수
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     fun discoverServices() {
         gatt?.discoverServices()
     }
 
+    // 특성 읽기 함수
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
-    fun readPassword() {
-        val service = gatt?.getService(UWB_SERVICE_UUID)
-        val characteristic = service?.getCharacteristic(CONTROLEE_CHARACTERISTIC_UUID)
+    fun readCharacteristic() {
+        val service = gatt?.getService(BLEConstants.UWB_SERVICE_UUID)
+        val characteristic = service?.getCharacteristic(BLEConstants.CONTROLEE_CHARACTERISTIC_UUID)
         if (characteristic != null) {
             val success = gatt?.readCharacteristic(characteristic)
             Log.v("bluetooth", "Read status: $success")
         }
     }
 
+    //  특성 쓰기 함수
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
-    fun writeName() {
-        val service = gatt?.getService(UWB_SERVICE_UUID)
-        val characteristic = service?.getCharacteristic(CONTROLLER_CHARACTERISTIC_UUID)
+    fun writeCharacteristic() {
+        val service = gatt?.getService(BLEConstants.UWB_SERVICE_UUID)
+        val characteristic = service?.getCharacteristic(BLEConstants.CONTROLLER_CHARACTERISTIC_UUID)
         if (characteristic != null) {
             characteristic.value = "CONTROLLER".toByteArray()
             val success = gatt?.writeCharacteristic(characteristic)
