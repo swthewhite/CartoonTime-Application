@@ -10,13 +10,9 @@ import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlin.math.pow
+import com.alltimes.cartoontime.data.model.Permissions
 
 class BLEScanner(context: Context) {
-    // Companion object를 이용하여 상수 정의
-    companion object {
-        const val PERMISSION_BLUETOOTH_SCAN = "android.permission.BLUETOOTH_SCAN"
-        const val PERMISSION_BLUETOOTH_CONNECT = "android.permission.BLUETOOTH_CONNECT"
-    }
 
     // BluetoothManager를 이용하여 BluetoothAdapter와 BluetoothLeScanner를 초기화
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE)
@@ -74,14 +70,14 @@ class BLEScanner(context: Context) {
     }
 
     // 스캔을 시작하는 함수, ScanCallback을 이용하여 스캔 결과를 처리
-    @RequiresPermission(PERMISSION_BLUETOOTH_SCAN)
+    @RequiresPermission(Permissions.BLUETOOTH_SCAN)
     fun startScanning() {
         scanner.startScan(scanCallback)
         isScanning.value = true
     }
 
     // 스캔을 중지하는 함수
-    @RequiresPermission(PERMISSION_BLUETOOTH_SCAN)
+    @RequiresPermission(Permissions.BLUETOOTH_SCAN)
     fun stopScanning() {
         scanner.stopScan(scanCallback)
         isScanning.value = false
