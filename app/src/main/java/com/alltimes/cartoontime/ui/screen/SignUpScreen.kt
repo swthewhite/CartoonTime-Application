@@ -38,6 +38,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
     val isVerificationCodeVisible by viewModel.isVerificationCodeVisible.collectAsState()
     val isSubmitButtonEnabled by viewModel.isSubmitButtonEnabled.collectAsState()
     val isNameCorrect by viewModel.isNameCorrect.collectAsState()
+    val isPhoneNumberEnable by viewModel.isPhoneNumberEnable.collectAsState()
 
     Column(
         modifier = Modifier
@@ -107,6 +108,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             ) {
                 // 전화번호 입력 필드
                 TextField(
+                    enabled = isPhoneNumberEnable,
                     value = phoneNumber,
                     onValueChange = { viewModel.onPhoneNumberChange(it) },
                     colors = TextFieldDefaults.textFieldColors(
@@ -146,8 +148,8 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                     // 중간: 인증번호 입력 (버튼 클릭 시 보이도록)
                     if (isVerificationCodeVisible) {
                         TextField(
-                            value = phoneNumber,
-                            onValueChange = { viewModel.onPhoneNumberChange(it) },
+                            value = verificationCode,
+                            onValueChange = { viewModel.onVerificationCodeChange(it) },
                             colors = TextFieldDefaults.textFieldColors(
                                 containerColor = Color.Transparent,
                                 focusedIndicatorColor = Color.Transparent,
@@ -250,7 +252,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                 // 이름 입력 필드
                 TextField(
                     value = name,
-                    onValueChange = { viewModel.onPhoneNumberChange(it) },
+                    onValueChange = { viewModel.onNameChange(it) },
                     colors = TextFieldDefaults.textFieldColors(
                         containerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
@@ -282,36 +284,40 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                         horizontalArrangement = Arrangement.End,
                     ) {
                         // 입력된 이름 다 지우기
-                        IconButton(
-                            onClick = { println("nameBACKBACK") },
-                            modifier = Modifier
-                                .size(16.dp)
-                                .background(Color.Transparent)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_back), // 사용할 이미지 리소스
-                                contentDescription = "Back",
-                                tint = Color.Black, // 아이콘 색상 설정
-                                modifier = Modifier.size(16.dp) // 아이콘 크기 설정
-                            )
-                        }
+//                        IconButton(
+//                            onClick = { println("nameBACKBACK") },
+//                            modifier = Modifier
+//                                .size(16.dp)
+//                                .background(Color.Transparent)
+//                        ) {
+//                            Icon(
+//                                painter = painterResource(id = R.drawable.ic_back), // 사용할 이미지 리소스
+//                                contentDescription = "Back",
+//                                tint = Color.Black, // 아이콘 색상 설정
+//                                modifier = Modifier.size(16.dp) // 아이콘 크기 설정
+//                            )
+//                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(50.dp))
 
-            if (isNameCorrect && isVerificationCodeVisible) {
-                Button(
-                    onClick = { viewModel.onSubmit() },
-                    enabled = isSubmitButtonEnabled,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Text("인증하기")
-                }
+            Button(
+                onClick = { viewModel.onRequestVerificationCode() },
+                shape = RoundedCornerShape(15),
+                enabled = isSubmitButtonEnabled,
+                colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = "인증하기",
+                    color = Color.Black,
+                )
             }
+
 
         }
     }

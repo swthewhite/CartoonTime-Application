@@ -2,6 +2,8 @@ package com.alltimes.cartoontime.ui.viewmodel
 
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +18,9 @@ class SignUpViewModel : ViewModel() {
     private val _name = MutableStateFlow(TextFieldValue())
     val name: StateFlow<TextFieldValue> = _name
 
+    private val _isPhoneNumberEnable = MutableStateFlow(true)
+    val isPhoneNumberEnable: StateFlow<Boolean> = _isPhoneNumberEnable
+
     private val _isVerificationCodeVisible = MutableStateFlow(false)
     val isVerificationCodeVisible: StateFlow<Boolean> = _isVerificationCodeVisible
 
@@ -25,12 +30,21 @@ class SignUpViewModel : ViewModel() {
     private val _isNameCorrect = MutableStateFlow(false)
     val isNameCorrect: StateFlow<Boolean> = _isNameCorrect
 
-
     private val _isSubmitButtonEnabled = MutableStateFlow(false)
     val isSubmitButtonEnabled: StateFlow<Boolean> = _isSubmitButtonEnabled
 
+    private val _navigateToFinish = MutableLiveData<Boolean>()
+    val navigateToFinish: LiveData<Boolean> = _navigateToFinish
+
+    fun onLogout() {
+        // 로그아웃 처리 로직
+        _navigateToFinish.value = true
+    }
+
+
     fun onRequestVerificationCode() {
         _isVerificationCodeVisible.value = true
+        _isPhoneNumberEnable.value = false
     }
 
     fun onPhoneNumberChange(newValue: TextFieldValue) {
@@ -46,6 +60,13 @@ class SignUpViewModel : ViewModel() {
     fun onNameChange(newValue: TextFieldValue) {
         _name.value = newValue
         checkSubmitButtonState()
+        // 이름은 아무렇게나
+        if (_name.value.text.length >= 2) {
+            _isNameCorrect.value = true
+        }
+        else {
+            _isNameCorrect.value = false
+        }
     }
 
     private fun checkSubmitButtonState() {
