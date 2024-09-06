@@ -60,11 +60,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.runtime.livedata)
-
-    implementation(libs.ui)
-    implementation(libs.material3)
     implementation(libs.androidx.foundation)
-    implementation(libs.androidx.runtime.livedata.v170)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

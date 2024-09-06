@@ -19,6 +19,13 @@ class SignUpViewModel : ViewModel() {
     private val _isVerificationCodeVisible = MutableStateFlow(false)
     val isVerificationCodeVisible: StateFlow<Boolean> = _isVerificationCodeVisible
 
+    private val _isVerificationCodeCorret = MutableStateFlow(false)
+    val isVerificationCodeCorrect: StateFlow<Boolean> = _isVerificationCodeCorret
+
+    private val _isNameCorrect = MutableStateFlow(false)
+    val isNameCorrect: StateFlow<Boolean> = _isNameCorrect
+
+
     private val _isSubmitButtonEnabled = MutableStateFlow(false)
     val isSubmitButtonEnabled: StateFlow<Boolean> = _isSubmitButtonEnabled
 
