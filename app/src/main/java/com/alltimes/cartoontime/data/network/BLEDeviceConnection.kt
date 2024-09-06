@@ -32,8 +32,10 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     private var gatt: BluetoothGatt? = null
 
     // BluetoothGattCallback을 상속받은 callback 객체
+    @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     private val callback = object: BluetoothGattCallback() {
         // 연결 상태 변경 처리 함수
+        @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             super.onConnectionStateChange(gatt, status, newState)
             // 연결 상태 변경 처리 함수 호출
@@ -41,6 +43,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         }
 
         // GATT 서비스 목록을 업데이트하는 함수
+        @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             super.onServicesDiscovered(gatt, status)
             // GATT 서비스 목록을 업데이트
@@ -49,6 +52,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
 
         // 읽은 데이터를 처리하는 함수
         @Deprecated("Deprecated in Java")
+        @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
         override fun onCharacteristicRead(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
@@ -60,6 +64,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         }
 
         // 쓴 데이터를 처리하는 함수
+        @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
         override fun onCharacteristicWrite(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
@@ -72,6 +77,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     }
 
     // 연결 상태 변경 처리 함수
+    @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     private fun handleConnectionStateChange(gatt: BluetoothGatt, newState: Int) {
         // 연결 상태가 변경되면 연결 상태를 저장
         val connected = newState == BluetoothGatt.STATE_CONNECTED
@@ -81,6 +87,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     }
 
     // 특성 읽기 처리 함수
+    @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     private fun handleCharacteristicRead(characteristic: BluetoothGattCharacteristic) {
         if (characteristic.uuid == BLEConstants.CONTROLEE_CHARACTERISTIC_UUID) {
             dataBLERead.value = String(characteristic.value)
@@ -88,6 +95,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     }
 
     // 특성 쓰기 처리 함수
+    @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     private fun handleCharacteristicWrite(characteristic: BluetoothGattCharacteristic) {
         if (characteristic.uuid == BLEConstants.CONTROLLER_CHARACTERISTIC_UUID) {
             successfulDataWrites.update { it + 1 }

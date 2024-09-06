@@ -1,11 +1,13 @@
 package com.alltimes.cartoontime.data.network
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.BluetoothLeScanner
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.Context
+import android.util.Log
 import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -28,15 +30,20 @@ class BLEScanner(context: Context) {
     val foundDevices = MutableStateFlow<List<DeviceInfo>>(emptyList())
 
     // 이름 없는 디바이스는 리스트에 추가하지 않는 함수
+    @SuppressLint("MissingPermission")
     private fun processScanResult(result: ScanResult?): DeviceInfo? {
         result ?: return null
         val deviceName = result.device.name ?: return null
+        Log.d("BLEScanner", "Device found: $deviceName")  // 디바이스 이름 디버그 로그로 출력
+
         if (deviceName.isEmpty()) return null
 
         val distance = calculateDistance(result.rssi, result.txPower)
+
         return DeviceInfo(result.device, distance)
     }
 
+    @RequiresPermission(Permissions.BLUETOOTH_SCAN)
     private val scanCallback = object : ScanCallback() {
         // 스캔 결과를 처리하는 함수
         override fun onScanResult(callbackType: Int, result: ScanResult?) {
@@ -72,6 +79,7 @@ class BLEScanner(context: Context) {
     // 스캔을 시작하는 함수, ScanCallback을 이용하여 스캔 결과를 처리
     @RequiresPermission(Permissions.BLUETOOTH_SCAN)
     fun startScanning() {
+        Log.d("BLEScanner", "startScanning")
         scanner.startScan(scanCallback)
         isScanning.value = true
     }
