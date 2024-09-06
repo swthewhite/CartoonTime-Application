@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.data.network
+package com.alltimes.cartoontime.data.network.ble
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
@@ -14,7 +14,8 @@ import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
-import kotlinx.coroutines.CoroutineScope
+import com.alltimes.cartoontime.data.model.UwbAddressModel
+import com.alltimes.cartoontime.data.network.uwb.UWBControllerManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -25,11 +26,9 @@ import kotlin.coroutines.suspendCoroutine
 
 class BLEServerManager(private val context: Context) {
 
-    // BluetoothManager 초기화
     private val bluetooth = context.getSystemService(Context.BLUETOOTH_SERVICE)
             as? BluetoothManager ?: throw Exception("This device doesn't support Bluetooth")
 
-    // UUID 정의
     private val serviceUuid = UUID.fromString("8c380000-10bd-4fdb-ba21-1922d6cf860d")
     private val passwordCharUuid = UUID.fromString("8c380001-10bd-4fdb-ba21-1922d6cf860d")
     private val nameCharUuid = UUID.fromString("8c380002-10bd-4fdb-ba21-1922d6cf860d")
@@ -39,13 +38,9 @@ class BLEServerManager(private val context: Context) {
 
     private var advertiseCallback: AdvertiseCallback? = null
     private val isServerListening: MutableStateFlow<Boolean?> = MutableStateFlow(null)
-
     private val preparedWrites = HashMap<Int, ByteArray>()
-
-    private val deviceNames = mutableMapOf<String, String>() // 주소와 이름을 매핑할 변수
-
+    private val deviceNames = mutableMapOf<String, String>()
     val controllerReceived = MutableStateFlow(emptyList<String>())
-
     private val uwbCommunicator = UWBControllerManager(context)
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
@@ -56,8 +51,6 @@ class BLEServerManager(private val context: Context) {
 
         startHandlingIncomingConnections()
         startAdvertising()
-
-        // Listen for controllerReceived updates
         collectControllerReceived()
     }
 
@@ -137,10 +130,7 @@ class BLEServerManager(private val context: Context) {
                 super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
                 val uwbAddress = uwbCommunicator.getUwbAddress()
                 val uwbChannel = uwbCommunicator.getUwbChannel()
-
-                // UWB 주소와 채널을 결합하여 하나의 ByteArray로 만듭니다.
                 val responseData = "$uwbAddress/$uwbChannel".toByteArray()
-
                 server?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, responseData)
             }
 
@@ -170,9 +160,7 @@ class BLEServerManager(private val context: Context) {
                 } else {
                     val receivedData = String(value)
                     controllerReceived.update { it.plus(receivedData) }
-
-                    // 장치 이름 저장
-                    val deviceName = device?.name ?: "Unknown Device"
+                    val deviceName = device.name ?: "Unknown Device"
                     deviceNames[device.address] = deviceName
                 }
 
@@ -224,8 +212,7 @@ class BLEServerManager(private val context: Context) {
 
     private fun parseReceivedData(data: String): String {
         val parts = data.split("/")
-        val addressPart = parts[0]
-        return addressPart
+        return parts[0]
     }
 
     private suspend fun collectControllerReceived() {
@@ -238,7 +225,7 @@ class BLEServerManager(private val context: Context) {
 
                 Log.d("uwb", "me:" + uwbCommunicator.getUwbAddress() + " " + uwbCommunicator.getUwbChannel())
                 Log.d("uwb", "controlee:$address")
-                uwbCommunicator.UwbConnection(address)
+                uwbCommunicator.UwbConnection(UwbAddressModel(address.toByteArray()))
             }
         }
     }
