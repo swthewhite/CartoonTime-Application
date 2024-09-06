@@ -30,6 +30,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.view.SignUpActivity" />
         <activity android:name=".ui.view.MainActivity" />
         <activity android:name=".ui.view.SendActivity" />
         <activity android:name=".ui.view.ReceiveActivity" />

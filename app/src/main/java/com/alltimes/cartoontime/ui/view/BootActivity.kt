@@ -1,5 +1,6 @@
 package com.alltimes.cartoontime.ui.view
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Space
 import androidx.activity.ComponentActivity
@@ -24,6 +25,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,11 +42,23 @@ import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 class BootActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val bootViewModel = BootViewModel() // ViewModel 생성
-
         setContent {
-            // ViewModel을 전달하여 BootScreen과 연결
-            BootScreen(viewModel = bootViewModel)
+            val viewModel: BootViewModel = BootViewModel()
+            val navigationEvent = viewModel.navigateTo.collectAsState().value
+
+            LaunchedEffect(navigationEvent) {
+                when (navigationEvent) {
+                    is BootViewModel.NavigationEvent.Login -> {
+                        //startActivity(Intent(this@BootActivity, LoginActivity::class.java))
+                    }
+                    is BootViewModel.NavigationEvent.SignUp -> {
+                        startActivity(Intent(this@BootActivity, SignUpActivity::class.java))
+                    }
+                    null -> Unit
+                }
+            }
+
+            BootScreen(viewModel)
         }
     }
 }
