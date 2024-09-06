@@ -9,6 +9,7 @@ import androidx.core.uwb.UwbComplexChannel
 import androidx.core.uwb.UwbControleeSessionScope
 import androidx.core.uwb.UwbDevice
 import androidx.core.uwb.UwbManager
+import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.primitives.Shorts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -88,7 +89,7 @@ class UWBControleeManger(context: Context) {
 
     fun getUwbAddress(): String {
         val address = controleeSessionScope?.localAddress
-        return address?.let { String(it.address) } ?: ""
+        return Shorts.fromByteArray(address?.address).toString()
     }
 
     suspend fun startCommunication(address: String, channel: String) = withContext(Dispatchers.IO) {
