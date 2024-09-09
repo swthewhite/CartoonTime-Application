@@ -24,14 +24,15 @@
         android:theme="@style/Theme.CartoonTime"
         >
         <activity
-            android:name=".ui.view.NaverLoginActivity"
+            android:name=".ui.view.BootActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.view.BootActivity"/>
+        <activity android:name=".ui.view.SignUpCompleteActivity"/>
+        <activity android:name=".ui.view.NaverLoginActivity"/>
         <activity android:name=".ui.view.PasswordSettingActivity" />
         <activity android:name=".ui.view.SignUpActivity" />
         <activity android:name=".ui.view.MainActivity" />

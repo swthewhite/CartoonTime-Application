@@ -35,7 +35,7 @@ class NaverLoginViewModel(private val context: Context) : ViewModel() {
         context?.let {
             if (_naverID.value.text == "naver" && _naverPassword.value.text == "1111") {
                 Toast.makeText(it, "로그인 성공", Toast.LENGTH_SHORT).show()
-                _navigationTo.value = NavigationTo(ActivityType.MAIN)
+                _navigationTo.value = NavigationTo(ActivityType.SIGNUPCOMPLETE)
             } else {
                 Toast.makeText(it, "로그인 실패", Toast.LENGTH_SHORT).show()
                 _naverID.value = TextFieldValue()
