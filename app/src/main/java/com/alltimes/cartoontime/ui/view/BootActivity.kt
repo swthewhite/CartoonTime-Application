@@ -44,7 +44,7 @@ import com.alltimes.cartoontime.utils.NavigationHelper
 class BootActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val viewModel: BootViewModel = BootViewModel()
+        val viewModel: BootViewModel = BootViewModel(this)
 
         setContent {
 

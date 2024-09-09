@@ -11,6 +11,7 @@ import com.alltimes.cartoontime.data.model.ActivityType
 import com.alltimes.cartoontime.ui.screen.MainScreen
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.ui.theme.CartoonTimeTheme
+import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 import com.alltimes.cartoontime.utils.PermissionsHelper
 
@@ -26,9 +27,10 @@ class MainActivity : ComponentActivity() {
             PermissionsHelper.requestPermissions(this)
         }
 
+        val viewModel: MainViewModel = MainViewModel(this)
+
         setContent {
             CartoonTimeTheme {
-                viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
                 MainScreen(viewModel)
             }
         }
