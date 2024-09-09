@@ -50,6 +50,11 @@ android {
 }
 
 dependencies {
+    // uwb
+    implementation("androidx.core.uwb:uwb:1.0.0-alpha08")
+    implementation("androidx.core.uwb:uwb-rxjava3:1.0.0-alpha08")
+    implementation(libs.firebase.crashlytics.buildtools)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -59,20 +64,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.runtime.livedata)
-
-    implementation(libs.androidx.uwb)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.firebase.crashlytics.buildtools)
-
-    // uwb
-    implementation("androidx.core.uwb:uwb:1.0.0-alpha08")
-    implementation("androidx.core.uwb:uwb-rxjava3:1.0.0-alpha08")
-
-    implementation(libs.ui)
-    implementation(libs.material3)
     implementation(libs.androidx.foundation)
-    implementation(libs.androidx.runtime.livedata.v170)
-    implementation(libs.androidx.appcompat)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
