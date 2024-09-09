@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class PasswordSettingViewModel(private val context: Context) {
+class PasswordSettingViewModel(private val context: Context) : ViewModel() {
 
     private val _password = MutableStateFlow("")
     val password: StateFlow<String> = _password

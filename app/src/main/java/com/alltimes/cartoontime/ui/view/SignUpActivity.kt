@@ -13,7 +13,7 @@ import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 class SignUpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val viewModel = SignUpViewModel() // ViewModel 생성
+        val viewModel = SignUpViewModel(this) // ViewModel 생성
 
         setContent {
             // ViewModel을 전달하여 BootScreen과 연결
