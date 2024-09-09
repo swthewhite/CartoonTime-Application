@@ -3,7 +3,7 @@ name: "Pull Request"
 about: Develop an idea for this project
 title: "[addLabelPLEASE]"
 labels: ''
-assignees: "swthewhite, NurungjiBurger
+assignees: "swthewhite, NurungjiBurger"
 
 ---
 
