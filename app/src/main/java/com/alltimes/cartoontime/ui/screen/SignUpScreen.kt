@@ -280,7 +280,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             Spacer(modifier = Modifier.height(50.dp))
 
             Button(
-                onClick = { viewModel.onRequestVerificationCode() },
+                onClick = { viewModel.onSubmit() },
                 shape = RoundedCornerShape(15),
                 enabled = isSubmitButtonEnabled,
                 colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
