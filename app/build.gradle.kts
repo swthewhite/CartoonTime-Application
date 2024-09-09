@@ -50,7 +50,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -64,11 +63,14 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.firebase.crashlytics.buildtools)
 
-
     // uwb
     implementation("androidx.core.uwb:uwb:1.0.0-alpha08")
     implementation("androidx.core.uwb:uwb-rxjava3:1.0.0-alpha08")
 
+    implementation(libs.ui)
+    implementation(libs.material3)
+    implementation(libs.androidx.foundation)
+    implementation(libs.androidx.runtime.livedata.v170)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
