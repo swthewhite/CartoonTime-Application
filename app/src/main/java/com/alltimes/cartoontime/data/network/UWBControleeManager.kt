@@ -22,7 +22,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
-class UWBControleeManger(context: Context) {
+class UWBControleeManager(context: Context) {
 
     private val uwbManager: UwbManager = UwbManager.createInstance(context)
 
