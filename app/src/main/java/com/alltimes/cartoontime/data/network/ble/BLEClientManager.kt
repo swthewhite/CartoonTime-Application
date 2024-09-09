@@ -1,6 +1,5 @@
-package com.alltimes.cartoontime.data.network
+package com.alltimes.cartoontime.data.network.ble
 
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
@@ -13,6 +12,7 @@ import kotlinx.coroutines.flow.update
 import java.util.UUID
 import com.alltimes.cartoontime.data.model.Permissions
 import com.alltimes.cartoontime.data.model.BLEConstants
+import com.alltimes.cartoontime.data.network.uwb.UwbControleeCommunicator
 
 val CTF_SERVICE_UUID: UUID = UUID.fromString("8c380000-10bd-4fdb-ba21-1922d6cf860d")
 val PASSWORD_CHARACTERISTIC_UUID: UUID = UUID.fromString("8c380001-10bd-4fdb-ba21-1922d6cf860d")
@@ -34,7 +34,10 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     val services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
     // BluetoothGatt 객체를 저장하는 변수
     private var gatt: BluetoothGatt? = null
-    private val uwbCommunicator = UwbControleeCommunicator(context)
+    private val uwbCommunicator =
+        UwbControleeCommunicator(
+            context
+        )
 
     // 서비스 발견 완료 여부를 저장하는 MutableStateFlow
     val serviceDiscoveryCompleted = MutableStateFlow(false)
