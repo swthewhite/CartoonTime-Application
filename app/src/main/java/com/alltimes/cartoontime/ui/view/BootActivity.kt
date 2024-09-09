@@ -36,30 +36,34 @@ import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.alltimes.cartoontime.R
+import com.alltimes.cartoontime.data.model.ActivityType
 import com.alltimes.cartoontime.ui.screen.BootScreen
 import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 
 class BootActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            val viewModel: BootViewModel = BootViewModel()
-            val navigationEvent = viewModel.navigateTo.collectAsState().value
+        val viewModel: BootViewModel = BootViewModel()
 
-            LaunchedEffect(navigationEvent) {
-                when (navigationEvent) {
-                    is BootViewModel.NavigationEvent.Login -> {
-                        //startActivity(Intent(this@BootActivity, LoginActivity::class.java))
-                    }
-                    is BootViewModel.NavigationEvent.SignUp -> {
-                        startActivity(Intent(this@BootActivity, SignUpActivity::class.java))
-                    }
-                    null -> Unit
-                }
-            }
+        setContent {
 
             BootScreen(viewModel)
         }
+
+        viewModel.navigationTo.observe(this) { navigationTo ->
+            navigationTo?.activityType?.let { activityType ->
+                navigateToActivity(activityType)
+            }
+        }
+    }
+
+    // Activity 전환 함수
+    private fun navigateToActivity(activityType: ActivityType) {
+        val intent = activityType.intentCreator(this)
+        if (activityType == ActivityType.FINISH) {
+            finish() // 현재 Activity 종료
+        } else if (intent != null) {
+            startActivity(intent) // Intent가 null이 아닐 때만 Activity 시작
+        }
     }
 }
-

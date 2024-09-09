@@ -14,6 +14,7 @@
          />
     <!-- /Permission -->
 
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -33,6 +34,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ui.view.PasswordSettingActivity" />
         <activity android:name=".ui.view.SignUpActivity" />
         <activity android:name=".ui.view.MainActivity" />
         <activity android:name=".ui.view.SendActivity" />
