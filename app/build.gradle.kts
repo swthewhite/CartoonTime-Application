@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.runtime.livedata.v170)
+    implementation(libs.androidx.appcompat)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

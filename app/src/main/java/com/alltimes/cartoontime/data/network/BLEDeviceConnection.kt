@@ -34,8 +34,9 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     val services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
     // BluetoothGatt 객체를 저장하는 변수
     private var gatt: BluetoothGatt? = null
-    private val uwbCommunicator = UWBControleeManger(context)
+    private val uwbCommunicator = UwbControleeCommunicator(context)
 
+    // 서비스 발견 완료 여부를 저장하는 MutableStateFlow
     val serviceDiscoveryCompleted = MutableStateFlow(false)
     val passwordReadCompleted = MutableStateFlow(false)
     val nameWrittenCompleted = MutableStateFlow(false)
@@ -177,6 +178,18 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             characteristic.value = uwbAddress.toByteArray()
             val success = gatt?.writeCharacteristic(characteristic)
             Log.v("bluetooth", "Write status: $success, ${characteristic.value}")
+        }
+        if (dataBLERead.value != null) {
+            // dataBLERead 값이 null이 아닌지 확인한 후 '/' 기준으로 분할
+            val data = dataBLERead.value?.split("/") ?: listOf("", "")
+            val address = data.getOrNull(0) ?: ""  // 앞부분이 address
+            val channel = data.getOrNull(1) ?: ""  // 뒷부분이 channel
+
+            val success = gatt?.writeCharacteristic(characteristic)
+
+            // UWB 통신 생성, address와 channel로 설정
+            uwbCommunicator.startCommunication(address, channel)
+            Log.v("uwb", "communication started: $success, Address: $address, Channel: $channel")
         }
     }
 }
