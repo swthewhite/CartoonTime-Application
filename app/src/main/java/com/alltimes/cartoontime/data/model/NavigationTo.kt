@@ -12,5 +12,6 @@ enum class ActivityType(val intentCreator: (Context) -> Intent?) {
     SEND({ context -> Intent(context, com.alltimes.cartoontime.ui.view.SendActivity::class.java) }),
     RECEIVE({ context -> Intent(context, com.alltimes.cartoontime.ui.view.ReceiveActivity::class.java) }),
     SIGNUP({ context -> Intent(context, com.alltimes.cartoontime.ui.view.SignUpActivity::class.java) }),
-    PasswordSetting({ context -> Intent(context, com.alltimes.cartoontime.ui.view.PasswordSettingActivity::class.java) })
+    PASSWORDSETTING({ context -> Intent(context, com.alltimes.cartoontime.ui.view.PasswordSettingActivity::class.java) }),
+    NAVERLOGIN({ context -> Intent(context, com.alltimes.cartoontime.ui.view.NaverLoginActivity::class.java) })
 }

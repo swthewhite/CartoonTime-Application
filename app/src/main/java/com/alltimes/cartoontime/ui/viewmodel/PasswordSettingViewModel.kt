@@ -4,7 +4,11 @@ import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.alltimes.cartoontime.data.model.ActivityType
+import com.alltimes.cartoontime.data.model.NavigationTo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -19,17 +23,16 @@ class PasswordSettingViewModel(private val context: Context) : ViewModel() {
     var inputEnable: Boolean = true
     var PassWord = ""
 
+    private val _navigationTo = MutableLiveData<NavigationTo>()
+    val navigationTo: LiveData<NavigationTo> get() = _navigationTo
+
 
     // 눌리는 버튼에 대한 구현
     fun onClickedButton(type: Int) {
 
         if (!inputEnable) return
 
-        if (type == -1)
-        {
-            println("지우기지우기")
-            _password.value = _password.value.dropLast(1)
-        }
+        if (type == -1) _password.value = _password.value.dropLast(1)
         else _password.value += type.toString()
 
 
@@ -53,6 +56,8 @@ class PasswordSettingViewModel(private val context: Context) : ViewModel() {
         println("비밀번호 체크 중")
         context?.let {
             if (_password.value == PassWord) {
+                _navigationTo.value = NavigationTo(ActivityType.NAVERLOGIN)
+
                 Toast.makeText(it, "동일합니다", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(it, "비밀번호가 다릅니다", Toast.LENGTH_SHORT).show()

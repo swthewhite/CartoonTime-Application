@@ -9,6 +9,7 @@ import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ActivityType
 import com.alltimes.cartoontime.ui.screen.SignUpScreen
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
+import com.alltimes.cartoontime.utils.NavigationHelper
 
 class SignUpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,18 +25,8 @@ class SignUpActivity : ComponentActivity() {
         // navigationTo를 관찰해서 Activity 전환 처리
         viewModel.navigationTo.observe(this) { navigationTo ->
             navigationTo?.activityType?.let { activityType ->
-                navigateToActivity(activityType)
+                NavigationHelper.navigate(this, activityType)
             }
-        }
-    }
-
-    // Activity 전환 함수
-    private fun navigateToActivity(activityType: ActivityType) {
-        val intent = activityType.intentCreator(this)
-        if (activityType == ActivityType.FINISH) {
-            finish() // 현재 Activity 종료
-        } else if (intent != null) {
-            startActivity(intent) // Intent가 null이 아닐 때만 Activity 시작
         }
     }
 }
