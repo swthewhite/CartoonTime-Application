@@ -3,19 +3,19 @@ package com.alltimes.cartoontime.ui.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.alltimes.cartoontime.data.model.ButtonAction
-import com.alltimes.cartoontime.data.model.ActionType
+import com.alltimes.cartoontime.data.model.ActivityType
+import com.alltimes.cartoontime.data.model.NavigationTo
 
 class MainViewModel : ViewModel() {
 
-    private val _action = MutableLiveData<ButtonAction>()
-    val action: LiveData<ButtonAction> get() = _action
+    private val _navigationTo = MutableLiveData<NavigationTo>()
+    val navigationTo: LiveData<NavigationTo> get() = _navigationTo
 
     fun onSendButtonClick() {
-        _action.value = ButtonAction(ActionType.SEND)
+        _navigationTo.value = NavigationTo(ActivityType.SEND)
     }
 
     fun onReceiveButtonClick() {
-        _action.value = ButtonAction(ActionType.RECEIVE)
+        _navigationTo.value = NavigationTo(ActivityType.RECEIVE)
     }
 }

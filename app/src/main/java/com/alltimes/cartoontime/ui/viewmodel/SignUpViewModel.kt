@@ -5,6 +5,8 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.alltimes.cartoontime.data.model.ActivityType
+import com.alltimes.cartoontime.data.model.NavigationTo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -33,14 +35,18 @@ class SignUpViewModel : ViewModel() {
     private val _isSubmitButtonEnabled = MutableStateFlow(false)
     val isSubmitButtonEnabled: StateFlow<Boolean> = _isSubmitButtonEnabled
 
-    private val _navigateToFinish = MutableLiveData<Boolean>()
-    val navigateToFinish: LiveData<Boolean> = _navigateToFinish
+    private val _navigationTo = MutableLiveData<NavigationTo>()
+    val navigationTo: LiveData<NavigationTo> get() = _navigationTo
 
     fun onLogout() {
         // 로그아웃 처리 로직
-        _navigateToFinish.value = true
+        _navigationTo.value = NavigationTo(ActivityType.FINISH)
     }
 
+    fun onSubmit() {
+        // 인증 처리 로직을 구현
+        _navigationTo.value = NavigationTo(ActivityType.PasswordSetting)
+    }
 
     fun onRequestVerificationCode() {
         _isVerificationCodeVisible.value = true
@@ -73,9 +79,5 @@ class SignUpViewModel : ViewModel() {
         _isSubmitButtonEnabled.value = _phoneNumber.value.text.isNotEmpty() &&
                 _verificationCode.value.text.isNotEmpty() &&
                 _name.value.text.isNotEmpty()
-    }
-
-    fun onSubmit() {
-        // 인증 처리 로직을 구현
     }
 }

@@ -57,7 +57,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             ) {
                 // 상단: 뒤로가기 버튼 finish와 연결
                 IconButton(
-                    onClick = { println("BACKBACKBACK") },
+                    onClick = { viewModel.onLogout() },
                     modifier = Modifier
                         .size(24.dp)
                         .background(Color.Transparent)
@@ -115,6 +115,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                         containerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
                         cursorColor = Color.Black,
                     ),
                     modifier = Modifier
@@ -127,7 +128,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                         .padding(2.dp),
                     label = {
                         Text(
-                            text = "전화번호",
+                            text = "- 없이 입력",
                             color = Color.Black,
                         )
                     }
@@ -189,7 +190,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                         ) {
                             Text(
                                 text = "인증번호 요청",
-                                color = Color.Black,
+                                color = Color(0xFF606060),
                             )
                         }
                     }
@@ -211,7 +212,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                     ) {
                         Text(
                             text = "인증번호 재요청",
-                            color = Color.Black,
+                            color = Color(0xFF606060),
                         )
                     }
 
@@ -224,7 +225,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                     ) {
                         Text(
                             text = "시간 연장",
-                            color = Color.Black,
+                            color = Color(0xFF606060),
                         )
                     }
                 }
@@ -274,31 +275,6 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                         )
                     }
                 )
-
-                // 이름이 한글자라도 입력되어 있다면 버튼 활성화
-                if (isNameCorrect) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(22.dp),
-                        horizontalArrangement = Arrangement.End,
-                    ) {
-                        // 입력된 이름 다 지우기
-//                        IconButton(
-//                            onClick = { println("nameBACKBACK") },
-//                            modifier = Modifier
-//                                .size(16.dp)
-//                                .background(Color.Transparent)
-//                        ) {
-//                            Icon(
-//                                painter = painterResource(id = R.drawable.ic_back), // 사용할 이미지 리소스
-//                                contentDescription = "Back",
-//                                tint = Color.Black, // 아이콘 색상 설정
-//                                modifier = Modifier.size(16.dp) // 아이콘 크기 설정
-//                            )
-//                        }
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.height(50.dp))
@@ -314,7 +290,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             ) {
                 Text(
                     text = "인증하기",
-                    color = Color.Black,
+                    color = Color(0xFF606060),
                 )
             }
 
