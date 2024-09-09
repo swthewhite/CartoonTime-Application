@@ -30,7 +30,7 @@ fun BootScreen(viewModel: BootViewModel) {
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.title_logo),
+            painter = painterResource(id = R.drawable.logo_title),
             contentDescription = "Logo",
             modifier = Modifier.size(300.dp)
         )

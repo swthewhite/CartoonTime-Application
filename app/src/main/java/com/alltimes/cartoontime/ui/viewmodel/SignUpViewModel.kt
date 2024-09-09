@@ -91,7 +91,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
     fun onSubmit() {
         // 인증 처리 로직을 구현
-        _navigationTo.value = NavigationTo(ActivityType.PasswordSetting)
+        _navigationTo.value = NavigationTo(ActivityType.PASSWORDSETTING)
     }
 
     fun onRequestVerificationCode() {

@@ -1,5 +1,6 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,7 +9,7 @@ import com.alltimes.cartoontime.data.model.NavigationTo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class BootViewModel : ViewModel() {
+class BootViewModel(private val context: Context) : ViewModel() {
 
     private val _navigationTo = MutableLiveData<NavigationTo>()
     val navigationTo: LiveData<NavigationTo> get() = _navigationTo

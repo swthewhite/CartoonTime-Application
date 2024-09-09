@@ -7,17 +7,12 @@ import androidx.lifecycle.ViewModel
 import com.alltimes.cartoontime.data.model.ActivityType
 import com.alltimes.cartoontime.data.model.NavigationTo
 
-class MainViewModel(private val context: Context) : ViewModel() {
-
+class SignUpCompleteViewModel(private val context: Context?) : ViewModel() {
 
     private val _navigationTo = MutableLiveData<NavigationTo>()
     val navigationTo: LiveData<NavigationTo> get() = _navigationTo
 
-    fun onSendButtonClick() {
-        _navigationTo.value = NavigationTo(ActivityType.SEND)
-    }
-
-    fun onReceiveButtonClick() {
-        _navigationTo.value = NavigationTo(ActivityType.RECEIVE)
+    fun onClick() {
+        _navigationTo.value = NavigationTo(ActivityType.MAIN)
     }
 }
