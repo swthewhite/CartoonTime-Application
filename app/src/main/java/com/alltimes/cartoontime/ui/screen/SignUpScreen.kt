@@ -50,6 +50,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
         // 상단: 전화번호 입력 및 인증번호 받기 버튼
         Column {
             Row(
+
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(5.dp),
