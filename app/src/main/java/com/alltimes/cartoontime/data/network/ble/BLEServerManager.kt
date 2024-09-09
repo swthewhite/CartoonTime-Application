@@ -16,6 +16,7 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.alltimes.cartoontime.data.model.UwbAddressModel
 import com.alltimes.cartoontime.data.network.uwb.UWBControllerManager
+import com.alltimes.cartoontime.data.network.uwb.UwbControllerCommunicator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -41,7 +42,8 @@ class BLEServerManager(private val context: Context) {
     private val preparedWrites = HashMap<Int, ByteArray>()
     private val deviceNames = mutableMapOf<String, String>()
     val controllerReceived = MutableStateFlow(emptyList<String>())
-    private val uwbCommunicator = UWBControllerManager(context)
+    //private val uwbCommunicator = UWBControllerManager(context)
+    private val uwbCommunicator = UwbControllerCommunicator(context)
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     suspend fun startServer() = withContext(Dispatchers.IO) {
@@ -225,7 +227,9 @@ class BLEServerManager(private val context: Context) {
 
                 Log.d("uwb", "me:" + uwbCommunicator.getUwbAddress() + " " + uwbCommunicator.getUwbChannel())
                 Log.d("uwb", "controlee:$address")
-                uwbCommunicator.UwbConnection(UwbAddressModel(address.toByteArray()))
+
+                uwbCommunicator.startCommunication(address)//UwbAddressModel(address.toByteArray()).toString())
+                //uwbCommunicator.UwbConnection(UwbAddressModel(address.toByteArray()))
             }
         }
     }

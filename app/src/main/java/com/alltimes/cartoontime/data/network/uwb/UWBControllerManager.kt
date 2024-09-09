@@ -9,6 +9,7 @@ import androidx.core.uwb.UwbControllerSessionScope
 import androidx.core.uwb.UwbDevice
 import androidx.core.uwb.UwbManager
 import com.alltimes.cartoontime.data.model.UwbAddressModel
+import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.primitives.Shorts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -70,7 +71,7 @@ class UWBControllerManager(context: Context) {
 
     fun getUwbAddress(): String {
         val address = controllerSessionScope?.localAddress
-        return address?.let { String(it.address) } ?: ""
+        return Shorts.fromByteArray(address?.address).toString()// address?.let { String(it.address) } ?: ""
     }
 
     fun getUwbChannel(): String {
