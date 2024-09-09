@@ -20,6 +20,6 @@ object PermissionsHelper {
     }
 
     fun requestPermissions(activity: ComponentActivity) {
-        ActivityCompat.requestPermissions(activity, requiredPermissions, 1)
+        ActivityCompat.requestPermissions(activity, requiredPermissions, 0)
     }
 }
