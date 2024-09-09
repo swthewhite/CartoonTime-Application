@@ -20,21 +20,13 @@ materialZVersion = "1.8.0-alpha01"
 runtimeLivedata = "1.6.8"
 rxandroid = "3.0.0"
 rxjava = "3.2.0"
-
 appcompat = "1.7.0"
 firebaseCrashlyticsBuildtools = "3.0.2"
-
 
 androidx-core-uwb = { module = "androidx.core:core-uwb", version.ref = "coreUwb" }
 runtimeLivedataVersion = "1.5.0"
 ui = "1.7.0"
-
 uwb = "1.0.0-alpha08"
-
-firebaseCrashlyticsBuildtools = "3.0.2"
-runtimeLivedataVersion = "1.5.0"
-ui = "1.7.0"
-appcompat = "1.7.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -67,9 +59,7 @@ rxandroid = { module = "io.reactivex.rxjava3:rxandroid", version.ref = "rxandroi
 rxjava = { module = "io.reactivex.rxjava3:rxjava", version.ref = "rxjava" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-

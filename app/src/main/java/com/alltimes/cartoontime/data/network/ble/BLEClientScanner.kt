@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.data.network
+package com.alltimes.cartoontime.data.network.ble
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice

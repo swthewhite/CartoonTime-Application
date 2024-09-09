@@ -1,15 +1,8 @@
-package com.alltimes.cartoontime.data.network;
+package com.alltimes.cartoontime.data.network.uwb;
 
-import android.Manifest;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.util.Log;
-import android.widget.EditText;
-import android.widget.TextView;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.uwb.RangingParameters;
 import androidx.core.uwb.RangingResult;
 import androidx.core.uwb.UwbAddress;

@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.data.network
+package com.alltimes.cartoontime.data.network.uwb
 
 import android.content.Context
 import android.util.Log
