@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.ui.screen
+package com.alltimes.cartoontime.ui.screen.signup
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,15 +23,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.ui.viewmodel.PasswordSettingViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @Composable
-fun PasswordSettingScreen(viewModel: PasswordSettingViewModel){
+fun PasswordSettingScreen(viewModel: SignUpViewModel){
 
     val password by viewModel.password.collectAsState()
     val passwordCheck by viewModel.passwordCheck.collectAsState()

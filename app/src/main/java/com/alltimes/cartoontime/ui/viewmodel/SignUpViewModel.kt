@@ -4,17 +4,29 @@ import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.alltimes.cartoontime.data.model.ActivityType
-import com.alltimes.cartoontime.data.model.NavigationTo
+import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
+import com.alltimes.cartoontime.data.model.ui.ActivityType
+import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
+import com.alltimes.cartoontime.data.model.ui.ScreenType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class SignUpViewModel(private val context: Context?) : ViewModel() {
+
+    /////////////////////////// 공용 ///////////////////////////
+
+    private val _activityNavigationTo = MutableLiveData<ActivityNavigationTo>()
+    val activityNavigationTo: LiveData<ActivityNavigationTo> get() = _activityNavigationTo
+
+    private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
+    val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
+
+    /////////////////////////// SignUp ///////////////////////////
+
     private val _phoneNumber = MutableStateFlow(TextFieldValue())
     val phoneNumber: StateFlow<TextFieldValue> = _phoneNumber
 
@@ -39,12 +51,10 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
     private val _isSubmitButtonEnabled = MutableStateFlow(false)
     val isSubmitButtonEnabled: StateFlow<Boolean> = _isSubmitButtonEnabled
 
-    private val _navigationTo = MutableLiveData<NavigationTo>()
-    val navigationTo: LiveData<NavigationTo> get() = _navigationTo
 
     fun onLogout() {
         // 로그아웃 처리 로직
-        _navigationTo.value = NavigationTo(ActivityType.FINISH)
+        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.FINISH)
     }
 
     private fun checkSubmitButtonState() {
@@ -91,7 +101,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
     fun onSubmit() {
         // 인증 처리 로직을 구현
-        _navigationTo.value = NavigationTo(ActivityType.PASSWORDSETTING)
+        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.PASSWORDSETTING)
     }
 
     fun onRequestVerificationCode() {
@@ -133,4 +143,100 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
             _isNameCorrect.value = false
         }
     }
+
+    /////////////////////////// PasswordSetting ///////////////////////////
+
+    private val _password = MutableStateFlow("")
+    val password: StateFlow<String> = _password
+
+    private val _passwordCheck = MutableStateFlow(false)
+    val passwordCheck: StateFlow<Boolean> = _passwordCheck
+
+    var inputEnable: Boolean = true
+    var PassWord = ""
+
+    // 눌리는 버튼에 대한 구현
+    fun onClickedButton(type: Int) {
+
+        if (!inputEnable) return
+
+        if (type == -1) _password.value = _password.value.dropLast(1)
+        else _password.value += type.toString()
+
+
+        // 6자리 모두 입력시 한번 더 체크
+        if (password.value.length == 6) {
+            if (!passwordCheck.value) {
+                _passwordCheck.value = true
+                PassWord = password.value
+                _password.value = ""
+            }
+            else
+            {
+                inputEnable = false
+                checkPassword()
+            }
+        }
+    }
+
+    // 입력된 비밀번호 체크
+    private fun checkPassword() {
+        println("비밀번호 체크 중")
+        context?.let {
+            if (_password.value == PassWord) {
+                _screenNavigationTo.value = ScreenNavigationTo(ScreenType.NAVERLOGIN)
+
+                Toast.makeText(it, "동일합니다", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(it, "비밀번호가 다릅니다", Toast.LENGTH_SHORT).show()
+                val vibrator = it.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                if (vibrator.hasVibrator()) {
+                    val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+                    vibrator.vibrate(vibrationEffect)
+                }
+
+                inputEnable = true
+                _passwordCheck.value = false
+                PassWord = ""
+                _password.value = ""
+            }
+        }
+    }
+
+    /////////////////////////// NaverLogin ///////////////////////////
+
+    private val _naverID = MutableStateFlow(TextFieldValue())
+    val naverID: StateFlow<TextFieldValue> = _naverID
+
+    private val _naverPassword = MutableStateFlow(TextFieldValue())
+    val naverPassword: StateFlow<TextFieldValue> = _naverPassword
+
+    fun onNaverIDChanged(newValue: TextFieldValue) {
+        _naverID.value = newValue
+    }
+
+    fun onNaverPasswordChanged(newValue: TextFieldValue) {
+        _naverPassword.value = newValue
+    }
+
+    fun onLogin() {
+        // 로그인 처리 로직
+        context?.let {
+            if (_naverID.value.text == "naver" && _naverPassword.value.text == "1111") {
+                Toast.makeText(it, "로그인 성공", Toast.LENGTH_SHORT).show()
+                _screenNavigationTo.value = ScreenNavigationTo(ScreenType.SIGNUPCOMPLETE)
+            } else {
+                Toast.makeText(it, "로그인 실패", Toast.LENGTH_SHORT).show()
+                _naverID.value = TextFieldValue()
+                _naverPassword.value = TextFieldValue()
+            }
+        }
+    }
+
+    /////////////////////////// SignUpComplete ///////////////////////////
+
+    fun onClick() {
+        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.MAIN)
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.ui.screen
+package com.alltimes.cartoontime.ui.screen.signup
 
 import androidx.compose.material3.Text
 import androidx.compose.foundation.Image
@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -25,10 +24,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.ui.viewmodel.SignUpCompleteViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @Composable
-fun SignUpCompleteScreen(viewModel: SignUpCompleteViewModel) {
+fun SignUpCompleteScreen(viewModel: SignUpViewModel) {
 
     Column (
         modifier = Modifier
