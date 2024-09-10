@@ -19,8 +19,6 @@ import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
 
-    val accelerometerData by viewModel.accelerometerData.observeAsState(AccelerometerDataModel(0f, 0f, 0f))
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -28,12 +26,6 @@ fun MainScreen(viewModel: MainViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text =
-            if (accelerometerData.z > 0) "Facing Up" else "Facing Down",
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
         Button(
             onClick = { viewModel.onSendButtonClick() },
             modifier = Modifier
