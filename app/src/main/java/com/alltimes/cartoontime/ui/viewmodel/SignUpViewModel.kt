@@ -1,6 +1,7 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
@@ -24,6 +25,13 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
     private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
     val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
+
+    // SharedPreferences 객체를 가져옵니다.
+    private val sharedPreferences: SharedPreferences?
+        get() = context?.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
+
+    // Editor 객체를 가져옵니다.
+    val editor = sharedPreferences?.edit()
 
     /////////////////////////// SignUp ///////////////////////////
 
@@ -181,10 +189,12 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
     // 입력된 비밀번호 체크
     private fun checkPassword() {
-        println("비밀번호 체크 중")
         context?.let {
             if (_password.value == PassWord) {
                 _screenNavigationTo.value = ScreenNavigationTo(ScreenType.NAVERLOGIN)
+
+                editor?.putString("password", _password.value)
+                editor?.apply()
 
                 Toast.makeText(it, "동일합니다", Toast.LENGTH_SHORT).show()
             } else {

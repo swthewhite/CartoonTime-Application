@@ -1,6 +1,7 @@
 [versions]
 agp = "8.5.0"
 androidxRuntimeLivedata = "1.7.0"
+biometricVersion = "1.2.0-alpha05"
 foundation = "1.7.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
@@ -25,8 +26,10 @@ uwb = "1.0.0-alpha08"
 firebaseCrashlyticsBuildtools = "3.0.2"
 navigationRuntimeKtx = "2.8.0"
 navigationCompose = "2.8.0"
+appcompat = "1.7.0"
 
 [libraries]
+androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometricVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
 androidx-material = { module = "androidx.compose.material:material", version.ref = "material" }
@@ -55,6 +58,7 @@ ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 
 
 [plugins]
