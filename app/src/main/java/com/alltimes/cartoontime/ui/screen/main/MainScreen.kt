@@ -8,13 +8,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.alltimes.cartoontime.data.model.AccelerometerDataModel
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
+
+    val accelerometerData by viewModel.accelerometerData.observeAsState(AccelerometerDataModel(0f, 0f, 0f))
 
     Column(
         modifier = Modifier
@@ -23,6 +28,12 @@ fun MainScreen(viewModel: MainViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Text(
+            text =
+            if (accelerometerData.z > 0) "Facing Up" else "Facing Down",
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
         Button(
             onClick = { viewModel.onSendButtonClick() },
             modifier = Modifier
