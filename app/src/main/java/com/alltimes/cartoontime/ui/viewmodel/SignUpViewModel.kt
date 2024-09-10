@@ -33,6 +33,9 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
     // Editor 객체를 가져옵니다.
     val editor = sharedPreferences?.edit()
 
+    // 회원가입인가 ? 로그인인가 ?
+    var isSignUp = true
+
     /////////////////////////// SignUp ///////////////////////////
 
     private val _phoneNumber = MutableStateFlow(TextFieldValue())
@@ -109,6 +112,8 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
     fun onSubmit() {
         // 인증 처리 로직을 구현
+        // 서버로부터 응담을 보고 회원가입인지 아닌지 판별
+        isSignUp = true
         _screenNavigationTo.value = ScreenNavigationTo(ScreenType.PASSWORDSETTING)
     }
 
@@ -191,7 +196,11 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
     private fun checkPassword() {
         context?.let {
             if (_password.value == PassWord) {
-                _screenNavigationTo.value = ScreenNavigationTo(ScreenType.NAVERLOGIN)
+
+                // 회원가입이라면 naverlogin으로 screen 전환
+                // 로그인이라면 main으로 activity 전환
+                if (isSignUp) _screenNavigationTo.value = ScreenNavigationTo(ScreenType.NAVERLOGIN)
+                else _activityNavigationTo.value = ActivityNavigationTo(ActivityType.MAIN)
 
                 editor?.putString("password", _password.value)
                 editor?.apply()
