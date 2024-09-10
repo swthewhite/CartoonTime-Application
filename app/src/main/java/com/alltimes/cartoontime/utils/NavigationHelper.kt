@@ -1,8 +1,7 @@
 package com.alltimes.cartoontime.utils
 
 import android.app.Activity
-import android.content.Intent
-import com.alltimes.cartoontime.data.model.ActivityType
+import com.alltimes.cartoontime.data.model.ui.ActivityType
 
 object NavigationHelper {
 

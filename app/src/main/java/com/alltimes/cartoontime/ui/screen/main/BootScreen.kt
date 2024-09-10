@@ -1,6 +1,5 @@
-package com.alltimes.cartoontime.ui.screen
+package com.alltimes.cartoontime.ui.screen.main
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,10 +16,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
+import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 
 @Composable
-fun BootScreen(viewModel: BootViewModel) {
+fun BootScreen(viewModel: MainViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()

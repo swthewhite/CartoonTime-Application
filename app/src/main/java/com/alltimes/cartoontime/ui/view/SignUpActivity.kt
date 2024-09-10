@@ -1,25 +1,20 @@
 package com.alltimes.cartoontime.ui.view
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
-import androidx.lifecycle.Observer
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.data.model.ActivityNavigationTo
-import com.alltimes.cartoontime.data.model.ActivityType
-import com.alltimes.cartoontime.data.model.ScreenNavigationTo
-import com.alltimes.cartoontime.data.model.ScreenType
-import com.alltimes.cartoontime.ui.screen.NaverLoginScreen
-import com.alltimes.cartoontime.ui.screen.PasswordSettingScreen
-import com.alltimes.cartoontime.ui.screen.SignUpCompleteScreen
-import com.alltimes.cartoontime.ui.screen.SignUpScreen
+import com.alltimes.cartoontime.data.model.ui.ActivityType
+import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.signup.NaverLoginScreen
+import com.alltimes.cartoontime.ui.screen.signup.PasswordSettingScreen
+import com.alltimes.cartoontime.ui.screen.signup.SignUpCompleteScreen
+import com.alltimes.cartoontime.ui.screen.signup.SignUpScreen
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
@@ -45,7 +40,15 @@ class SignUpActivity : ComponentActivity() {
         // ViewModel에서 Activity 전환 요청 처리
         viewModel.activityNavigationTo.observe(this) { navigationTo ->
             navigationTo?.activityType?.let { activityType ->
-                NavigationHelper.navigate(this, activityType)
+                if (activityType == ActivityType.MAIN) {
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        putExtra("MAIN", true) // 데이터 전달
+                    }
+                    startActivity(intent)
+                    finish()
+                } else {
+                    NavigationHelper.navigate(this, activityType)
+                }
             }
         }
 

@@ -4,15 +4,14 @@ import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.alltimes.cartoontime.data.model.ActivityNavigationTo
-import com.alltimes.cartoontime.data.model.ActivityType
-import com.alltimes.cartoontime.data.model.ScreenNavigationTo
-import com.alltimes.cartoontime.data.model.ScreenType
+import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
+import com.alltimes.cartoontime.data.model.ui.ActivityType
+import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
+import com.alltimes.cartoontime.data.model.ui.ScreenType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
