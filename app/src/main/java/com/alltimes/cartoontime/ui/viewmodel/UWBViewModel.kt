@@ -6,7 +6,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.data.model.UIStateModel
 import com.alltimes.cartoontime.data.model.UwbAddressModel // UwbAddressModel을 가져옵니다.
-import com.alltimes.cartoontime.data.network.uwb.UWBControllerManager
 import com.alltimes.cartoontime.data.network.uwb.UwbControllerCommunicator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
