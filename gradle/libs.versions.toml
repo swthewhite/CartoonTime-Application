@@ -23,6 +23,8 @@ ui = "1.7.0"
 androidx-core-uwb = { module = "androidx.core:core-uwb", version.ref = "coreUwb" }
 uwb = "1.0.0-alpha08"
 firebaseCrashlyticsBuildtools = "3.0.2"
+navigationRuntimeKtx = "2.8.0"
+navigationCompose = "2.8.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -51,6 +53,8 @@ androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtim
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
+androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 
 [plugins]

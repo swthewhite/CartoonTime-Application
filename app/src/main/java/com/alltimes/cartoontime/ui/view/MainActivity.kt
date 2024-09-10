@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
         }
 
         // navigationTo를 관찰해서 Activity 전환 처리
-        viewModel.navigationTo.observe(this) { navigationTo ->
+        viewModel.activityNavigationTo.observe(this) { navigationTo ->
             navigationTo?.activityType?.let { activityType ->
                 NavigationHelper.navigate(this, activityType)
             }

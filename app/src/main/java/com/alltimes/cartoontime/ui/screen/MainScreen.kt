@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.alltimes.cartoontime.data.model.ActivityType
-import com.alltimes.cartoontime.ui.view.PasswordSettingActivity
 import com.alltimes.cartoontime.ui.view.ReceiveActivity
 import com.alltimes.cartoontime.ui.view.SendActivity
 import com.alltimes.cartoontime.ui.view.SignUpActivity

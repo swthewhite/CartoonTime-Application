@@ -33,11 +33,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.ui.viewmodel.NaverLoginViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NaverLoginScreen(viewModel: NaverLoginViewModel) {
+fun NaverLoginScreen(viewModel: SignUpViewModel) {
 
     val name = "오현진"
 

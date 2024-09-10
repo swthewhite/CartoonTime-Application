@@ -51,7 +51,7 @@ class BootActivity : ComponentActivity() {
             BootScreen(viewModel)
         }
 
-        viewModel.navigationTo.observe(this) { navigationTo ->
+        viewModel.activityNavigationTo.observe(this) { navigationTo ->
             navigationTo?.activityType?.let { activityType ->
                 NavigationHelper.navigate(this, activityType)
             }

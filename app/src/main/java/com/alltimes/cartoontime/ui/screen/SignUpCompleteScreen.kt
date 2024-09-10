@@ -25,10 +25,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.ui.viewmodel.SignUpCompleteViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @Composable
-fun SignUpCompleteScreen(viewModel: SignUpCompleteViewModel) {
+fun SignUpCompleteScreen(viewModel: SignUpViewModel) {
 
     Column (
         modifier = Modifier

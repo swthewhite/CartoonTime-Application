@@ -28,10 +28,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.ui.viewmodel.PasswordSettingViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @Composable
-fun PasswordSettingScreen(viewModel: PasswordSettingViewModel){
+fun PasswordSettingScreen(viewModel: SignUpViewModel){
 
     val password by viewModel.password.collectAsState()
     val passwordCheck by viewModel.passwordCheck.collectAsState()
