@@ -9,7 +9,6 @@ import android.hardware.SensorManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -18,6 +17,7 @@ import androidx.navigation.compose.rememberNavController
 import com.alltimes.cartoontime.data.model.AccelerometerDataModel
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.main.BootScreen
+import com.alltimes.cartoontime.ui.screen.main.LoginScreen
 import com.alltimes.cartoontime.ui.screen.main.MainScreen
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
@@ -31,8 +31,12 @@ class MainActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private lateinit var accelerometerSensor: Sensor
 
+    private lateinit var activity: ComponentActivity
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
 
         viewModel = MainViewModel(this) // ViewModel 생성
 
@@ -40,6 +44,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!!
 
+        activity = this
 
         // 권한 요청 부분을 PermissionsHelper로 처리
         if (!PermissionsHelper.hasAllPermissions(this)) {
@@ -49,8 +54,7 @@ class MainActivity : ComponentActivity(), SensorEventListener {
         setContent {
             navController = rememberNavController() // 전역 변수에 저장
 
-            NavHost(navController as NavHostController, startDestination = getStartDestination()) {
-                composable("bootscreen") { BootScreen(viewModel = viewModel) }
+            NavHost(navController as NavHostController, startDestination = "mainscreen") {
                 composable("mainscreen") { MainScreen(viewModel = viewModel) }
             }
         }
@@ -99,21 +103,20 @@ class MainActivity : ComponentActivity(), SensorEventListener {
 
 
     // 현재 상태에 따라 올바른 시작 목적지를 반환하는 함수
-    private fun getStartDestination(): String {
-        // Intent로부터 데이터를 읽어오기
-        val wasSignedUp = intent.getBooleanExtra("MAIN", false)
-        return if (wasSignedUp) {
-            "mainscreen" // 회원가입 완료 후 메인 스크린으로 시작
-        } else {
-            "mainscreen"
-            //"bootscreen" // 기본적으로 부트 스크린
+    private fun getStartDestination(password: String): String {
+        // userPassword가 존재하면 메인 스크린 시작 없으면 부트 스크린 시작
+
+        println("password: $password")
+
+        if (password.isNullOrEmpty()) {
+            return "bootscreen"
         }
+        return "loginscreen"
     }
 
     // 스크린 전환을 처리하는 함수로 분리하여 처리
     private fun navigateToScreen(screenType: ScreenType) {
         val route = when (screenType) {
-            ScreenType.BOOT -> "bootscreen"
             ScreenType.MAIN -> "mainscreen"
             else -> return
         }

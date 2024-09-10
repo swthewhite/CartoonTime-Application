@@ -1,6 +1,7 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
@@ -24,6 +25,16 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
     private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
     val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
+
+    // SharedPreferences 객체를 가져옵니다.
+    private val sharedPreferences: SharedPreferences?
+        get() = context?.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
+
+    // Editor 객체를 가져옵니다.
+    val editor = sharedPreferences?.edit()
+
+    // 회원가입인가 ? 로그인인가 ?
+    var isSignUp = true
 
     /////////////////////////// SignUp ///////////////////////////
 
@@ -101,6 +112,8 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
     fun onSubmit() {
         // 인증 처리 로직을 구현
+        // 서버로부터 응담을 보고 회원가입인지 아닌지 판별
+        isSignUp = true
         _screenNavigationTo.value = ScreenNavigationTo(ScreenType.PASSWORDSETTING)
     }
 
@@ -181,10 +194,16 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
     // 입력된 비밀번호 체크
     private fun checkPassword() {
-        println("비밀번호 체크 중")
         context?.let {
             if (_password.value == PassWord) {
-                _screenNavigationTo.value = ScreenNavigationTo(ScreenType.NAVERLOGIN)
+
+                // 회원가입이라면 naverlogin으로 screen 전환
+                // 로그인이라면 main으로 activity 전환
+                if (isSignUp) _screenNavigationTo.value = ScreenNavigationTo(ScreenType.NAVERLOGIN)
+                else _activityNavigationTo.value = ActivityNavigationTo(ActivityType.MAIN)
+
+                editor?.putString("password", _password.value)
+                editor?.apply()
 
                 Toast.makeText(it, "동일합니다", Toast.LENGTH_SHORT).show()
             } else {

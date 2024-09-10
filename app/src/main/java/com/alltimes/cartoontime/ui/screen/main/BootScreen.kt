@@ -16,10 +16,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
+import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 
 @Composable
-fun BootScreen(viewModel: MainViewModel) {
+fun BootScreen(viewModel: BootViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -49,31 +49,31 @@ fun BootScreen(viewModel: MainViewModel) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = "아직 회원이 아니신가요?",
-                color = Color.Gray,
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Button(
-                onClick = { viewModel.onSignUpClick() },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                modifier = Modifier.wrapContentWidth()
-            ) {
-                Text(
-                    text = "회원가입",
-                    color = Color.Black,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        textDecoration = TextDecoration.Underline
-                    )
-                )
-            }
-        }
+//        Row(
+//            verticalAlignment = Alignment.CenterVertically,
+//            horizontalArrangement = Arrangement.Center,
+//            modifier = Modifier.fillMaxWidth()
+//        ) {
+//            Text(
+//                text = "아직 회원이 아니신가요?",
+//                color = Color.Gray,
+//            )
+//
+//            Spacer(modifier = Modifier.width(8.dp))
+//
+//            Button(
+//                onClick = { viewModel.onSignUpClick() },
+//                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+//                modifier = Modifier.wrapContentWidth()
+//            ) {
+//                Text(
+//                    text = "회원가입",
+//                    color = Color.Black,
+//                    style = MaterialTheme.typography.bodyMedium.copy(
+//                        textDecoration = TextDecoration.Underline
+//                    )
+//                )
+//            }
+//        }
     }
 }
