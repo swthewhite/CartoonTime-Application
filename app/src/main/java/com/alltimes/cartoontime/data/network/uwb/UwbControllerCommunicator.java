@@ -45,7 +45,7 @@ public class UwbControllerCommunicator {
         UwbControllerSessionScope controllerSessionScope = (UwbControllerSessionScope) currentUwbSessionScope.get();
         if (controllerSessionScope != null) {
             UwbAddress localAddress = controllerSessionScope.getLocalAddress();
-            return Shorts.fromByteArray(localAddress.getAddress()) + "";
+            return Short.toUnsignedInt(Shorts.fromByteArray(localAddress.getAddress())) + "";
         } else {
             return "UWB session not initialized";
         }
@@ -62,7 +62,7 @@ public class UwbControllerCommunicator {
 
     public void startCommunication(String controlee) {
         try {
-            int otherSideLocalAddress = Integer.parseInt(controlee);
+            int otherSideLocalAddress = Integer.parseUnsignedInt(controlee);
             UwbAddress partnerAddress = new UwbAddress(Shorts.toByteArray((short) otherSideLocalAddress));
 
             UwbControllerSessionScope controllerSessionScope = currentUwbSessionScope.get();
