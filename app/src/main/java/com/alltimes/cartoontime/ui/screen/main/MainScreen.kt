@@ -280,7 +280,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         }
 
                         Button(
-                            onClick = { viewModel.onSendButtonClick() },
+                            onClick = { println("퇴실방법") },
                             colors = ButtonDefaults.buttonColors(Color.Transparent),
                             shape = RoundedCornerShape(16.dp),
                             modifier = Modifier
@@ -324,7 +324,7 @@ fun MainScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Button(
-                onClick = {  },
+                onClick = { viewModel.onBookRecommendButtonClick() },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier

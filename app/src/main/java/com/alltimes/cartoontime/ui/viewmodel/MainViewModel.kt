@@ -15,6 +15,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.data.model.AccelerometerDataModel
+import com.alltimes.cartoontime.data.model.Cartoon
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
@@ -42,6 +43,8 @@ class MainViewModel(private val context: Context) : ViewModel() {
     val editor = sharedPreferences.edit()
 
     val userName = sharedPreferences.getString("name", "")
+    
+    // 서버 통신 관련 변수
 
     /////////////////////////// Main ///////////////////////////
 
@@ -65,9 +68,81 @@ class MainViewModel(private val context: Context) : ViewModel() {
         _activityNavigationTo.value = ActivityNavigationTo(ActivityType.RECEIVE)
     }
 
+    fun onBookRecommendButtonClick() {
+        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.BOOKRECOMMEND)
+    }
+
     fun serverConnect() {
         // 서버와 연결해서 값을 받아오는 함수
         // 지속적으로 호출되어야 하나 ?
         // state, enteredTime, usedTime, balance 값이 변경되어야 함
     }
+
+    /////////////////////////// BookRecommend ///////////////////////////
+
+    private val _cartoons = MutableStateFlow<List<Cartoon>>(emptyList())
+    val cartoons: StateFlow<List<Cartoon>> = _cartoons
+
+    private val _clickedCartoon = MutableStateFlow<Cartoon>(Cartoon("", "", "", "", ""))
+    val clickedCartoon: StateFlow<Cartoon> = _clickedCartoon
+
+    private val _category = MutableStateFlow("사용자 취향 만화")
+    val category: StateFlow<String> get() = _category
+
+    fun bookRecommendInit() {
+        fetchCartoons("사용자 취향 만화")
+    }
+
+    fun onClickedCategory(category: String) {
+        _category.value = category
+    }
+
+    fun onClickedCartoon(cartoon: Cartoon) {
+        if (_clickedCartoon.value == cartoon) {
+            _clickedCartoon.value = Cartoon("", "", "", "", "")
+        } else {
+            _clickedCartoon.value = cartoon
+        }
+    }
+
+    fun onClickedHome() {
+        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.MAIN)
+    }
+
+    fun onClickedCartoonDetail() {
+        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.BOOKDETAIL)
+    }
+
+    fun fetchCartoons(category: String) {
+        // 서버 통신 필요
+
+        if (category == "사용자 취향 만화") {
+            _cartoons.value = listOf(
+                Cartoon("만화 1", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
+                Cartoon("만화 2", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
+                Cartoon("만화 3", "작가 3", "무협", "https://example.com/cover3.jpg", "B"),
+                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                // 추가 데이터...
+            )
+        }
+        else if (category == "베스트 셀러 만화") {
+            _cartoons.value = listOf(
+                Cartoon("만화 4", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
+                Cartoon("만화 3", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
+                Cartoon("만화 2", "작가 3", "무협", "https://example.com/cover3.jpg", "B"),
+                Cartoon("만화 1", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                // 추가 데이터...
+            )
+        }
+        else if (category == "오늘의 추천 만화") {
+            _cartoons.value = listOf(
+                Cartoon("만화 2", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
+                Cartoon("만화 4", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
+                Cartoon("만화 1", "작가 3", "무협", "https://example.com/cover3.jpg", "B"),
+                Cartoon("만화 3", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                // 추가 데이터...
+            )
+        }
+    }
+
 }

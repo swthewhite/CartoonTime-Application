@@ -56,7 +56,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                         .background(Color.Transparent)
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_back), // 사용할 이미지 리소스
+                        painter = painterResource(id = R.drawable.ic_exit), // 사용할 이미지 리소스
                         contentDescription = "Back",
                         tint = Color.Black, // 아이콘 색상 설정
                         modifier = Modifier.size(24.dp) // 아이콘 크기 설정

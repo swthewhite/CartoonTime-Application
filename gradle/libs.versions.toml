@@ -2,6 +2,7 @@
 agp = "8.5.0"
 androidxRuntimeLivedata = "1.7.0"
 biometricVersion = "1.2.0-alpha05"
+coilCompose = "2.0.0"
 foundation = "1.7.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
@@ -39,6 +40,7 @@ androidx-material-z = { module = "androidx.compose.material:material-*", version
 androidx-material-z-v170 = { module = "androidx.compose.material:material-*", version.ref = "materialZ" }
 androidx-runtime-livedata-v150 = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "runtimeLivedataVersion" }
 androidx-runtime-livedata-v170 = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "androidxRuntimeLivedata" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

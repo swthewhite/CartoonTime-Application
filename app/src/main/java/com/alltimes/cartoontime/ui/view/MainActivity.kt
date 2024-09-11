@@ -10,6 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.main.BookDetailScreen
+import com.alltimes.cartoontime.ui.screen.main.BookRecommendScreen
 import com.alltimes.cartoontime.ui.screen.main.MainScreen
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
@@ -35,6 +37,8 @@ class MainActivity : ComponentActivity() {
 
             NavHost(navController as NavHostController, startDestination = "mainscreen") {
                 composable("mainscreen") { MainScreen(viewModel = viewModel) }
+                composable("bookRecommendScreen") { BookRecommendScreen(viewModel = viewModel) }
+                composable("bookDetailScreen") { BookDetailScreen(viewModel = viewModel) }
             }
         }
 
@@ -57,6 +61,8 @@ class MainActivity : ComponentActivity() {
     private fun navigateToScreen(screenType: ScreenType) {
         val route = when (screenType) {
             ScreenType.MAIN -> "mainscreen"
+            ScreenType.BOOKRECOMMEND -> "bookRecommendScreen"
+            ScreenType.BOOKDETAIL -> "bookDetailScreen"
             else -> return
         }
         navController.navigate(route)
