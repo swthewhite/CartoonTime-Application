@@ -51,7 +51,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
     private val _balnace = MutableStateFlow(8000)
     val balance: StateFlow<Int> get() = _balnace
 
-    private val _state = MutableStateFlow("입실 완료")
+    private val _state = MutableStateFlow("입실 전")
     val state: StateFlow<String> get() = _state
 
     private val _enteredTime = MutableStateFlow("2024-09-11 11:11")
@@ -70,6 +70,10 @@ class MainViewModel(private val context: Context) : ViewModel() {
 
     fun onBookRecommendButtonClick() {
         _screenNavigationTo.value = ScreenNavigationTo(ScreenType.BOOKRECOMMEND)
+    }
+    
+    fun onLogin() {
+        _state.value = "입실 완료"
     }
 
     fun serverConnect() {
