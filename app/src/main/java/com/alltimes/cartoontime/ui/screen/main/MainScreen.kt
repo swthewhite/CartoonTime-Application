@@ -5,6 +5,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,10 @@ import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.ui.screen.composable.ApproachAnimate
 import com.alltimes.cartoontime.ui.screen.composable.PhoneReverseAnimate
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.input.pointer.motionEventSpy
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
 import kotlinx.coroutines.delay
 
 @Composable
@@ -47,6 +52,8 @@ fun MainScreen(viewModel: MainViewModel) {
     val name = viewModel.userName
     val balance by viewModel.balance.collectAsState()
     val state by viewModel.state.collectAsState()
+    val enteredTime by viewModel.enteredTime.collectAsState()
+    val usedTime by viewModel.usedTime.collectAsState()
 
     Column(
         modifier = Modifier
@@ -202,8 +209,94 @@ fun MainScreen(viewModel: MainViewModel) {
                 .height(250.dp)
                 .padding(start = 16.dp, end = 16.dp, top = 5.dp, bottom = 5.dp)
         ) {
-            AnimateSequence { animationId ->
-                currentAnimation = animationId
+            if (state == "입실 전") {
+                AnimateSequence { animationId ->
+                    currentAnimation = animationId
+                }
+            }
+            else if (state == "입실 완료") {
+                Box(
+                    modifier = Modifier
+                        .height(160.dp)
+                        .background(Color(0xFFFFFFFF), RoundedCornerShape(16.dp))
+                        .fillMaxWidth()
+                ){
+                    Column (
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(10.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp)
+                                .padding(5.dp)
+                        ){
+                            Column (
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                Text(
+                                    text = "입실 시간",
+                                    fontSize = 20.sp,
+                                    color = Color.Black
+                                )
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Text(
+                                    text = "이용 시간",
+                                    fontSize = 20.sp,
+                                    color = Color.Black
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(40.dp))
+
+                            Column (
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier
+                                    .padding(top = 5.dp)
+                            ) {
+                                Text(
+                                    text = "$enteredTime",
+                                    fontSize = 20.sp,
+                                    color = Color.Black
+                                )
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Text(
+                                    text = "$usedTime",
+                                    fontSize = 20.sp,
+                                    color = Color.Black
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { viewModel.onSendButtonClick() },
+                            colors = ButtonDefaults.buttonColors(Color.Transparent),
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                        ) {
+                            Text(
+                                text = "퇴실 방법",
+                                color = Color(0xFF413930),
+                                fontSize = 20.sp,
+                                style = TextStyle(
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -215,6 +308,7 @@ fun MainScreen(viewModel: MainViewModel) {
         Spacer(modifier = Modifier.height(10.dp))
 
         if (state == "입실 전") {
+            println(state + " : 입실 전")
             Text(
                 text = if (currentAnimation == 1) {
                     "핸드폰을 키오스크 가까이에 갖다 대주세요."
@@ -225,13 +319,18 @@ fun MainScreen(viewModel: MainViewModel) {
             )
         }
         else if (state == "입실 완료") {
+            println(state + " : 입실 완료")
+            
             Spacer(modifier = Modifier.height(10.dp))
 
             Button(
-                onClick = { viewModel.onSendButtonClick() },
+                onClick = {  },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier
+                    .width(350.dp)
+                    .height(50.dp)
+                    .padding(start = 8.dp)
             ) {
                 Text(
                     text = "추천만화 확인하기",
