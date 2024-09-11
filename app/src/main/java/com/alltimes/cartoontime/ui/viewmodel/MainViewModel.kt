@@ -41,7 +41,15 @@ class MainViewModel(private val context: Context) : ViewModel() {
     // Editor 객체를 가져옵니다.
     val editor = sharedPreferences.edit()
 
+    val userName = sharedPreferences.getString("name", "")
+
     /////////////////////////// Main ///////////////////////////
+
+    private val _balnace = MutableStateFlow(8000)
+    val balance: StateFlow<Int> get() = _balnace
+
+    private val _state = MutableStateFlow("입실 전")
+    val state: StateFlow<String> get() = _state
 
     fun onSendButtonClick() {
         _activityNavigationTo.value = ActivityNavigationTo(ActivityType.SEND)

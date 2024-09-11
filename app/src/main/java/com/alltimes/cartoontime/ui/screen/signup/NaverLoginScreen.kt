@@ -37,8 +37,7 @@ import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 @Composable
 fun NaverLoginScreen(viewModel: SignUpViewModel) {
 
-    val name = "오현진"
-
+    val name = viewModel.userName
     val naverID by viewModel.naverID.collectAsState()
     val naverPassword by viewModel.naverPassword.collectAsState()
 

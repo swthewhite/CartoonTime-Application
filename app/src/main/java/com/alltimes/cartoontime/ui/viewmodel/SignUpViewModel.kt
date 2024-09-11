@@ -115,6 +115,9 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
         // 서버로부터 응담을 보고 회원가입인지 아닌지 판별
         isSignUp = true
         _screenNavigationTo.value = ScreenNavigationTo(ScreenType.PASSWORDSETTING)
+
+        editor?.putString("name", _name.value.text)
+        editor?.apply()
     }
 
     fun onRequestVerificationCode() {
@@ -229,6 +232,9 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
     private val _naverPassword = MutableStateFlow(TextFieldValue())
     val naverPassword: StateFlow<TextFieldValue> = _naverPassword
+
+    val userName: String?
+        get() = sharedPreferences?.getString("name", "")
 
     fun onNaverIDChanged(newValue: TextFieldValue) {
         _naverID.value = newValue
