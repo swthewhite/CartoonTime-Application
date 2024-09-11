@@ -41,7 +41,21 @@ class MainViewModel(private val context: Context) : ViewModel() {
     // Editor 객체를 가져옵니다.
     val editor = sharedPreferences.edit()
 
+    val userName = sharedPreferences.getString("name", "")
+
     /////////////////////////// Main ///////////////////////////
+
+    private val _balnace = MutableStateFlow(8000)
+    val balance: StateFlow<Int> get() = _balnace
+
+    private val _state = MutableStateFlow("입실 완료")
+    val state: StateFlow<String> get() = _state
+
+    private val _enteredTime = MutableStateFlow("2024-09-11 11:11")
+    val enteredTime: StateFlow<String> get() = _enteredTime
+
+    private val _usedTime = MutableStateFlow("1시간 10분")
+    val usedTime: StateFlow<String> get() = _usedTime
 
     fun onSendButtonClick() {
         _activityNavigationTo.value = ActivityNavigationTo(ActivityType.SEND)
@@ -49,5 +63,11 @@ class MainViewModel(private val context: Context) : ViewModel() {
 
     fun onReceiveButtonClick() {
         _activityNavigationTo.value = ActivityNavigationTo(ActivityType.RECEIVE)
+    }
+
+    fun serverConnect() {
+        // 서버와 연결해서 값을 받아오는 함수
+        // 지속적으로 호출되어야 하나 ?
+        // state, enteredTime, usedTime, balance 값이 변경되어야 함
     }
 }

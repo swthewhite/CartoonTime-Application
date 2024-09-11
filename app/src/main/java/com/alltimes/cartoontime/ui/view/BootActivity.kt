@@ -2,24 +2,19 @@ package com.alltimes.cartoontime.ui.view
 
 import android.content.Context
 import android.content.Intent
-import android.hardware.Sensor
-import android.hardware.SensorManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
-import com.alltimes.cartoontime.ui.screen.main.BootScreen
-import com.alltimes.cartoontime.ui.screen.main.LoginScreen
-import com.alltimes.cartoontime.ui.screen.main.MainScreen
+import com.alltimes.cartoontime.ui.screen.boot.BootScreen
+import com.alltimes.cartoontime.ui.screen.boot.LoginScreen
 import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
