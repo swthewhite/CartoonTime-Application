@@ -9,6 +9,8 @@ enum class ScreenType(val navigateTo: (NavController) -> Unit) {
     FINISH({ null }),
     BOOT({ navController -> navController.navigate("bootScreen") }),
     MAIN({ navController -> navController.navigate("mainScreen") }),
+    BOOKRECOMMEND({ navController -> navController.navigate("bookRecommendScreen") }),
+    BOOKDETAIL({ navController -> navController.navigate("bookDetailScreen") }),
     SEND({ navController -> navController.navigate("sendScreen") }),
     RECEIVE({ navController -> navController.navigate("receiveScreen") }),
     SIGNUP({ navController -> navController.navigate("signUpScreen") }),
