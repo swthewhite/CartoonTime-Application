@@ -292,6 +292,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 modifier = Modifier
                     .constrainAs(stateTextDescription) {
                         top.linkTo(stateText.bottom, margin = 10.dp)
+                        bottom.linkTo(parent.bottom, margin = 5.dp)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                     }
@@ -306,7 +307,8 @@ fun MainScreen(viewModel: MainViewModel) {
                     .height(50.dp)
                     .padding(start = 8.dp)
                     .constrainAs(bookButton) {
-                        bottom.linkTo(parent.bottom, margin = 15.dp)
+                        top.linkTo(stateText.bottom, margin = 10.dp)
+                        bottom.linkTo(parent.bottom, margin = 5.dp)
                         start.linkTo(parent.start)
                         end.linkTo(parent.end)
                     }

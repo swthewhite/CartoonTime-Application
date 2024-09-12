@@ -78,9 +78,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
 
         // 제일 위 홈버튼과 이름
 
-        Image(
-            painter = painterResource(id = R.drawable.ic_home),
-            contentDescription = "Home",
+        Box(
             modifier = Modifier
                 .width(50.dp)
                 .height(50.dp)
@@ -88,7 +86,20 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                     top.linkTo(parent.top, margin = 10.dp)
                     start.linkTo(parent.start, margin = 10.dp)
                 }
-        )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { viewModel.onClickedHome() }
+                ),
+
+        ){
+            Image(
+                painter = painterResource(id = R.drawable.ic_home),
+                contentDescription = "Home",
+                modifier = Modifier
+                    .fillMaxSize()
+            )
+        }
 
         Text(
             text = "추천만화",
