@@ -13,65 +13,49 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 
 @Composable
 fun BootScreen(viewModel: BootViewModel) {
-    Column(
+    ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFFF9B912))
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(16.dp)
     ) {
+        // Create references for the UI elements
+        val (logo, loginButton) = createRefs()
+
+        // 로고 이미지
         Image(
             painter = painterResource(id = R.drawable.logo_title),
             contentDescription = "Logo",
-            modifier = Modifier.size(300.dp)
+            modifier = Modifier
+                .size(300.dp)
+                .constrainAs(logo) {
+                    top.linkTo(parent.top, margin = 150.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
         )
 
-        Spacer(modifier = Modifier.height(150.dp))
-
+        // 로그인 버튼
         Button(
             onClick = { viewModel.onLoginClick() },
             colors = ButtonDefaults.buttonColors(Color(0xFF3C2C10)),
             shape = RoundedCornerShape(15),
             modifier = Modifier
                 .size(width = 300.dp, height = 50.dp)
-                .padding(horizontal = 16.dp)
+                .constrainAs(loginButton) {
+                    top.linkTo(logo.bottom, margin = 150.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom, margin = 50.dp)
+                }
         ) {
             Text("로그인하기")
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-//        Row(
-//            verticalAlignment = Alignment.CenterVertically,
-//            horizontalArrangement = Arrangement.Center,
-//            modifier = Modifier.fillMaxWidth()
-//        ) {
-//            Text(
-//                text = "아직 회원이 아니신가요?",
-//                color = Color.Gray,
-//            )
-//
-//            Spacer(modifier = Modifier.width(8.dp))
-//
-//            Button(
-//                onClick = { viewModel.onSignUpClick() },
-//                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-//                modifier = Modifier.wrapContentWidth()
-//            ) {
-//                Text(
-//                    text = "회원가입",
-//                    color = Color.Black,
-//                    style = MaterialTheme.typography.bodyMedium.copy(
-//                        textDecoration = TextDecoration.Underline
-//                    )
-//                )
-//            }
-//        }
     }
 }

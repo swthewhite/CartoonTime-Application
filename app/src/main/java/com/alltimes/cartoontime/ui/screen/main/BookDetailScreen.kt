@@ -48,104 +48,117 @@ import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.ui.screen.composable.Map
 import com.alltimes.cartoontime.ui.screen.composable.cartoon
 import kotlinx.coroutines.delay
 
 @Composable
 fun BookDetailScreen(viewModel: MainViewModel) {
-
     val clickedCartoon by viewModel.clickedCartoon.collectAsState()
 
-    Column(
+    ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFFF4F2EE)),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(color = Color(0xFFF4F2EE))
     ) {
+        val (backButton, bookImage, title, author, genre, locationText, map) = createRefs()
+
         // 상단 바 메뉴
-        Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .width(50.dp)
                 .height(50.dp)
-                .padding(10.dp)
-        ){
-            Box(
+                .background(Color.Transparent)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = {
+                        viewModel.onBookRecommendButtonClick()
+                    }
+                )
+                .constrainAs(backButton) {
+                    top.linkTo(parent.top, margin = 10.dp)
+                    start.linkTo(parent.start, margin = 10.dp)
+                }
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_back),
+                contentDescription = "Back Icon",
                 modifier = Modifier
                     .width(50.dp)
                     .height(50.dp)
-                    .background(Color.Transparent)
-                    .clickable(
-                        // 밑에 두개 다 써야 클릭시 효과 제거 가능
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = {
-                            viewModel.onBookRecommendButtonClick()
-                        }
-                    )
-            ){
-                Image(
-                    painter = painterResource(id = R.drawable.ic_back), //rememberImagePainter(clickedCartoon.image),
-                    contentDescription = "Back Icon",
-                    modifier = Modifier
-                        .width(50.dp)
-                        .height(50.dp)
-                )
-            }
+            )
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // 만화 정보
         Image(
-            painter = painterResource(id = R.drawable.image_book), //rememberImagePainter(clickedCartoon.image),
+            painter = painterResource(id = R.drawable.image_book),
             contentDescription = "Book Image",
             modifier = Modifier
                 .width(200.dp)
                 .height(300.dp)
-                .clip(RoundedCornerShape(8.dp)),
+                .clip(RoundedCornerShape(8.dp))
+                .constrainAs(bookImage) {
+                    top.linkTo(backButton.bottom, margin = 20.dp)
+                    start.linkTo(parent.start, margin = 10.dp)
+                    end.linkTo(parent.end, margin = 10.dp)
+                },
             contentScale = ContentScale.Crop
         )
-
-        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = clickedCartoon.title,
             fontSize = 24.sp,
+            modifier = Modifier.constrainAs(title) {
+                top.linkTo(bookImage.bottom, margin = 20.dp)
+                start.linkTo(parent.start, margin = 10.dp)
+                end.linkTo(parent.end, margin = 10.dp)
+            }
         )
-
-        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = clickedCartoon.author,
             fontSize = 12.sp,
+            modifier = Modifier.constrainAs(author) {
+                top.linkTo(title.bottom, margin = 20.dp)
+                start.linkTo(parent.start, margin = 10.dp)
+                end.linkTo(parent.end, margin = 10.dp)
+            }
         )
-
-        Spacer(modifier = Modifier.height(10.dp))
 
         Text(
             text = clickedCartoon.genre,
             fontSize = 12.sp,
+            modifier = Modifier.constrainAs(genre) {
+                top.linkTo(author.bottom, margin = 10.dp)
+                start.linkTo(parent.start, margin = 10.dp)
+                end.linkTo(parent.end, margin = 10.dp)
+            }
         )
-
-        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = "도서 위치  " + clickedCartoon.sector + "  구역",
-            fontSize = 24.sp,
+            fontSize = 20.sp,
+            modifier = Modifier.constrainAs(locationText) {
+                top.linkTo(genre.bottom, margin = 20.dp)
+                start.linkTo(parent.start, margin = 10.dp)
+                end.linkTo(parent.end, margin = 10.dp)
+            }
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // 지도
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
+                .height(280.dp)
                 .padding(10.dp)
                 .background(Color.Transparent)
-        ){
+                .constrainAs(map) {
+                    top.linkTo(locationText.bottom, margin = 10.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                }
+        ) {
             Map(viewModel)
         }
     }

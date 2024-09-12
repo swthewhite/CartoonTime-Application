@@ -2,6 +2,7 @@ package com.alltimes.cartoontime.ui.screen.signup
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.content.contentReceiver
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -19,6 +20,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
@@ -33,245 +35,212 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
     val isNameCorrect by viewModel.isNameCorrect.collectAsState()
     val isPhoneNumberEnable by viewModel.isPhoneNumberEnable.collectAsState()
 
-    Column(
+    ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+            .padding(16.dp)
     ) {
-        // 상단: 전화번호 입력 및 인증번호 받기 버튼
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(5.dp),
-                horizontalArrangement = Arrangement.End // 오른쪽 끝에 정렬
-            ) {
-                // 상단: 뒤로가기 버튼 finish와 연결
-                IconButton(
-                    onClick = { viewModel.onLogout() },
-                    modifier = Modifier
-                        .size(24.dp)
-                        .background(Color.Transparent)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_exit), // 사용할 이미지 리소스
-                        contentDescription = "Back",
-                        tint = Color.Black, // 아이콘 색상 설정
-                        modifier = Modifier.size(24.dp) // 아이콘 크기 설정
-                    )
+        // References for the components
+        val (exitButton, titleText, instructionText, phoneText, phoneField, verifyCodeField, requestButton, codeRequestButton, plusTimeButton, nameText, nameField, submitButton) = createRefs()
+
+        // Exit button
+        IconButton(
+            onClick = { viewModel.onLogout() },
+            modifier = Modifier
+                .size(24.dp)
+                .constrainAs(exitButton) {
+                    top.linkTo(parent.top, margin = 5.dp)
+                    end.linkTo(parent.end, margin = 5.dp)
                 }
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_exit),
+                contentDescription = "Exit",
+                tint = Color.Black,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        // Title text
+        Text(
+            text = "휴대폰 본인인증",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.constrainAs(titleText) {
+                top.linkTo(exitButton.bottom, margin = 20.dp)
+                start.linkTo(parent.start, margin = 5.dp)
             }
+        )
 
-            Spacer(modifier = Modifier.height(16.dp))
+        // Instruction text
+        Text(
+            text = "인증번호를 요청해주세요.",
+            fontSize = 24.sp,
+            modifier = Modifier.constrainAs(instructionText) {
+                top.linkTo(titleText.bottom, margin = 10.dp)
+                start.linkTo(parent.start, margin = 5.dp)
+            }
+        )
 
-            Text(
-                text = "휴대폰 본인인증",
-                fontSize = 16.sp, // 텍스트 크기 설정
-                fontWeight = FontWeight.Bold // 텍스트 굵기 설정
-            )
+        // Phone Number Label
+        Text(
+            text = "휴대폰 번호",
+            fontSize = 16.sp,
+            modifier = Modifier.constrainAs(phoneText) {
+                top.linkTo(instructionText.bottom, margin = 80.dp)
+                start.linkTo(parent.start, margin = 5.dp)
+            }
+        )
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = "인증번호를 요청해주세요.",
-                fontSize = 24.sp,
-            )
-
-            Spacer(modifier = Modifier.height(80.dp))
-
-            Text(
-                text = "휴대폰 번호",
-                fontSize = 16.sp,
-                modifier = Modifier.padding(start = 15.dp)
-            )
-
-            Spacer(modifier = Modifier.height(3.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        width = 1.dp,
-                        color = Color.Transparent,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(5.dp)
-            ) {
-                // 전화번호 입력 필드
-                TextField(
-                    enabled = isPhoneNumberEnable,
-                    value = phoneNumber,
-                    onValueChange = { viewModel.onPhoneNumberChange(it) },
-                    colors = TextFieldDefaults.textFieldColors(
-                        containerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        cursorColor = Color.Black,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            width = 1.dp,
-                            color = Color.Black,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(2.dp),
-                    label = {
-                        Text(
-                            text = "- 없이 입력",
-                            color = Color.Black,
-                        )
-                    }
+        // Phone Number TextField
+        TextField(
+            enabled = isPhoneNumberEnable,
+            value = phoneNumber,
+            onValueChange = { viewModel.onPhoneNumberChange(it) },
+            colors = TextFieldDefaults.textFieldColors(
+                containerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent, // 비활성 상태에서 밑줄 색상 제거
+                cursorColor = Color.Black
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = Color.Black,
+                    shape = RoundedCornerShape(16.dp)
                 )
+                .constrainAs(phoneField) {
+                    top.linkTo(phoneText.bottom, margin = 3.dp)
+                    start.linkTo(parent.start, margin = 5.dp)
+                    end.linkTo(parent.end, margin = 5.dp)
+                },
+            label = {
+                Text(text = "- 없이 입력", color = Color.Black)
             }
+        )
 
-            Box(
+        // 인증번호 요청 버튼
+        if (!isVerificationCodeVisible) {
+            Button(
+                onClick = { viewModel.onRequestVerificationCode() },
+                shape = RoundedCornerShape(15),
+                colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
+                modifier = Modifier
+                    .constrainAs(requestButton) {
+                        top.linkTo(phoneField.bottom, margin = 10.dp)
+                        end.linkTo(parent.end, margin = 5.dp)
+                    }
+            ) {
+                Text(text = "인증번호 요청", color = Color(0xFF606060))
+            }
+        }
+
+        // 인증번호 입력 관련
+        if (isVerificationCodeVisible) {
+            TextField(
+                value = verificationCode,
+                onValueChange = { viewModel.onVerificationCodeChange(it) },
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = Color.Black
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(
                         width = 1.dp,
-                        color = Color.Transparent,
+                        color = Color.Black,
                         shape = RoundedCornerShape(16.dp)
                     )
-                    .padding(5.dp)
+                    .constrainAs(verifyCodeField) {
+                        top.linkTo(phoneField.bottom, margin = 10.dp)
+                        start.linkTo(parent.start, margin = 5.dp)
+                        end.linkTo(parent.end, margin = 5.dp)
+                    },
+                label = {
+                    Text(text = "인증번호", color = Color.Black)
+                }
+            )
 
-                ) {
-                    // 중간: 인증번호 입력 (버튼 클릭 시 보이도록)
-                    if (isVerificationCodeVisible) {
-                        TextField(
-                            value = verificationCode,
-                            onValueChange = { viewModel.onVerificationCodeChange(it) },
-                            colors = TextFieldDefaults.textFieldColors(
-                                containerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                cursorColor = Color.Black,
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(
-                                    width = 1.dp,
-                                    color = Color.Black,
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                                .padding(2.dp),
-                            label = {
-                                Text(
-                                    text = "인증번호",
-                                    color = Color.Black,
-                                )
-                            }
-                        )
-                    }
-
-                Row(
+            if (isVerificationCodeVisible) {
+                Button(
+                    onClick = { println("시간 연장") },
+                    shape = RoundedCornerShape(15),
+                    colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End, // 오른쪽 끝에 정렬
-                ) {
-                    // 인증번호 요청 버튼 클릭시 사라져야함
-                    if (!isVerificationCodeVisible) {
-                        Button(
-                            onClick = { viewModel.onRequestVerificationCode() },
-                            shape = RoundedCornerShape(15),
-                            colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
-                            modifier = Modifier
-                                .padding(8.dp)
-                        ) {
-                            Text(
-                                text = "인증번호 요청",
-                                color = Color(0xFF606060),
-                            )
+                        .padding(2.dp)
+                        .constrainAs(plusTimeButton) {
+                            top.linkTo(verifyCodeField.bottom, margin = 3.dp)
+                            end.linkTo(parent.end, margin = 5.dp)
                         }
-                    }
+                ) {
+                    Text(
+                        text = "시간 연장",
+                        color = Color(0xFF606060),
+                    )
+                }
+
+                Button(
+                    onClick = { println("인증번호 재요청") },
+                    shape = RoundedCornerShape(15),
+                    colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
+                    modifier = Modifier
+                        .padding(2.dp)
+                        .constrainAs(codeRequestButton) {
+                            top.linkTo(verifyCodeField.bottom, margin = 3.dp)
+                            end.linkTo(plusTimeButton.start, margin = 5.dp)
+                        }
+                ) {
+                    Text(
+                        text = "인증번호 재요청",
+                        color = Color(0xFF606060),
+                    )
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.End, // 오른쪽 끝에 정렬
-            ) {
-                if (isVerificationCodeVisible) {
-                    Button(
-                        onClick = { println("인증번호 재요청") },
-                        shape = RoundedCornerShape(15),
-                        colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
-                        modifier = Modifier
-                            .padding(2.dp)
-                    ) {
-                        Text(
-                            text = "인증번호 재요청",
-                            color = Color(0xFF606060),
-                        )
-                    }
 
-                    Button(
-                        onClick = { println("시간 연장") },
-                        shape = RoundedCornerShape(15),
-                        colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
-                        modifier = Modifier
-                            .padding(2.dp)
-                    ) {
-                        Text(
-                            text = "시간 연장",
-                            color = Color(0xFF606060),
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(80.dp))
-
+            // Name Label
             Text(
                 text = "이름",
                 fontSize = 16.sp,
-                modifier = Modifier.padding(start = 15.dp)
+                modifier = Modifier.constrainAs(nameText) {
+                    top.linkTo(codeRequestButton.bottom, margin = 100.dp)
+                    start.linkTo(parent.start, margin = 5.dp)
+                }
             )
 
-            Spacer(modifier = Modifier.height(3.dp))
-
-            Box(
+            // Name TextField
+            TextField(
+                value = name,
+                onValueChange = { viewModel.onNameChange(it) },
+                colors = TextFieldDefaults.textFieldColors(
+                    containerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = Color.Black
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(
                         width = 1.dp,
-                        color = Color.Transparent,
+                        color = Color.Black,
                         shape = RoundedCornerShape(16.dp)
                     )
-            ) {
-                // 이름 입력 필드
-                TextField(
-                    value = name,
-                    onValueChange = { viewModel.onNameChange(it) },
-                    colors = TextFieldDefaults.textFieldColors(
-                        containerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = Color.Black,
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            width = 1.dp,
-                            color = Color.Black,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(2.dp),
-                    label = {
-                        Text(
-                            text = "이름",
-                            color = Color.Black,
-                        )
-                    }
-                )
-            }
+                    .constrainAs(nameField) {
+                        top.linkTo(nameText.bottom, margin = 3.dp)
+                        start.linkTo(parent.start, margin = 5.dp)
+                        end.linkTo(parent.end, margin = 5.dp)
+                    },
+                label = {
+                    Text(text = "이름", color = Color.Black)
+                }
+            )
 
-            Spacer(modifier = Modifier.height(50.dp))
-
+            // Submit Button
             Button(
                 onClick = { viewModel.onSubmit() },
                 shape = RoundedCornerShape(15),
@@ -279,15 +248,15 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                 colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    .constrainAs(submitButton) {
+                        top.linkTo(nameField.bottom, margin = 50.dp)
+                        start.linkTo(parent.start, margin = 5.dp)
+                        end.linkTo(parent.end, margin = 5.dp)
+                        bottom.linkTo(parent.bottom, margin = 5.dp)
+                    }
             ) {
-                Text(
-                    text = "인증하기",
-                    color = Color(0xFF606060),
-                )
+                Text(text = "인증하기", color = Color(0xFF606060))
             }
-
-
         }
     }
 }
