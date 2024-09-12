@@ -94,7 +94,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
     val category: StateFlow<String> get() = _category
 
     fun bookRecommendInit() {
-        fetchCartoons("사용자 취향 만화")
+        fetchCartoons(_category.toString())
     }
 
     fun onClickedCategory(category: String) {

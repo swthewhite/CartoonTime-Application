@@ -3,6 +3,7 @@ agp = "8.5.0"
 androidxRuntimeLivedata = "1.7.0"
 biometricVersion = "1.2.0-alpha05"
 coilCompose = "2.0.0"
+constraintlayoutComposeVersion = "1.0.1"
 foundation = "1.7.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
@@ -31,6 +32,7 @@ appcompat = "1.7.0"
 
 [libraries]
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometricVersion" }
+androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayoutComposeVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
 androidx-material = { module = "androidx.compose.material:material", version.ref = "material" }

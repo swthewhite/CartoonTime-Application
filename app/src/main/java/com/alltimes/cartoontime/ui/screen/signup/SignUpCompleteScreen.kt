@@ -23,19 +23,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @Composable
 fun SignUpCompleteScreen(viewModel: SignUpViewModel) {
 
-    Column (
+    ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFFF4F2EE)),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(color = Color(0xFFF4F2EE))
     ) {
+        val (logo, message, subMessage, button) = createRefs()
 
         Image(
             painter = painterResource(id = R.drawable.logo_cartoontime),
@@ -43,29 +43,39 @@ fun SignUpCompleteScreen(viewModel: SignUpViewModel) {
             modifier = Modifier
                 .width(250.dp)
                 .height(100.dp)
-                .padding(top = 70.dp),
+                .constrainAs(logo) {
+                    top.linkTo(parent.top, margin = 70.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                },
             contentScale = ContentScale.Fit
         )
-
-        Spacer(modifier = Modifier.height(220.dp))
 
         Text(
             text = "가입이 완료 되었어요.",
             fontSize = 24.sp,
-            textAlign = TextAlign.Center,  // 가운데 정렬
-            modifier = Modifier.fillMaxWidth()  // 텍
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .constrainAs(message) {
+                    top.linkTo(logo.bottom, margin = 180.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
+                .fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         Text(
             text = "지금 바로 카툰타임을 \n 시작해 보세요!",
             fontSize = 20.sp,
-            textAlign = TextAlign.Center,  // 가운데 정렬
-            modifier = Modifier.fillMaxWidth()  // 텍
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .constrainAs(subMessage) {
+                    top.linkTo(message.bottom, margin = 16.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
+                .fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(300.dp))
 
         Button(
             onClick = { viewModel.onClick() },
@@ -74,7 +84,11 @@ fun SignUpCompleteScreen(viewModel: SignUpViewModel) {
             modifier = Modifier
                 .width(350.dp)
                 .height(60.dp)
-                .padding(8.dp)
+                .constrainAs(button) {
+                    bottom.linkTo(parent.bottom, margin = 16.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
         ) {
             Text(
                 text = "시작하기",

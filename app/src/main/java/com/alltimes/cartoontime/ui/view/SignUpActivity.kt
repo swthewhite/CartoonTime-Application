@@ -62,12 +62,22 @@ class SignUpActivity : ComponentActivity() {
 
     // 스크린 전환을 처리하는 함수로 분리하여 처리
     private fun navigateToScreen(screenType: ScreenType) {
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+
         val route = when (screenType) {
             ScreenType.PASSWORDSETTING -> "passwordsettingscreen"
             ScreenType.NAVERLOGIN -> "naverloginscreen"
             ScreenType.SIGNUPCOMPLETE -> "signupcompletescreen"
             else -> return
         }
-        navController.navigate(route)
+
+        // 현재 화면과 다를 때 화면 전환
+        if (currentRoute != route) {
+            navController.navigate(route) {
+                // 모든 과정에서
+                popUpTo(route) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
     }
 }

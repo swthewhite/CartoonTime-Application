@@ -75,6 +75,10 @@ dependencies {
     // 이미지 캐시
     implementation(libs.coil.compose)
 
+    // constraint layout
+    implementation(libs.androidx.constraintlayout.compose)
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

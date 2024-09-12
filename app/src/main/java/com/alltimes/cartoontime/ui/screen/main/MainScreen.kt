@@ -41,12 +41,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
+import androidx.constraintlayout.compose.ConstraintLayout
 
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
-
-    // 애니메이션 상태를 기억하는 상태 변수
     var currentAnimation by remember { mutableStateOf(1) }
 
     val name = viewModel.userName
@@ -55,26 +55,35 @@ fun MainScreen(viewModel: MainViewModel) {
     val enteredTime by viewModel.enteredTime.collectAsState()
     val usedTime by viewModel.usedTime.collectAsState()
 
-    Column(
+    ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color(0xFFF4F2EE)),
-        horizontalAlignment = Alignment.CenterHorizontally, // Column 내 모든 요소를 왼쪽 정렬
-        verticalArrangement = Arrangement.Top// 중앙 정렬
+            .background(color = Color(0xFFF4F2EE))
     ) {
+        val (logo, line1, title, walletContainer, animationBox, stateText, stateTextDescription, bookButton) = createRefs()
+
+        // 상단 로고 및 문구
         Image(
             painter = painterResource(id = R.drawable.logo_cartoontime),
             contentDescription = "Main Logo",
             contentScale = ContentScale.Fit,
             modifier = Modifier
                 .width(300.dp)
-                .height(120.dp)
-                .padding(top = 20.dp)
+                .height(100.dp)
+                .constrainAs(logo) {
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
         )
 
         Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .constrainAs(line1) {
+                top.linkTo(logo.bottom, margin = 10.dp)
+                    start.linkTo(parent.start, margin = 30.dp)
+                    end.linkTo(parent.end, margin = 30.dp) },
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_line),
@@ -84,11 +93,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     .height(30.dp)
                     .padding(end = 10.dp)
             )
-
-            Text(
-                text = "만화와 소중했던 그 시간들",
-            )
-
+            Text(text = "만화와 소중했던 그 시간들")
             Image(
                 painter = painterResource(id = R.drawable.ic_line),
                 contentDescription = "Line Icon",
@@ -99,60 +104,56 @@ fun MainScreen(viewModel: MainViewModel) {
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
         Text(
-            text = "$name" + "님 환영합니다.",
+            text = "${name}님 환영합니다.",
             fontSize = 20.sp,
             color = Color.Black,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, top = 16.dp)
+                .constrainAs(title) {
+                    top.linkTo(line1.bottom, margin = 20.dp)
+                    start.linkTo(parent.start, margin = 20.dp)
+                }
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // 전체 지갑 형태의 컨테이너
+        // 지갑 컨테이너
         Box(
             modifier = Modifier
                 .padding(16.dp)
                 .background(Color(0xFFF9B912), RoundedCornerShape(16.dp))
                 .fillMaxWidth()
+                .constrainAs(walletContainer) {
+                    top.linkTo(title.bottom, margin = 16.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // 첫 번째 Column
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 10.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 10.dp)
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_wallet), // 아이콘 이미지
+                        painter = painterResource(id = R.drawable.ic_wallet),
                         contentDescription = "Icon",
-                        modifier = Modifier
-                            .size(40.dp)
+                        modifier = Modifier.size(40.dp)
                     )
                     Text(
                         text = "내 지갑",
                         fontSize = 20.sp,
-                        modifier = Modifier
-                            .padding(start = 16.dp)
+                        modifier = Modifier.padding(start = 16.dp)
                     )
                 }
 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 10.dp),
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 10.dp)
                 ) {
                     Text(
-                        text = "$balance" + "  Points",
+                        text = "$balance Points",
                         fontSize = 24.sp,
                         modifier = Modifier.padding(start = 8.dp)
                     )
@@ -162,8 +163,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 10.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.End
                 ) {
                     Button(
                         onClick = { viewModel.onSendButtonClick() },
@@ -171,10 +171,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.padding(start = 8.dp)
                     ) {
-                        Text(
-                            text = "송금하기",
-                            color = Color.Black
-                        )
+                        Text(text = "송금하기", color = Color.Black)
                     }
                     Button(
                         onClick = { viewModel.onReceiveButtonClick() },
@@ -182,24 +179,17 @@ fun MainScreen(viewModel: MainViewModel) {
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.padding(start = 8.dp)
                     ) {
-                        Text(
-                            text = "송금받기",
-                            color = Color.Black
-                        )
+                        Text(text = "송금받기", color = Color.Black)
                     }
                     Button(
-                        onClick = {  },
+                        onClick = { /* Handle Recharge */ },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5A911)),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.padding(start = 8.dp)
                     ) {
-                        Text(
-                            text = "충전",
-                            color = Color.Black
-                        )
+                        Text(text = "충전", color = Color.Black)
                     }
                 }
-
             }
         }
 
@@ -208,20 +198,24 @@ fun MainScreen(viewModel: MainViewModel) {
                 .fillMaxWidth()
                 .height(250.dp)
                 .padding(start = 16.dp, end = 16.dp, top = 5.dp, bottom = 5.dp)
+                .constrainAs(animationBox) {
+                    top.linkTo(walletContainer.bottom, margin = 5.dp)
+                    start.linkTo(parent.start, margin = 5.dp)
+                    end.linkTo(parent.end, margin = 5.dp)
+                }
         ) {
             if (state == "입실 전") {
                 AnimateSequence { animationId ->
                     currentAnimation = animationId
                 }
-            }
-            else if (state == "입실 완료") {
+            } else if (state == "입실 완료") {
                 Box(
                     modifier = Modifier
-                        .height(160.dp)
                         .background(Color(0xFFFFFFFF), RoundedCornerShape(16.dp))
                         .fillMaxWidth()
-                ){
-                    Column (
+                        .height(160.dp)
+                ) {
+                    Column(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
@@ -235,47 +229,26 @@ fun MainScreen(viewModel: MainViewModel) {
                                 .fillMaxWidth()
                                 .height(80.dp)
                                 .padding(5.dp)
-                        ){
-                            Column (
+                        ) {
+                            Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,
+                                verticalArrangement = Arrangement.Center
                             ) {
-                                Text(
-                                    text = "입실 시간",
-                                    fontSize = 20.sp,
-                                    color = Color.Black
-                                )
-
+                                Text(text = "입실 시간", fontSize = 20.sp, color = Color.Black)
                                 Spacer(modifier = Modifier.height(10.dp))
-
-                                Text(
-                                    text = "이용 시간",
-                                    fontSize = 20.sp,
-                                    color = Color.Black
-                                )
+                                Text(text = "이용 시간", fontSize = 20.sp, color = Color.Black)
                             }
 
                             Spacer(modifier = Modifier.width(40.dp))
 
-                            Column (
+                            Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
-                                modifier = Modifier
-                                    .padding(top = 5.dp)
+                                modifier = Modifier.padding(top = 5.dp)
                             ) {
-                                Text(
-                                    text = "$enteredTime",
-                                    fontSize = 20.sp,
-                                    color = Color.Black
-                                )
-
+                                Text(text = "$enteredTime", fontSize = 20.sp, color = Color.Black)
                                 Spacer(modifier = Modifier.height(10.dp))
-
-                                Text(
-                                    text = "$usedTime",
-                                    fontSize = 20.sp,
-                                    color = Color.Black
-                                )
+                                Text(text = "$usedTime", fontSize = 20.sp, color = Color.Black)
                             }
                         }
 
@@ -283,16 +256,13 @@ fun MainScreen(viewModel: MainViewModel) {
                             onClick = { println("퇴실방법") },
                             colors = ButtonDefaults.buttonColors(Color.Transparent),
                             shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier
-                                .fillMaxSize()
+                            modifier = Modifier.fillMaxSize()
                         ) {
                             Text(
                                 text = "퇴실 방법",
                                 color = Color(0xFF413930),
                                 fontSize = 20.sp,
-                                style = TextStyle(
-                                    textDecoration = TextDecoration.Underline
-                                )
+                                style = TextStyle(textDecoration = TextDecoration.Underline)
                             )
                         }
                     }
@@ -303,12 +273,15 @@ fun MainScreen(viewModel: MainViewModel) {
         Text(
             text = "$state",
             fontSize = 20.sp,
+            modifier = Modifier
+                .constrainAs(stateText) {
+                top.linkTo(animationBox.bottom, margin = 10.dp)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+            }
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
         if (state == "입실 전") {
-            println(state + " : 입실 전")
             Text(
                 text = if (currentAnimation == 1) {
                     "핸드폰을 키오스크 가까이에 갖다 대주세요."
@@ -316,13 +289,15 @@ fun MainScreen(viewModel: MainViewModel) {
                     "손 안의 핸드폰을 뒤집어서 입실을 진행해주세요."
                 },
                 fontSize = 15.sp,
+                modifier = Modifier
+                    .constrainAs(stateTextDescription) {
+                        top.linkTo(stateText.bottom, margin = 10.dp)
+                        bottom.linkTo(parent.bottom, margin = 5.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
             )
-        }
-        else if (state == "입실 완료") {
-            println(state + " : 입실 완료")
-            
-            Spacer(modifier = Modifier.height(10.dp))
-
+        } else if (state == "입실 완료") {
             Button(
                 onClick = { viewModel.onBookRecommendButtonClick() },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
@@ -331,11 +306,14 @@ fun MainScreen(viewModel: MainViewModel) {
                     .width(350.dp)
                     .height(50.dp)
                     .padding(start = 8.dp)
+                    .constrainAs(bookButton) {
+                        top.linkTo(stateText.bottom, margin = 10.dp)
+                        bottom.linkTo(parent.bottom, margin = 5.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
             ) {
-                Text(
-                    text = "추천만화 확인하기",
-                    color = Color.Black
-                )
+                Text(text = "추천만화 확인하기", color = Color.Black)
             }
         }
     }

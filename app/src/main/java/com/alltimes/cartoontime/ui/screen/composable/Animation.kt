@@ -39,7 +39,8 @@ fun ApproachAnimate() {
     }
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Row(

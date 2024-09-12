@@ -88,10 +88,18 @@ class BootActivity : ComponentActivity() {
 
     // 스크린 전환을 처리하는 함수로 분리하여 처리
     private fun navigateToScreen(screenType: ScreenType) {
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+
         val route = when (screenType) {
             ScreenType.MAIN -> "mainscreen"
             else -> return
         }
-        navController.navigate(route)
+
+        if (currentRoute != route) {
+            navController.navigate(route) {
+                popUpTo(route) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
     }
 }
