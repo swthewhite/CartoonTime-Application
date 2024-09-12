@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
             if (data.z <= -9.0) {
                 // 아래를 보는 중
                 accelerometerCount++
-                if (accelerometerCount >= 15) viewModel.onLogin()
+                if (accelerometerCount >= 10) viewModel.onLogin()
             } else if (data.z >= 0) {
                 // 위를 보는 중
                 accelerometerCount = 0
@@ -91,9 +91,16 @@ class MainActivity : ComponentActivity() {
         // 현재 화면이 이동하려는 화면과 다를 경우에만 화면 전환
         if (currentRoute != route) {
             navController.navigate(route) {
-                if (screenType == ScreenType.MAIN) popUpTo("mainscreen") { inclusive = true }
-                else if (screenType == ScreenType.BOOKDETAIL) popUpTo("bookRecommendScreen") { inclusive = false }
-                launchSingleTop = true // 동일 화면 중복 쌓임 방지
+                // 메인 -> 책 추천, 책 추천 -> 책 상세 일 경우 스택 초기화 X
+                if ((currentRoute == "bookRecommendScreen" && route == "bookDetailScreen")
+                    || (currentRoute == "mainscreen" && route == "bookRecommendScreen")) {
+                    // 아무 행동 하지 않음
+                } else {
+                    // 그 외에는 현재 화면 스택에서 제거 && 화면 이동
+                    popUpTo(currentRoute.toString()) { inclusive = true } // 현재 화면 스택에서 제거
+                }
+                // 동일 화면 중복 쌓임 방지
+                launchSingleTop = true
             }
         }
     }
