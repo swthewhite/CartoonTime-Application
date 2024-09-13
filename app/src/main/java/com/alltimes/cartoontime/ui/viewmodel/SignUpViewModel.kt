@@ -117,6 +117,8 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
         _screenNavigationTo.value = ScreenNavigationTo(ScreenType.PASSWORDSETTING)
 
         editor?.putString("name", _name.value.text)
+        // 서버로부터 응답이 있을 때는 사용자 잔여금을 받아와서 저장
+        editor?.putInt("balance", 8000)
         editor?.apply()
     }
 

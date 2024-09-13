@@ -43,13 +43,14 @@ class MainViewModel(private val context: Context) : ViewModel() {
     val editor = sharedPreferences.edit()
 
     val userName = sharedPreferences.getString("name", "")
-    
+
+    // MutableStateFlow로 balance 값을 관리
+    private val _balance = MutableStateFlow(sharedPreferences.getInt("balance", 8000))
+    val balance: StateFlow<Int> = _balance
+
     // 서버 통신 관련 변수
 
     /////////////////////////// Main ///////////////////////////
-
-    private val _balnace = MutableStateFlow(8000)
-    val balance: StateFlow<Int> get() = _balnace
 
     private val _state = MutableStateFlow("입실 전")
     val state: StateFlow<String> get() = _state

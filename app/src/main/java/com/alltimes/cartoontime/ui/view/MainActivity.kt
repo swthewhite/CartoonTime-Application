@@ -4,6 +4,7 @@ package com.alltimes.cartoontime.ui.view
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -35,8 +36,28 @@ class MainActivity : ComponentActivity() {
         // 권한 요청 부분을 PermissionsHelper로 처리
         if (!PermissionsHelper.hasAllPermissions(this)) {
             PermissionsHelper.requestPermissions(this)
+        } else {
+            initializeApp() // 권한이 이미 있을 경우 초기화
         }
+    }
 
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        // 모든 권한이 허가되었는지 확인
+        if (PermissionsHelper.allPermissionsGranted(grantResults)) {
+            initializeApp() // 권한이 허가되면 앱 초기화
+        } else {
+            // 권한이 허가되지 않았을 경우 앱 종료
+            ActivityCompat.finishAffinity(this) // 앱을 완전히 종료
+        }
+    }
+
+    private fun initializeApp() {
         accelerometerManager = AccelerometerManager(this)
         accelerometerCount = 0
 

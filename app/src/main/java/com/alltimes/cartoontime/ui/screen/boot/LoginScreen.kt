@@ -96,7 +96,7 @@ fun LoginScreen(viewModel: BootViewModel) {
             }
         }
 
-        // 숫자 버튼들
+        // 0 ~ 9, 삭제 버튼
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -107,39 +107,65 @@ fun LoginScreen(viewModel: BootViewModel) {
                 }
         ) {
             // 숫자 버튼들
-            NumberRow(viewModel, listOf(1, 2, 3))
-            NumberRow(viewModel, listOf(4, 5, 6))
-            NumberRow(viewModel, listOf(7, 8, 9))
+            (1..9 step 3).forEach { row ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    (row until row + 3).forEach { num ->
+                        Button(
+                            onClick = { viewModel.onClickedButton(num) },
+                            shape = RoundedCornerShape(0.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(btnSpace)
+                        ) {
+                            Text(
+                                text = num.toString(),
+                                color = Color(0xFF000000),
+                                fontSize = 40.sp
+                            )
+                        }
+                    }
+                }
+            }
 
-            // 마지막 줄 (빈칸, 0, 삭제)
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Button(
                     onClick = { /* 빈칸 */ },
                     shape = RoundedCornerShape(0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
-                    modifier = Modifier.weight(1f).heightIn(min = 60.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(btnSpace)
                 ) {
                     Text(" ", color = Color(0xFF000000), fontSize = 40.sp)
                 }
-
                 Button(
                     onClick = { viewModel.onClickedButton(0) },
                     shape = RoundedCornerShape(0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
-                    modifier = Modifier.weight(1f).heightIn(min = 60.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(btnSpace)
                 ) {
                     Text("0", color = Color(0xFF000000), fontSize = 40.sp)
                 }
-
                 Button(
                     onClick = { viewModel.onClickedButton(-1) },
                     shape = RoundedCornerShape(0.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
-                    modifier = Modifier.weight(1f).heightIn(min = 60.dp)
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(btnSpace)
                 ) {
                     Text("<-", color = Color(0xFF000000), fontSize = 40.sp)
                 }
             }
+
         }
     }
 }
