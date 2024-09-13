@@ -22,4 +22,8 @@ object PermissionsHelper {
     fun requestPermissions(activity: ComponentActivity) {
         ActivityCompat.requestPermissions(activity, requiredPermissions, 0)
     }
+
+    fun allPermissionsGranted(grantResults: IntArray): Boolean {
+        return grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+    }
 }
