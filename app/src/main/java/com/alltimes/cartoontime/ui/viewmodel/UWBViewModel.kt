@@ -1,8 +1,10 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.data.model.UIStateModel
 import com.alltimes.cartoontime.data.model.UwbAddressModel // UwbAddressModel을 가져옵니다.
@@ -12,12 +14,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class UWBViewModel(application: Application) : AndroidViewModel(application) {
+class UWBViewModel(private val context: Context) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UIStateModel())
     val uiState = _uiState.asStateFlow()
 
-    private val uwbCommunicator: UwbControllerCommunicator = UwbControllerCommunicator(application) // UWBControllerManager = UWBControllerManager(application)
+    private val uwbCommunicator: UwbControllerCommunicator = UwbControllerCommunicator(context)
 
     init {
         viewModelScope.launch {

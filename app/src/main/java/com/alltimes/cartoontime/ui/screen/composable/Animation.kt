@@ -309,3 +309,92 @@ fun SendAnimation() {
         )
     }
 }
+
+@Composable
+fun ReceiveAnimation() {
+    val images = listOf(
+        R.drawable.yellow_book,         // 1번 이미지
+        R.drawable.sky_color_book,      // 2번 이미지
+        R.drawable.red_color_book,      // 3번 이미지
+        R.drawable.orange_color_book,   // 4번 이미지
+        R.drawable.green_color_book,    // 5번 이미지
+        R.drawable.blue_color_book      // 6번 이미지
+    )
+
+    // 각 이미지의 초기 Y 위치 (서로 겹치도록 설정)
+    // 3번과 5번
+    val initialOffsets = listOf(-180.dp, -130.dp, -68.dp, -30.dp, 32.dp, 70.dp)
+
+    // 각 이미지의 Y 위치와 가시성을 관리하는 리스트
+    val offsets = remember { List(images.size) { index -> Animatable(initialOffsets[index].value) } }
+    val visibilities = remember { List(images.size) { Animatable(0f) } }  // 처음엔 전부 invisible (alpha = 0)
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            // 순차적으로 애니메이션 처리 (6번 이미지부터 1번 이미지까지)
+            for (i in images.indices.reversed()) {
+                // alpha 값을 1로 변경해서 visible
+                visibilities[i].animateTo(1f, animationSpec = tween(500))
+                // y 위치를 +30.dp 이동 (아래로 이동)
+                offsets[i].animateTo(initialOffsets[i].value + 30f, animationSpec = tween(500))
+                // 다음 이미지를 위해 0.25초 지연
+                delay(250)
+            }
+
+            // 모든 애니메이션이 완료된 후 0.5초 대기
+            delay(500)
+
+            // 모든 이미지가 동시에 사라지기 (alpha = 0, 다시 invisible)
+            visibilities.forEach { visibility ->
+                visibility.animateTo(0f, animationSpec = tween(0))
+            }
+
+            // 모든 이미지가 원래 상태로 되돌아오기 (y = 초기 위치)
+            offsets.forEachIndexed { index, animatable ->
+                animatable.animateTo(initialOffsets[index].value, animationSpec = tween(0))
+            }
+
+            // 원래 상태로 되돌아온 후 0.5초 대기 후 다시 시작
+            delay(500)
+        }
+    }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // 3번과 5번 이미지를 제외한 나머지 이미지 렌더링
+        images.forEachIndexed { index, image ->
+            if (index != 4 && index != 2) {  // 5번(1)과 3번(2) 제외
+                Image(
+                    painter = painterResource(id = image),
+                    contentDescription = "Image $index",
+                    modifier = Modifier
+                        .size(150.dp)
+                        .offset(y = offsets[index].value.dp)  // Float 값을 Dp로 변환
+                        .graphicsLayer(alpha = visibilities[index].value)  // visibility 적용
+                )
+            }
+        }
+
+        // 3번 이미지 (가장 앞에 배치)
+        Image(
+            painter = painterResource(id = R.drawable.red_color_book),
+            contentDescription = "Image 3",
+            modifier = Modifier
+                .size(150.dp)
+                .offset(y = offsets[2].value.dp)
+                .graphicsLayer(alpha = visibilities[2].value)
+        )
+
+        // 5번 이미지 (가장 앞에 배치)
+        Image(
+            painter = painterResource(id = R.drawable.green_color_book),
+            contentDescription = "Image 5",
+            modifier = Modifier
+                .size(150.dp)
+                .offset(y = offsets[4].value.dp)
+                .graphicsLayer(alpha = visibilities[4].value)
+        )
+    }
+}

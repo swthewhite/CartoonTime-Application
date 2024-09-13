@@ -45,8 +45,6 @@ import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 @Composable
 fun DescriptionScreen(viewModel: SendViewModel) {
 
-
-
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
