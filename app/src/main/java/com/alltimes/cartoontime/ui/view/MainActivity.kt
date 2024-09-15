@@ -13,11 +13,16 @@ import androidx.navigation.compose.rememberNavController
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.main.BookDetailScreen
 import com.alltimes.cartoontime.ui.screen.main.BookRecommendScreen
+import com.alltimes.cartoontime.ui.screen.main.ConfirmScreen
 import com.alltimes.cartoontime.ui.screen.main.MainScreen
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.utils.AccelerometerManager
 import com.alltimes.cartoontime.utils.NavigationHelper
 import com.alltimes.cartoontime.utils.PermissionsHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.properties.Delegates
 
 class MainActivity : ComponentActivity() {
@@ -27,6 +32,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var accelerometerManager: AccelerometerManager
     private var accelerometerCount by Delegates.notNull<Int>()
+    private var isCounting = true // 1분 동안 카운팅 방지용 플래그
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,6 +74,7 @@ class MainActivity : ComponentActivity() {
                 composable("mainscreen") { MainScreen(viewModel = viewModel) }
                 composable("bookRecommendScreen") { BookRecommendScreen(viewModel = viewModel) }
                 composable("bookDetailScreen") { BookDetailScreen(viewModel = viewModel) }
+                composable("confirmScreen") { ConfirmScreen(viewModel = viewModel) }
             }
         }
 
@@ -87,14 +94,26 @@ class MainActivity : ComponentActivity() {
 
         accelerometerManager.accelerometerData.observe(this) { data ->
             // 데이터 업데이트
-            if (data.z <= -9.0) {
+            if (data.z <= -9.0 && isCounting) {
                 // 아래를 보는 중
                 accelerometerCount++
-                if (accelerometerCount >= 10) viewModel.onLogin()
+                if (accelerometerCount >= 10) {
+                    viewModel.onLoginOut()
+                    accelerometerCount = 0
+                    disableCounting() // 카운팅 방지
+                }
             } else if (data.z >= 0) {
                 // 위를 보는 중
                 accelerometerCount = 0
             }
+        }
+    }
+
+    private fun disableCounting() {
+        isCounting = false // 카운팅 방지
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(10000) // 대기
+            isCounting = true // 다시 카운팅 활성화
         }
     }
 
@@ -106,6 +125,7 @@ class MainActivity : ComponentActivity() {
             ScreenType.MAIN -> "mainscreen"
             ScreenType.BOOKRECOMMEND -> "bookRecommendScreen"
             ScreenType.BOOKDETAIL -> "bookDetailScreen"
+            ScreenType.CONFIRM -> "confirmScreen"
             else -> return
         }
 

@@ -49,6 +49,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
 import androidx.constraintlayout.compose.ConstraintLayout
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
@@ -59,7 +63,37 @@ fun MainScreen(viewModel: MainViewModel) {
     val balance by viewModel.balance.collectAsState()
     val state by viewModel.state.collectAsState()
     val enteredTime by viewModel.enteredTime.collectAsState()
-    val usedTime by viewModel.usedTime.collectAsState()
+
+    var usedTime by remember { mutableStateOf("") }
+
+// 실시간으로 현재 시간과 enteredTime 차이를 계산하는 LaunchedEffect
+    LaunchedEffect(enteredTime) {
+        while (true) {
+            val formatterWithSeconds = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val formatterWithoutSeconds = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+            val entered = try {
+                LocalDateTime.parse(enteredTime, formatterWithSeconds)
+            } catch (e: DateTimeParseException) {
+                // 초가 없는 경우
+                LocalDateTime.parse(enteredTime, formatterWithoutSeconds).withSecond(0)
+            }
+
+            val now = LocalDateTime.now()
+
+            // 시간 차이 계산
+            val hours = ChronoUnit.HOURS.between(entered, now)
+            val minutes = ChronoUnit.MINUTES.between(entered, now) % 60
+
+            usedTime = if (hours > 0) {
+                String.format("%d시간 %d분", hours, minutes)
+            } else {
+                String.format("%d분", minutes)
+            }
+
+            delay(1000) // 1초마다 업데이트
+        }
+    }
 
     ConstraintLayout(
         modifier = Modifier
