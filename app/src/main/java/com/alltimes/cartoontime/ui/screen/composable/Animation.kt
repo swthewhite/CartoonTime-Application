@@ -254,7 +254,7 @@ fun SendAnimation() {
                 delay(250)
             }
 
-            // 모든 애니메이션이 완료된 후 0.5초 대기
+            // 모든 애니메이션이 완료된 후 0.25초 대기
             delay(250)
 
             // 모든 이미지가 동시에 원래 상태로 되돌아오기 (y = 초기 위치, visible)
@@ -265,7 +265,7 @@ fun SendAnimation() {
                 visibility.animateTo(1f, animationSpec = tween(0))
             }
 
-            // 원래 상태로 되돌아온 후 0.5초 대기 후 다시 시작
+            // 원래 상태로 되돌아온 후 0.25초 대기 후 다시 시작
             delay(250)
         }
     }
@@ -341,8 +341,8 @@ fun ReceiveAnimation() {
                 delay(250)
             }
 
-            // 모든 애니메이션이 완료된 후 0.5초 대기
-            delay(500)
+            // 모든 애니메이션이 완료된 후 0.25초 대기
+            delay(250)
 
             // 모든 이미지가 동시에 사라지기 (alpha = 0, 다시 invisible)
             visibilities.forEach { visibility ->
@@ -354,8 +354,8 @@ fun ReceiveAnimation() {
                 animatable.animateTo(initialOffsets[index].value, animationSpec = tween(0))
             }
 
-            // 원래 상태로 되돌아온 후 0.5초 대기 후 다시 시작
-            delay(500)
+            // 원래 상태로 되돌아온 후 0.25초 대기 후 다시 시작
+            delay(250)
         }
     }
 

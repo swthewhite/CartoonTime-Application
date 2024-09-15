@@ -11,5 +11,6 @@ enum class ActivityType(val intentCreator: (Context) -> Intent?) {
     MAIN({context-> Intent(context, com.alltimes.cartoontime.ui.view.MainActivity::class.java)}),
     SEND({ context -> Intent(context, com.alltimes.cartoontime.ui.view.SendActivity::class.java) }),
     RECEIVE({ context -> Intent(context, com.alltimes.cartoontime.ui.view.ReceiveActivity::class.java) }),
+    CHARGE({ context -> Intent(context, com.alltimes.cartoontime.ui.view.ChargeActivity::class.java) }),
     SIGNUP({ context -> Intent(context, com.alltimes.cartoontime.ui.view.SignUpActivity::class.java) }),
 }

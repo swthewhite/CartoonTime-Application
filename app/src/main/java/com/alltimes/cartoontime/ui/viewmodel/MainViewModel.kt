@@ -69,6 +69,10 @@ class MainViewModel(private val context: Context) : ViewModel() {
         _activityNavigationTo.value = ActivityNavigationTo(ActivityType.RECEIVE)
     }
 
+    fun onChargeButtonClick() {
+        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.CHARGE)
+    }
+
     fun onBookRecommendButtonClick() {
         _screenNavigationTo.value = ScreenNavigationTo(ScreenType.BOOKRECOMMEND)
     }

@@ -182,7 +182,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         Text(text = "송금받기", color = Color.Black)
                     }
                     Button(
-                        onClick = { /* Handle Recharge */ },
+                        onClick = { viewModel.onChargeButtonClick() },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5A911)),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.padding(start = 8.dp)
