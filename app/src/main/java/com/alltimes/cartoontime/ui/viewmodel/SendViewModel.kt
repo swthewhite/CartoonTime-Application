@@ -84,7 +84,10 @@ class SendViewModel(private val context: Context) : ViewModel() {
     // 눌리는 버튼에 대한 구현
     fun onPointClickedButton(type: Int) {
         context?.let {
-            if (type == -1 && _point.value != "") _point.value = _point.value.dropLast(1)
+            if (type == -1) {
+                if (_point.value != "") _point.value = _point.value.dropLast(1)
+                return
+            }
             else if (type == -2) _point.value += "00"
             else _point.value += type.toString()
 
@@ -112,7 +115,10 @@ class SendViewModel(private val context: Context) : ViewModel() {
         context?.let {
             if (!inputEnable) return
 
-            if (type == -1) _password.value = _password.value.dropLast(1)
+            if (type == -1) {
+                if (_password.value != "") _password.value = _password.value.dropLast(1)
+                return
+            }
             else _password.value += type.toString()
 
 

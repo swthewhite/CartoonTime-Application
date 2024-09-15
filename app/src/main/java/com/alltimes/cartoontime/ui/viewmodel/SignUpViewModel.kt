@@ -178,7 +178,10 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
         if (!inputEnable) return
 
-        if (type == -1) _password.value = _password.value.dropLast(1)
+        if (type == -1) {
+            if (_password.value != "") _password.value = _password.value.dropLast(1)
+            return
+        }
         else _password.value += type.toString()
 
 

@@ -5,26 +5,20 @@ import android.content.SharedPreferences
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.biometric.BiometricPrompt
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import java.util.concurrent.Executor
 
-class BootViewModel(private val context: Context) : ViewModel() {
+class ChargeViewModel(private val context: Context) : ViewModel() {
 
     /////////////////////////// 공용 ///////////////////////////
-    
+
     private val _activityNavigationTo = MutableLiveData<ActivityNavigationTo>()
     val activityNavigationTo: LiveData<ActivityNavigationTo> get() = _activityNavigationTo
 
@@ -38,35 +32,60 @@ class BootViewModel(private val context: Context) : ViewModel() {
     // Editor 객체를 가져옵니다.
     val editor = sharedPreferences.edit()
 
-    /////////////////////////// Boot ///////////////////////////
+    val userName = sharedPreferences.getString("name", "")
 
-    fun onLoginClick() {
-        // 로그인 처리 로직
-        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.SIGNUP)
+    // MutableStateFlow로 balance 값을 관리
+    private val _balance = MutableStateFlow(sharedPreferences.getInt("balance", 8000))
+    val balance: StateFlow<Int> = _balance
+
+    fun goActivity(activity: ActivityType) {
+        _activityNavigationTo.value = ActivityNavigationTo(activity)
     }
 
-    fun onSignUpClick() {
-        // 회원가입 처리 로직
-        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.SIGNUP)
+    fun goScreen(screen: ScreenType) {
+        _screenNavigationTo.value = ScreenNavigationTo(screen)
     }
 
-    /////////////////////////// Login ///////////////////////////
+    // 서버 통신 관련 변수
+
+    /////////////////////////// PointInput ///////////////////////////
+
+    private val _point = MutableStateFlow("")
+    val point: StateFlow<String> get() = _point
+
+    // 눌리는 버튼에 대한 구현
+    fun onPointClickedButton(type: Int) {
+        context?.let {
+            if (type == -1) {
+                if (_point.value != "") _point.value = _point.value.dropLast(1)
+                return
+            }
+            else if (type == -2) _point.value += "00"
+            else _point.value += type.toString()
+
+            // 천만 이하만 충전 가능
+            if (_point.value.toInt() > 10000000) {
+                _point.value = 10000000.toString()
+                // 경고 느낌으로 진동 한번
+                val vibrator = it.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                if (vibrator.hasVibrator()) {
+                    val vibrationEffect =
+                        VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+                    vibrator.vibrate(vibrationEffect)
+                }
+            }
+        }
+    }
+
+
+    /////////////////////////// PasswordInput ///////////////////////////
 
     private val _password = MutableStateFlow("")
-    val password: StateFlow<String> = _password
+    val password: StateFlow<String> get() = _password
 
-    private lateinit var biometricPrompt: BiometricPrompt
-    private lateinit var promptInfo: BiometricPrompt.PromptInfo
-
-    var inputEnable: Boolean = true
-
-    fun authenticationSuccess() {
-        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.MAIN)
-    }
-
-    fun onClickedButton(type: Int) {
+    fun onPasswordClickedButton(type: Int) {
         context?.let {
-            if (!inputEnable) return
+            //if (!inputEnable) return
 
             if (type == -1) {
                 if (_password.value != "") _password.value = _password.value.dropLast(1)
@@ -79,7 +98,7 @@ class BootViewModel(private val context: Context) : ViewModel() {
             if (password.value.length == 6) {
                 val userPassword = sharedPreferences.getString("password", null)
                 if (userPassword == password.value) {
-                    authenticationSuccess()
+                    goScreen(ScreenType.CONFIRM)
                 } else {
                     _password.value = ""
 
@@ -94,5 +113,16 @@ class BootViewModel(private val context: Context) : ViewModel() {
                 }
             }
         }
+    }
+
+    /////////////////////////// Confirm ///////////////////////////
+
+    fun onCharge(chargePoint : String) {
+        val currentBalance = sharedPreferences.getInt("balance", 0)
+        val newBalance = currentBalance + chargePoint.toInt()
+        editor.putInt("balance", newBalance)
+        editor.apply()
+
+        _balance.value = newBalance
     }
 }
