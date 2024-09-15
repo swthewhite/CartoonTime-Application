@@ -23,6 +23,9 @@ import com.alltimes.cartoontime.data.model.ui.ScreenType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.Executor
 
 class MainViewModel(private val context: Context) : ViewModel() {
@@ -44,22 +47,27 @@ class MainViewModel(private val context: Context) : ViewModel() {
 
     val userName = sharedPreferences.getString("name", "")
 
+    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
+    val state: MutableStateFlow<String?> = _state
+
     // MutableStateFlow로 balance 값을 관리
     private val _balance = MutableStateFlow(sharedPreferences.getInt("balance", 8000))
     val balance: StateFlow<Int> = _balance
 
+    private val _enteredTime = MutableStateFlow(sharedPreferences.getString("enteredTime", ""))
+    val enteredTime: MutableStateFlow<String?> = _enteredTime
+
+    fun goActivity(activity: ActivityType) {
+        _activityNavigationTo.value = ActivityNavigationTo(activity)
+    }
+
+    fun goScreen(screen: ScreenType) {
+        _screenNavigationTo.value = ScreenNavigationTo(screen)
+    }
+
     // 서버 통신 관련 변수
 
     /////////////////////////// Main ///////////////////////////
-
-    private val _state = MutableStateFlow("입실 전")
-    val state: StateFlow<String> get() = _state
-
-    private val _enteredTime = MutableStateFlow("2024-09-11 11:11")
-    val enteredTime: StateFlow<String> get() = _enteredTime
-
-    private val _usedTime = MutableStateFlow("1시간 10분")
-    val usedTime: StateFlow<String> get() = _usedTime
 
     fun onSendButtonClick() {
         _activityNavigationTo.value = ActivityNavigationTo(ActivityType.SEND)
@@ -76,9 +84,57 @@ class MainViewModel(private val context: Context) : ViewModel() {
     fun onBookRecommendButtonClick() {
         _screenNavigationTo.value = ScreenNavigationTo(ScreenType.BOOKRECOMMEND)
     }
-    
-    fun onLogin() {
-        _state.value = "입실 완료"
+
+    // 현재 시각을 가져오는 함수
+    private fun getCurrentTime(): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        return sdf.format(Date())
+    }
+
+    // 입실 시간과 현재 시간의 차이를 분 단위로 계산하는 함수
+    private fun calculateUsedTime(enteredTime: String?, currentTime: String): Long {
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        val enteredDate = sdf.parse(enteredTime)
+        val currentDate = sdf.parse(currentTime)
+
+        // 시간 차이를 분 단위로 계산
+        return (currentDate.time - enteredDate.time) / (1000 * 60)
+    }
+
+    // 요금을 계산하는 함수 (예: 분당 100원)
+    private fun calculateCharge(usedTimeMinutes: Long): Int {
+        val chargePerMinute = 100  // 분당 요금
+        return (usedTimeMinutes * chargePerMinute).toInt()
+    }
+
+    fun onLoginOut() {
+
+        println("onLoginOut")
+        println("state: ${_state.value}")
+        println("get state : ${sharedPreferences.getString("state", "입실 전")}")
+
+        val currentTime = getCurrentTime()  // 현재 시각을 가져오는 함수
+        if (_state.value == "입실 전") {
+            // 입실 완료 상태로 변경
+            _state.value = "입실 완료"
+            editor.putString("state", "입실 완료")
+            editor.apply()
+
+            // 현재 시각을 기록
+            _enteredTime.value = currentTime
+            editor.putString("enteredTime", currentTime)
+            editor.apply()
+
+        } else if (_state.value == "입실 완료") {
+
+            // 입실 시 기록된 시간과 현재 시간을 바탕으로 요금 계산
+            val enteredTime = sharedPreferences.getString("enteredTime", currentTime)
+            val usedTimeMinutes = calculateUsedTime(enteredTime, currentTime)  // 사용 시간을 분 단위로 계산
+            _charge.value = calculateCharge(usedTimeMinutes) + 50000 // 요금을 계산
+
+            // 요금 정산 페이지로 넘어가기
+            _screenNavigationTo.value = ScreenNavigationTo(ScreenType.CONFIRM)
+        }
     }
 
     fun serverConnect() {
@@ -152,6 +208,25 @@ class MainViewModel(private val context: Context) : ViewModel() {
                 // 추가 데이터...
             )
         }
+    }
+
+    /////////////////////////// Confirm ///////////////////////////
+
+    private val _charge = MutableStateFlow(0)
+    val charge: StateFlow<Int> = _charge
+
+    fun onConfirmButtonClick() {
+        // 입실 전 상태로 변경
+        _state.value = "입실 전"
+        editor.putString("state", "입실 전")
+        editor.apply()
+
+        // 요금 정산
+        _balance.value -= _charge.value
+        editor.putInt("balance", _balance.value)
+        editor.apply()
+
+        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.MAIN)
     }
 
 }

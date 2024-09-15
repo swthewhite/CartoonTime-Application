@@ -6,6 +6,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,20 +42,58 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
 import androidx.constraintlayout.compose.ConstraintLayout
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
     var currentAnimation by remember { mutableStateOf(1) }
+    var showExitDialog by remember { mutableStateOf(false) }
 
     val name = viewModel.userName
     val balance by viewModel.balance.collectAsState()
     val state by viewModel.state.collectAsState()
     val enteredTime by viewModel.enteredTime.collectAsState()
-    val usedTime by viewModel.usedTime.collectAsState()
+
+    var usedTime by remember { mutableStateOf("") }
+
+// 실시간으로 현재 시간과 enteredTime 차이를 계산하는 LaunchedEffect
+    LaunchedEffect(enteredTime) {
+        while (true) {
+            val formatterWithSeconds = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            val formatterWithoutSeconds = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+            val entered = try {
+                LocalDateTime.parse(enteredTime, formatterWithSeconds)
+            } catch (e: DateTimeParseException) {
+                // 초가 없는 경우
+                LocalDateTime.parse(enteredTime, formatterWithoutSeconds).withSecond(0)
+            }
+
+            val now = LocalDateTime.now()
+
+            // 시간 차이 계산
+            val hours = ChronoUnit.HOURS.between(entered, now)
+            val minutes = ChronoUnit.MINUTES.between(entered, now) % 60
+
+            usedTime = if (hours > 0) {
+                String.format("%d시간 %d분", hours, minutes)
+            } else {
+                String.format("%d분", minutes)
+            }
+
+            delay(1000) // 1초마다 업데이트
+        }
+    }
 
     ConstraintLayout(
         modifier = Modifier
@@ -252,11 +292,18 @@ fun MainScreen(viewModel: MainViewModel) {
                             }
                         }
 
-                        Button(
-                            onClick = { println("퇴실방법") },
-                            colors = ButtonDefaults.buttonColors(Color.Transparent),
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxSize()
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Transparent)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = {
+                                        showExitDialog = true
+                                    }
+                                )
                         ) {
                             Text(
                                 text = "퇴실 방법",
@@ -317,6 +364,11 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
     }
+
+    // 팝업 표시
+    if (showExitDialog) {
+        ExitDialog(onDismiss = { showExitDialog = false })
+    }
 }
 
 @Composable
@@ -339,5 +391,45 @@ fun AnimateSequence(onAnimationChange: (Int) -> Unit) {
         ApproachAnimate() // 첫 번째 애니메이션
     } else {
         PhoneReverseAnimate() // 두 번째 애니메이션
+    }
+}
+
+@Composable
+fun ExitDialog(onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(color = Color(0xFFF4F2EE), shape = RoundedCornerShape(16.dp))
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "퇴실 방법 안내",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Text(
+                    text = "입실방법과 똑같이\n키오스크 가까이에서\n휴대폰을 뒤집으면 퇴실이 완료돼요.",
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5A911)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(text = "닫기", color = Color.Black)
+                }
+            }
+        }
     }
 }
