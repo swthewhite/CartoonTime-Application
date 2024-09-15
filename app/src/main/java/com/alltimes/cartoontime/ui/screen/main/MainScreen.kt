@@ -6,6 +6,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,7 +42,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -48,6 +53,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
     var currentAnimation by remember { mutableStateOf(1) }
+    var showExitDialog by remember { mutableStateOf(false) }
 
     val name = viewModel.userName
     val balance by viewModel.balance.collectAsState()
@@ -252,11 +258,18 @@ fun MainScreen(viewModel: MainViewModel) {
                             }
                         }
 
-                        Button(
-                            onClick = { println("퇴실방법") },
-                            colors = ButtonDefaults.buttonColors(Color.Transparent),
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxSize()
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Transparent)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = {
+                                        showExitDialog = true
+                                    }
+                                )
                         ) {
                             Text(
                                 text = "퇴실 방법",
@@ -317,6 +330,11 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
     }
+
+    // 팝업 표시
+    if (showExitDialog) {
+        ExitDialog(onDismiss = { showExitDialog = false })
+    }
 }
 
 @Composable
@@ -339,5 +357,45 @@ fun AnimateSequence(onAnimationChange: (Int) -> Unit) {
         ApproachAnimate() // 첫 번째 애니메이션
     } else {
         PhoneReverseAnimate() // 두 번째 애니메이션
+    }
+}
+
+@Composable
+fun ExitDialog(onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(color = Color(0xFFF4F2EE), shape = RoundedCornerShape(16.dp))
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "퇴실 방법 안내",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Text(
+                    text = "입실방법과 똑같이\n키오스크 가까이에서\n휴대폰을 뒤집으면 퇴실이 완료돼요.",
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5A911)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(text = "닫기", color = Color.Black)
+                }
+            }
+        }
     }
 }
