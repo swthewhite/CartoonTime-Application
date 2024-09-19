@@ -16,14 +16,26 @@ enum class ScreenType(val navigateTo: (NavController) -> Unit) {
     BOOKRECOMMEND({ navController -> navController.navigate("bookRecommendScreen") }),
     BOOKDETAIL({ navController -> navController.navigate("bookDetailScreen") }),
     
-    // 송금 & 입금
+    // 기타
     SEND({ navController -> navController.navigate("sendScreen") }),
-    PASSWORDINPUT({ navController -> navController.navigate("passwordInputScreen") }),
-    POINTINPUT({ navController -> navController.navigate("pointInputScreen") }),
-    DESCRIPTION({ navController -> navController.navigate("descriptionScreen") }),
-    LOADING({ navController -> navController.navigate("loadingScreen") }),
-    CONFIRM({ navController -> navController.navigate("confirmScreen") }),
     RECEIVE({ navController -> navController.navigate("receiveScreen") }),
+    
+    // 송금
+    SENDPOINTINPUT({ navController -> navController.navigate("sendPointInputScreen") }),
+    SENDPASSWORDINPUT({ navController -> navController.navigate("sendPasswordInputScreen") }),
+    SENDLOADING({ navController -> navController.navigate("sendLoadingScreen") }),
+    SENDDESCRIPTION({ navController -> navController.navigate("sendDescriptionScreen") }),
+    SENDCONFIRM({ navController -> navController.navigate("sendConfirmScreen") }),
+
+    // 입금
+    RECEIVELOADING({ navController -> navController.navigate("receiveLoadingScreen") }),
+    RECEIVECONFIRM({ navController -> navController.navigate("receiveConfirmScreen") }),
+    RECEIVEDESCRIPTION({ navController -> navController.navigate("receiveDescriptionScreen") }),
+
+    // 충전
+    CHARGEPOINTINPUT({ navController -> navController.navigate("chargePointInputScreen") }),
+    CHARGEPASSWORDINPUT({ navController -> navController.navigate("chargePasswordInputScreen") }),
+    CHARGECONFIRM({ navController -> navController.navigate("chargeConfirmScreen") }),
     
     // 회원가입
     SIGNUP({ navController -> navController.navigate("signUpScreen") }),

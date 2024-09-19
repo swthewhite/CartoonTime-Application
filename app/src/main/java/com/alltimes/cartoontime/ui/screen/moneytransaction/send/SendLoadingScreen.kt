@@ -1,37 +1,25 @@
 package com.alltimes.cartoontime.ui.screen.moneytransaction.send
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,18 +27,33 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
-import com.alltimes.cartoontime.ui.screen.composable.SendDescription
+import com.alltimes.cartoontime.ui.screen.composable.SendAnimation
 import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
+import kotlinx.coroutines.delay
 
 @Composable
-fun DescriptionScreen(viewModel: SendViewModel) {
+fun SendLoadingScreen(viewModel: SendViewModel) {
+
+    var dots by remember { mutableStateOf("") }
+
+    // 점의 개수를 0.1초마다 업데이트
+    LaunchedEffect(Unit) {
+        while (true) {
+            dots = when (dots.length) {
+                5 -> ""
+                else -> dots + "."
+            }
+            delay(500) // 0.1초마다 실행
+        }
+    }
+
 
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, animationBox, description0, description1, nextbtn ) = createRefs()
+        val (backButton, title, nextbtn, animationBox, description0, description1) = createRefs()
 
         // 뒤로가기 버튼
         Box(
@@ -94,7 +97,7 @@ fun DescriptionScreen(viewModel: SendViewModel) {
         )
 
         Button(
-            onClick = { viewModel.goScreen(ScreenType.LOADING) },
+            onClick = { viewModel.goScreen(ScreenType.CONFIRM) },
             modifier = Modifier
                 .wrapContentSize()
                 .constrainAs(nextbtn){
@@ -105,44 +108,35 @@ fun DescriptionScreen(viewModel: SendViewModel) {
         ) {
             Text("다음")
         }
-        
+
+        // 점이 변화하는 텍스트
+        Text(
+            text = "포인트 보내는 중 $dots",
+            fontSize = 24.sp,
+            modifier = Modifier
+                .constrainAs(description0) {
+                    bottom.linkTo(parent.bottom, margin = 200.dp)
+                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                },
+            color = Color.Black
+        )
+
         // 애니메이션 뷰
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(500.dp)
+                //.background(Color.Black)
                 .constrainAs(animationBox) {
-                    start.linkTo(parent.start)
+                    top.linkTo(description0.bottom, margin = 10.dp)
                     end.linkTo(parent.end)
-                    top.linkTo(parent.top)
+                    start.linkTo(parent.start)
                     bottom.linkTo(parent.bottom)
                 }
-        ){
-            SendDescription()
+        ) {
+            SendAnimation()
         }
-
-        // 설명
-        Text(
-            text = "송금을 받으시려는 분과",
-            fontSize = 24.sp,
-            modifier = Modifier
-                .constrainAs(description0){
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                    top.linkTo(animationBox.bottom, margin = 30.dp)
-                }
-        )
-
-        Text(
-            text = "핸드폰 앞면을 맞대주세요.",
-            fontSize = 24.sp,
-            modifier = Modifier
-                .constrainAs(description1){
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                    top.linkTo(description0.bottom)
-                }
-        )
-
     }
 }

@@ -4,17 +4,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -30,28 +24,26 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
+import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenType
-import com.alltimes.cartoontime.ui.screen.composable.Numpad
+import com.alltimes.cartoontime.ui.screen.composable.Pointpad
 import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
 
 @Composable
-fun PasswordInputScreen(viewModel: ChargeViewModel) {
+fun ChargePointInputScreen(viewModel: ChargeViewModel) {
 
-    val imgSize = 40.dp
-    val imgSpace = 10.dp
     val btnSpace = 80.dp
 
 
     val point by viewModel.point.collectAsState()
     val balance by viewModel.balance.collectAsState()
-    val password by viewModel.password.collectAsState()
 
     ConstraintLayout(
     modifier = Modifier
     .fillMaxSize()
     .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, description0, description1, passwordRow, description2, numPad, ) = createRefs()
+        val (backButton, title, description0, description1, description2, points, nextButton, numPad, ) = createRefs()
 
         // 뒤로가기 버튼
         Box(
@@ -63,7 +55,7 @@ fun PasswordInputScreen(viewModel: ChargeViewModel) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {
-                        viewModel.goScreen(ScreenType.POINTINPUT)
+                        viewModel.goActivity(ActivityType.MAIN)
                     }
                 )
                 .constrainAs(backButton) {
@@ -94,72 +86,68 @@ fun PasswordInputScreen(viewModel: ChargeViewModel) {
             }
         )
 
+        // 내 지갑에서
         Text(
-            text = "간편 비밀번호",
-            fontSize = 36.sp,
+            text = "내 지갑에",
+            fontSize = 26.sp,
             color = Color.Black,
-            modifier = Modifier
-                .constrainAs(description0) {
-                    top.linkTo(title.bottom, margin = 50.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }
-        )
-
-        Text(
-            text = "비밀번호를 입력해주세요.",
-            fontSize = 16.sp,
-            color = Color.Gray,
-            modifier = Modifier
-                .constrainAs(description1) {
-                    top.linkTo(description0.bottom, margin = 50.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }
-        )
-
-
-        // 비밀번호 6자리 표시
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 50.dp, end = 50.dp)
-                .constrainAs(passwordRow) {
-                    top.linkTo(description1.bottom, margin = 50.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                },
-            horizontalArrangement = Arrangement.Center
-        ) {
-            repeat(6) { i ->
-                Image(
-                    painter = if (password.length > i)
-                        painterResource(id = R.drawable.ic_filled_circle)
-                    else painterResource(id = R.drawable.ic_empty_circle),
-                    contentDescription = "password${i + 1}",
-                    modifier = Modifier
-                        .size(imgSize)
-                        .padding(horizontal = imgSpace)
-                )
+            modifier = Modifier.constrainAs(description0) {
+                top.linkTo(backButton.bottom, margin = 150.dp)
+                start.linkTo(parent.start, margin = 15.dp)
+                width = Dimension.wrapContent
             }
-        }
+        )
 
-        // 비밀번호를 잊으셨나요 ?
-        Box(
-            modifier = Modifier
-                .constrainAs(description2) {
-                    bottom.linkTo(numPad.top, 10.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }
-        ){
+        // 얼마를 충전할까요 ?
+        Text(
+            text = if (point == "") "얼마를 충전할까요?" else "$point 포인트",
+            fontSize = 40.sp,
+            color = if (point == "") Color(0xFFA5A5A5) else Color.Black,
+            modifier = Modifier.constrainAs(points) {
+                top.linkTo(description0.bottom, margin = 20.dp)
+                start.linkTo(parent.start, margin = 15.dp)
+                width = Dimension.wrapContent
+            }
+        )
+
+        // 최소 충전 포인트 알림
+        if (point != "" && point.toInt() < 1000) {
             Text(
-                text = "비밀번호를 잊어버리셨나요?",
-                fontSize = 16.sp,
-                color = Color.Gray,
+                text = "최소 충전 포인트는 1000포인트입니다.",
+                fontSize = 20.sp,
+                color = Color.Red,
+                modifier = Modifier.constrainAs(description2) {
+                    top.linkTo(points.bottom, margin = 20.dp)
+                    start.linkTo(parent.start, margin = 15.dp)
+                    width = Dimension.wrapContent
+                }
             )
         }
 
+        // 다음 버튼 visible
+        if (point != "" && point.toInt() >= 1000) {
+            Button(
+                onClick = {
+                    viewModel.goScreen(ScreenType.PASSWORDINPUT)
+                },
+                colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
+                modifier = Modifier
+                    .width(350.dp)
+                    .height(50.dp)
+
+                    .constrainAs(nextButton) {
+                        bottom.linkTo(numPad.top, margin = 10.dp)
+                        start.linkTo(parent.start, margin = 15.dp)
+                        end.linkTo(parent.end, margin = 15.dp)
+                    }
+            ) {
+                Text(
+                    text = "다음",
+                    fontSize = 20.sp,
+                    color = Color.Black
+                )
+            }
+        }
 
         // 숫자패드
         // 0 ~ 9, 삭제 버튼
@@ -172,8 +160,7 @@ fun PasswordInputScreen(viewModel: ChargeViewModel) {
                     end.linkTo(parent.end)
                 }
         ) {
-            Numpad(viewModel)
+            Pointpad(viewModel)
         }
     }
-
 }

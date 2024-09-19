@@ -11,9 +11,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenType
-import com.alltimes.cartoontime.ui.screen.moneytransaction.charge.PointInputScreen
-import com.alltimes.cartoontime.ui.screen.moneytransaction.charge.ConfirmScreen
-import com.alltimes.cartoontime.ui.screen.moneytransaction.charge.PasswordInputScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.charge.ChargeConfirmScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.charge.ChargePasswordInputScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.charge.ChargePointInputScreen
 import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
@@ -30,10 +30,10 @@ class ChargeActivity : ComponentActivity() {
         setContent {
             navController = rememberNavController() // 전역 변수에 저장
 
-            NavHost(navController as NavHostController, startDestination = "pointInputScreen") {
-                composable("pointInputScreen") { PointInputScreen(viewModel = viewModel) }
-                composable("passwordInputScreen") { PasswordInputScreen(viewModel = viewModel)  }
-                composable("confirmScreen") { ConfirmScreen(viewModel = viewModel) }
+            NavHost(navController as NavHostController, startDestination = "chargePointInputScreen") {
+                composable("chargePointInputScreen") { ChargePointInputScreen(viewModel = viewModel) }
+                composable("chargePasswordInputScreen") { ChargePasswordInputScreen(viewModel = viewModel)  }
+                composable("chargeConfirmScreen") { ChargeConfirmScreen(viewModel = viewModel) }
             }
         }
 
@@ -66,9 +66,9 @@ class ChargeActivity : ComponentActivity() {
         val currentRoute = navController.currentBackStackEntry?.destination?.route
 
         val route = when (screenType) {
-            ScreenType.CONFIRM -> "confirmScreen"
-            ScreenType.PASSWORDINPUT -> "passwordInputScreen"
-            ScreenType.POINTINPUT -> "pointInputScreen"
+            ScreenType.CHARGECONFIRM -> "chargeConfirmScreen"
+            ScreenType.CHARGEPASSWORDINPUT -> "chargePasswordInputScreen"
+            ScreenType.CHARGEPOINTINPUT -> "chargePointInputScreen"
             else -> return
         }
 

@@ -11,9 +11,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenType
-import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ConfirmScreen
-import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.DescriptionScreen
-import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.LoadingScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveConfirmScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveDescriptionScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveLoadingScreen
 import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
@@ -30,10 +30,10 @@ class ReceiveActivity : ComponentActivity() {
         setContent {
             navController = rememberNavController() // 전역 변수에 저장
 
-            NavHost(navController as NavHostController, startDestination = "descriptionScreen") {
-                composable("descriptionScreen") { DescriptionScreen(viewModel = viewModel) }
-                composable("loadingScreen") { LoadingScreen(viewModel = viewModel) }
-                composable("confirmScreen") { ConfirmScreen(viewModel = viewModel) }
+            NavHost(navController as NavHostController, startDestination = "receiveDescriptionScreen") {
+                composable("receiveDescriptionScreen") { ReceiveDescriptionScreen(viewModel = viewModel) }
+                composable("receiveLoadingScreen") { ReceiveLoadingScreen(viewModel = viewModel) }
+                composable("receiveConfirmScreen") { ReceiveConfirmScreen(viewModel = viewModel) }
             }
         }
 
@@ -66,9 +66,9 @@ class ReceiveActivity : ComponentActivity() {
         val currentRoute = navController.currentBackStackEntry?.destination?.route
 
         val route = when (screenType) {
-            ScreenType.DESCRIPTION -> "descriptionScreen"
-            ScreenType.LOADING -> "loadingScreen"
-            ScreenType.CONFIRM -> "confirmScreen"
+            ScreenType.RECEIVEDESCRIPTION -> "receiveDescriptionScreen"
+            ScreenType.RECEIVELOADING -> "receiveLoadingScreen"
+            ScreenType.RECEIVECONFIRM -> "receiveConfirmScreen"
             else -> return
         }
 

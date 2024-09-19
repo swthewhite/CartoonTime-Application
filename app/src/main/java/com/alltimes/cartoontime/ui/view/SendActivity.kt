@@ -11,11 +11,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenType
-import com.alltimes.cartoontime.ui.screen.moneytransaction.send.ConfirmScreen
-import com.alltimes.cartoontime.ui.screen.moneytransaction.send.DescriptionScreen
-import com.alltimes.cartoontime.ui.screen.moneytransaction.send.LoadingScreen
-import com.alltimes.cartoontime.ui.screen.moneytransaction.send.PasswordInputScreen
-import com.alltimes.cartoontime.ui.screen.moneytransaction.send.PointInputScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendConfirmScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendDescriptionScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendLoadingScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendPasswordInputScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendPointInputScreen
 import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
@@ -32,12 +32,12 @@ class SendActivity : ComponentActivity() {
         setContent {
             navController = rememberNavController() // 전역 변수에 저장
 
-            NavHost(navController as NavHostController, startDestination = "pointInputScreen") {
-                composable("pointInputScreen") { PointInputScreen(viewModel = viewModel) }
-                composable("passwordInputScreen") {PasswordInputScreen(viewModel = viewModel)}
-                composable("descriptionScreen") {DescriptionScreen(viewModel = viewModel)}
-                composable("loadingScreen") { LoadingScreen(viewModel = viewModel)}
-                composable("confirmScreen") { ConfirmScreen(viewModel = viewModel)}
+            NavHost(navController as NavHostController, startDestination = "sendPointInputScreen") {
+                composable("sendPointInputScreen") { SendPointInputScreen(viewModel = viewModel) }
+                composable("sendPasswordInputScreen") { SendPasswordInputScreen(viewModel = viewModel)}
+                composable("sendDescriptionScreen") { SendDescriptionScreen(viewModel = viewModel)}
+                composable("sendLoadingScreen") { SendLoadingScreen(viewModel = viewModel)}
+                composable("sendConfirmScreen") { SendConfirmScreen(viewModel = viewModel)}
             }
         }
 
@@ -70,11 +70,11 @@ class SendActivity : ComponentActivity() {
         val currentRoute = navController.currentBackStackEntry?.destination?.route
 
         val route = when (screenType) {
-            ScreenType.POINTINPUT -> "pointInputScreen"
-            ScreenType.PASSWORDINPUT -> "passwordInputScreen"
-            ScreenType.DESCRIPTION -> "descriptionScreen"
-            ScreenType.LOADING -> "loadingScreen"
-            ScreenType.CONFIRM -> "confirmScreen"
+            ScreenType.SENDPOINTINPUT -> "sendPointInputScreen"
+            ScreenType.SENDPASSWORDINPUT -> "sendPasswordInputScreen"
+            ScreenType.SENDDESCRIPTION -> "sendDescriptionScreen"
+            ScreenType.SENDLOADING -> "sendLoadingScreen"
+            ScreenType.SENDCONFIRM -> "sendConfirmScreen"
             else -> return
         }
 
