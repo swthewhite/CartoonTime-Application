@@ -14,10 +14,6 @@ import com.alltimes.cartoontime.data.model.Permissions
 import com.alltimes.cartoontime.data.model.BLEConstants
 import com.alltimes.cartoontime.data.network.uwb.UwbControleeCommunicator
 
-val CTF_SERVICE_UUID: UUID = UUID.fromString("8c380000-10bd-4fdb-ba21-1922d6cf860d")
-val PASSWORD_CHARACTERISTIC_UUID: UUID = UUID.fromString("8c380001-10bd-4fdb-ba21-1922d6cf860d")
-val NAME_CHARACTERISTIC_UUID: UUID = UUID.fromString("8c380002-10bd-4fdb-ba21-1922d6cf860d")
-
 @Suppress("DEPRECATION")
 class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
     // Context와 BluetoothDevice를 받아서 초기화
@@ -163,7 +159,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     fun readCharacteristic() {
         Log.d("bluetooth", "ReadCharacteristic")
-        val service = gatt?.getService(BLEConstants.UWB_SERVICE_UUID)
+        val service = gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
         val characteristic = service?.getCharacteristic(BLEConstants.CONTROLEE_CHARACTERISTIC_UUID)
         if (characteristic != null) {
             val success = gatt?.readCharacteristic(characteristic)
@@ -174,7 +170,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     //  특성 쓰기 함수
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     fun writeCharacteristic() {
-        val service = gatt?.getService(BLEConstants.UWB_SERVICE_UUID)
+        val service = gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
         val characteristic = service?.getCharacteristic(BLEConstants.CONTROLLER_CHARACTERISTIC_UUID)
         if (characteristic != null) {
             val uwbAddress = uwbCommunicator.getUwbAddress()
