@@ -14,6 +14,7 @@ import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
+import com.alltimes.cartoontime.data.model.BLEConstants
 import com.alltimes.cartoontime.data.model.UwbAddressModel
 import com.alltimes.cartoontime.data.network.uwb.UwbControllerCommunicator
 import kotlinx.coroutines.Dispatchers
@@ -28,10 +29,6 @@ class BLEServerManager(private val context: Context) {
 
     private val bluetooth = context.getSystemService(Context.BLUETOOTH_SERVICE)
             as? BluetoothManager ?: throw Exception("This device doesn't support Bluetooth")
-
-    private val serviceUuid = UUID.fromString("8c380000-10bd-4fdb-ba21-1922d6cf860d")
-    private val passwordCharUuid = UUID.fromString("8c380001-10bd-4fdb-ba21-1922d6cf860d")
-    private val nameCharUuid = UUID.fromString("8c380002-10bd-4fdb-ba21-1922d6cf860d")
 
     private var server: BluetoothGattServer? = null
     private var ctfService: BluetoothGattService? = null
@@ -183,16 +180,16 @@ class BLEServerManager(private val context: Context) {
             }
         })
 
-        val service = BluetoothGattService(serviceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+        val service = BluetoothGattService(BLEConstants.UWB_KIOSK_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
 
         val passwordCharacteristic = BluetoothGattCharacteristic(
-            passwordCharUuid,
+            BLEConstants.CONTROLEE_CHARACTERISTIC_UUID,
             BluetoothGattCharacteristic.PROPERTY_READ,
             BluetoothGattCharacteristic.PERMISSION_READ
         )
 
         val nameCharacteristic = BluetoothGattCharacteristic(
-            nameCharUuid,
+            BLEConstants.CONTROLLER_CHARACTERISTIC_UUID,
             BluetoothGattCharacteristic.PROPERTY_WRITE,
             BluetoothGattCharacteristic.PERMISSION_WRITE
         )
