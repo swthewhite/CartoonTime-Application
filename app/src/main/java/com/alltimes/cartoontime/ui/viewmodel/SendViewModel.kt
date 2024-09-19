@@ -125,7 +125,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             onPasswordComplete = { password: String ->
                 val userPassword = sharedPreferences.getString("password", null)
                 if (userPassword == password) {
-                    goScreen(ScreenType.DESCRIPTION)
+                    goScreen(ScreenType.SENDDESCRIPTION)
                 } else {
                     numPadClickHandler.clearPassword()
                     showPasswordError()

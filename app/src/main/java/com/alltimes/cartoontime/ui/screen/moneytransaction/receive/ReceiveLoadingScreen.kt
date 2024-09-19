@@ -64,7 +64,7 @@ fun ReceiveLoadingScreen(viewModel: ReceiveViewModel) {
         )
 
         Button(
-            onClick = { viewModel.goScreen(ScreenType.CONFIRM) },
+            onClick = { viewModel.goScreen(ScreenType.RECEIVECONFIRM) },
             modifier = Modifier
                 .wrapContentSize()
                 .constrainAs(nextbtn){

@@ -141,7 +141,7 @@ fun SendPointInputScreen(viewModel: SendViewModel) {
         if (point != "") {
             Button(
                 onClick = {
-                    viewModel.goScreen(ScreenType.PASSWORDINPUT)
+                    viewModel.goScreen(ScreenType.SENDPASSWORDINPUT)
                 },
                 colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
                 modifier = Modifier

@@ -98,7 +98,7 @@ class ChargeViewModel(private val context: Context) : ViewModel(), NumpadAction,
             onPasswordComplete = { password: String ->
                 val userPassword = sharedPreferences.getString("password", null)
                 if (userPassword == password) {
-                    goScreen(ScreenType.DESCRIPTION)
+                    goScreen(ScreenType.CHARGECONFIRM)
                 } else {
                     numPadClickHandler.clearPassword()
                     showPasswordError()

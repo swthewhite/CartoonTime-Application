@@ -46,7 +46,7 @@ fun SendDescriptionScreen(viewModel: SendViewModel) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {
-                        viewModel.goScreen(ScreenType.POINTINPUT)
+                        viewModel.goScreen(ScreenType.SENDPOINTINPUT)
                     }
                 )
                 .constrainAs(backButton) {
@@ -78,7 +78,7 @@ fun SendDescriptionScreen(viewModel: SendViewModel) {
         )
 
         Button(
-            onClick = { viewModel.goScreen(ScreenType.LOADING) },
+            onClick = { viewModel.goScreen(ScreenType.SENDLOADING) },
             modifier = Modifier
                 .wrapContentSize()
                 .constrainAs(nextbtn){

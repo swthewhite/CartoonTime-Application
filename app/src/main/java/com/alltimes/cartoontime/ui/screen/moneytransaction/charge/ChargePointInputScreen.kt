@@ -128,7 +128,7 @@ fun ChargePointInputScreen(viewModel: ChargeViewModel) {
         if (point != "" && point.toInt() >= 1000) {
             Button(
                 onClick = {
-                    viewModel.goScreen(ScreenType.PASSWORDINPUT)
+                    viewModel.goScreen(ScreenType.CHARGEPASSWORDINPUT)
                 },
                 colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
                 modifier = Modifier

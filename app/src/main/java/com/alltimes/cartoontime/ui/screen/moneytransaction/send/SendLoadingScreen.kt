@@ -65,7 +65,7 @@ fun SendLoadingScreen(viewModel: SendViewModel) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {
-                        viewModel.goScreen(ScreenType.POINTINPUT)
+                        viewModel.goScreen(ScreenType.SENDPOINTINPUT)
                     }
                 )
                 .constrainAs(backButton) {
@@ -97,7 +97,7 @@ fun SendLoadingScreen(viewModel: SendViewModel) {
         )
 
         Button(
-            onClick = { viewModel.goScreen(ScreenType.CONFIRM) },
+            onClick = { viewModel.goScreen(ScreenType.SENDCONFIRM) },
             modifier = Modifier
                 .wrapContentSize()
                 .constrainAs(nextbtn){

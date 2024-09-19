@@ -59,7 +59,7 @@ fun ChargePasswordInputScreen(viewModel: ChargeViewModel) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {
-                        viewModel.goScreen(ScreenType.POINTINPUT)
+                        viewModel.goScreen(ScreenType.CHARGEPOINTINPUT)
                     }
                 )
                 .constrainAs(backButton) {
