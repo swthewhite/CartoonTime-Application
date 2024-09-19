@@ -5,13 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -29,11 +26,11 @@ import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.composable.Pointpad
 import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
-import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 
 @Composable
-fun PointInputScreen(viewModel: ChargeViewModel) {
+fun ChargePointInputScreen(viewModel: ChargeViewModel) {
 
     val btnSpace = 80.dp
 
@@ -131,7 +128,7 @@ fun PointInputScreen(viewModel: ChargeViewModel) {
         if (point != "" && point.toInt() >= 1000) {
             Button(
                 onClick = {
-                    viewModel.goScreen(ScreenType.PASSWORDINPUT)
+                    viewModel.goScreen(ScreenType.CHARGEPASSWORDINPUT)
                 },
                 colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
                 modifier = Modifier
@@ -154,7 +151,7 @@ fun PointInputScreen(viewModel: ChargeViewModel) {
 
         // 숫자패드
         // 0 ~ 9, 삭제 버튼
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .constrainAs(numPad) {
@@ -163,66 +160,7 @@ fun PointInputScreen(viewModel: ChargeViewModel) {
                     end.linkTo(parent.end)
                 }
         ) {
-            // 숫자 버튼들
-            (1..9 step 3).forEach { row ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    (row until row + 3).forEach { num ->
-                        Button(
-                            onClick = { viewModel.onPointClickedButton(num) },
-                            shape = RoundedCornerShape(0.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF4F2EE)),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(btnSpace)
-                        ) {
-                            Text(
-                                text = num.toString(),
-                                color = Color(0xFF000000),
-                                fontSize = 40.sp
-                            )
-                        }
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(
-                    onClick = { viewModel.onPointClickedButton(-2) },
-                    shape = RoundedCornerShape(0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF4F2EE)),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnSpace)
-                ) {
-                    Text("00", color = Color(0xFF000000), fontSize = 40.sp)
-                }
-                Button(
-                    onClick = { viewModel.onPointClickedButton(0) },
-                    shape = RoundedCornerShape(0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF4F2EE)),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnSpace)
-                ) {
-                    Text("0", color = Color(0xFF000000), fontSize = 40.sp)
-                }
-                Button(
-                    onClick = { viewModel.onPointClickedButton(-1) },
-                    shape = RoundedCornerShape(0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF4F2EE)),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnSpace)
-                ) {
-                    Text("<-", color = Color(0xFF000000), fontSize = 40.sp)
-                }
-            }
+            Pointpad(viewModel)
         }
-
     }
 }

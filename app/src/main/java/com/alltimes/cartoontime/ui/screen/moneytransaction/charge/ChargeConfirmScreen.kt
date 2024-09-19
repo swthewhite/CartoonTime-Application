@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.ui.screen.moneytransaction.receive
+package com.alltimes.cartoontime.ui.screen.moneytransaction.charge
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -20,11 +20,14 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ActivityType
-import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
+import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
 
 @Composable
-fun ConfirmScreen(viewModel: ReceiveViewModel) {
+fun ChargeConfirmScreen(viewModel: ChargeViewModel) {
 
+    val name = viewModel.userName
+
+    val point by viewModel.point.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -36,7 +39,7 @@ fun ConfirmScreen(viewModel: ReceiveViewModel) {
 
         // 상단 타이틀
         Text(
-            text = "Send Witch",
+            text = "포인트 충전하기",
             fontSize = 30.sp,
             color = Color.Black,
             modifier = Modifier.constrainAs(title) {
@@ -61,8 +64,7 @@ fun ConfirmScreen(viewModel: ReceiveViewModel) {
         )
 
         Text(
-            // 통신으로 받아와야하는 이름 정보
-            text = "상빈님 지갑에서",
+            text = "${name}님 지갑에",
             fontSize = 20.sp,
             modifier = Modifier
                 .constrainAs(description0) {
@@ -73,8 +75,7 @@ fun ConfirmScreen(viewModel: ReceiveViewModel) {
         )
 
         Text(
-            // 통신 혹은 내 지갑으로 들어온 돈 정보
-            text = "000 포인트를",
+            text = "${point} 포인트를",
             fontSize = 20.sp,
             modifier = Modifier
                 .constrainAs(description1) {
@@ -85,7 +86,7 @@ fun ConfirmScreen(viewModel: ReceiveViewModel) {
         )
 
         Text(
-            text = "받았어요.",
+            text = "충전했어요.",
             fontSize = 20.sp,
             modifier = Modifier
                 .constrainAs(description2) {
@@ -98,6 +99,7 @@ fun ConfirmScreen(viewModel: ReceiveViewModel) {
         Button(
             onClick = {
                 viewModel.goActivity(ActivityType.MAIN)
+                viewModel.onCharge(point)
             },
             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
             modifier = Modifier

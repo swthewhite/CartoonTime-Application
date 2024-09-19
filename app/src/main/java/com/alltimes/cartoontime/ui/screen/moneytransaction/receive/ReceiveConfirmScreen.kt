@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.ui.screen.moneytransaction.charge
+package com.alltimes.cartoontime.ui.screen.moneytransaction.receive
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -9,8 +9,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -20,15 +18,11 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ActivityType
-import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
-import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
+import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
 
 @Composable
-fun ConfirmScreen(viewModel: ChargeViewModel) {
+fun ReceiveConfirmScreen(viewModel: ReceiveViewModel) {
 
-    val name = viewModel.userName
-
-    val point by viewModel.point.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -40,7 +34,7 @@ fun ConfirmScreen(viewModel: ChargeViewModel) {
 
         // 상단 타이틀
         Text(
-            text = "포인트 충전하기",
+            text = "Send Witch",
             fontSize = 30.sp,
             color = Color.Black,
             modifier = Modifier.constrainAs(title) {
@@ -65,7 +59,8 @@ fun ConfirmScreen(viewModel: ChargeViewModel) {
         )
 
         Text(
-            text = "${name}님 지갑에",
+            // 통신으로 받아와야하는 이름 정보
+            text = "상빈님 지갑에서",
             fontSize = 20.sp,
             modifier = Modifier
                 .constrainAs(description0) {
@@ -76,7 +71,8 @@ fun ConfirmScreen(viewModel: ChargeViewModel) {
         )
 
         Text(
-            text = "${point} 포인트를",
+            // 통신 혹은 내 지갑으로 들어온 돈 정보
+            text = "000 포인트를",
             fontSize = 20.sp,
             modifier = Modifier
                 .constrainAs(description1) {
@@ -87,7 +83,7 @@ fun ConfirmScreen(viewModel: ChargeViewModel) {
         )
 
         Text(
-            text = "충전했어요.",
+            text = "받았어요.",
             fontSize = 20.sp,
             modifier = Modifier
                 .constrainAs(description2) {
@@ -100,7 +96,6 @@ fun ConfirmScreen(viewModel: ChargeViewModel) {
         Button(
             onClick = {
                 viewModel.goActivity(ActivityType.MAIN)
-                viewModel.onCharge(point)
             },
             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
             modifier = Modifier

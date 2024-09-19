@@ -8,14 +8,18 @@ import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.alltimes.cartoontime.common.NumpadAction
+import com.alltimes.cartoontime.common.PointpadAction
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
+import com.alltimes.cartoontime.ui.handler.PointPadClickHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class ChargeViewModel(private val context: Context) : ViewModel() {
+class ChargeViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -50,68 +54,65 @@ class ChargeViewModel(private val context: Context) : ViewModel() {
 
     /////////////////////////// PointInput ///////////////////////////
 
-    private val _point = MutableStateFlow("")
-    val point: StateFlow<String> get() = _point
+    override fun onPointClickedButton(type: Int) {
+        pointPadClickHandler.onClickedButton(type, balance.value)
+    }
+
+    val point: StateFlow<String> get() = pointPadClickHandler.point
 
     // 눌리는 버튼에 대한 구현
-    fun onPointClickedButton(type: Int) {
-        context?.let {
-            if (type == -1) {
-                if (_point.value != "") _point.value = _point.value.dropLast(1)
-                return
-            }
-            else if (type == -2) _point.value += "00"
-            else _point.value += type.toString()
-
-            // 천만 이하만 충전 가능
-            if (_point.value.toInt() > 10000000) {
-                _point.value = 10000000.toString()
-                // 경고 느낌으로 진동 한번
-                val vibrator = it.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if (vibrator.hasVibrator()) {
-                    val vibrationEffect =
-                        VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
-                    vibrator.vibrate(vibrationEffect)
+    private val pointPadClickHandler: PointPadClickHandler by lazy {
+        PointPadClickHandler(
+            context = context,
+            isPointExceeded = {
+                // 천만 이하만 충전 가능
+                if (point.value.toInt() > 10000000) {
+                    pointPadClickHandler.setPoint("10000000")
+                    showPointError()
                 }
             }
+        )
+    }
+
+    private fun showPointError() {
+        Toast.makeText(context, "충전 가능한 포인트가 초과되었습니다", Toast.LENGTH_SHORT).show()
+        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        if (vibrator.hasVibrator()) {
+            val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            vibrator.vibrate(vibrationEffect)
         }
     }
 
 
     /////////////////////////// PasswordInput ///////////////////////////
 
-    private val _password = MutableStateFlow("")
-    val password: StateFlow<String> get() = _password
+    override fun onClickedButton(type: Int) {
+        numPadClickHandler.onClickedButton(type)
+    }
 
-    fun onPasswordClickedButton(type: Int) {
-        context?.let {
-            //if (!inputEnable) return
+    val password: StateFlow<String> get() = numPadClickHandler.password
 
-            if (type == -1) {
-                if (_password.value != "") _password.value = _password.value.dropLast(1)
-                return
-            }
-            else _password.value += type.toString()
-
-
-            // 6자리 모두 입력시 비밀번호와 비교
-            if (password.value.length == 6) {
+    private val numPadClickHandler: NumPadClickHandler by lazy {
+        NumPadClickHandler(
+            context = context,
+            onPasswordComplete = { password: String ->
                 val userPassword = sharedPreferences.getString("password", null)
-                if (userPassword == password.value) {
-                    goScreen(ScreenType.CONFIRM)
+                if (userPassword == password) {
+                    goScreen(ScreenType.CHARGECONFIRM)
                 } else {
-                    _password.value = ""
-
-                    Toast.makeText(it, "비밀번호가 다릅니다", Toast.LENGTH_SHORT).show()
-                    val vibrator = it.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                    if (vibrator.hasVibrator()) {
-                        val vibrationEffect =
-                            VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
-                        vibrator.vibrate(vibrationEffect)
-                    }
-
+                    numPadClickHandler.clearPassword()
+                    showPasswordError()
                 }
             }
+        )
+    }
+
+    private fun showPasswordError() {
+        Toast.makeText(context, "비밀번호가 다릅니다", Toast.LENGTH_SHORT).show()
+        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        if (vibrator.hasVibrator()) {
+            val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            vibrator.vibrate(vibrationEffect)
         }
     }
 

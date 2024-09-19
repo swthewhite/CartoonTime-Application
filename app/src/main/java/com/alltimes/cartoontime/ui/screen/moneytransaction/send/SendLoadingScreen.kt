@@ -28,12 +28,11 @@ import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.composable.SendAnimation
-import com.alltimes.cartoontime.ui.screen.composable.SendDescription
 import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun LoadingScreen(viewModel: SendViewModel) {
+fun SendLoadingScreen(viewModel: SendViewModel) {
 
     var dots by remember { mutableStateOf("") }
 
@@ -66,7 +65,7 @@ fun LoadingScreen(viewModel: SendViewModel) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {
-                        viewModel.goScreen(ScreenType.POINTINPUT)
+                        viewModel.goScreen(ScreenType.SENDPOINTINPUT)
                     }
                 )
                 .constrainAs(backButton) {
@@ -98,7 +97,7 @@ fun LoadingScreen(viewModel: SendViewModel) {
         )
 
         Button(
-            onClick = { viewModel.goScreen(ScreenType.CONFIRM) },
+            onClick = { viewModel.goScreen(ScreenType.SENDCONFIRM) },
             modifier = Modifier
                 .wrapContentSize()
                 .constrainAs(nextbtn){

@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.ui.screen.moneytransaction.receive
+package com.alltimes.cartoontime.ui.screen.moneytransaction.send
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,13 +22,12 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.composable.SendDescription
-import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 
 @Composable
-fun DescriptionScreen(viewModel: ReceiveViewModel) {
+fun SendDescriptionScreen(viewModel: SendViewModel) {
 
     ConstraintLayout(
         modifier = Modifier
@@ -47,7 +46,7 @@ fun DescriptionScreen(viewModel: ReceiveViewModel) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {
-                        viewModel.goActivity(ActivityType.MAIN)
+                        viewModel.goScreen(ScreenType.SENDPOINTINPUT)
                     }
                 )
                 .constrainAs(backButton) {
@@ -79,7 +78,7 @@ fun DescriptionScreen(viewModel: ReceiveViewModel) {
         )
 
         Button(
-            onClick = { viewModel.goScreen(ScreenType.LOADING) },
+            onClick = { viewModel.goScreen(ScreenType.SENDLOADING) },
             modifier = Modifier
                 .wrapContentSize()
                 .constrainAs(nextbtn){
@@ -90,7 +89,7 @@ fun DescriptionScreen(viewModel: ReceiveViewModel) {
         ) {
             Text("다음")
         }
-
+        
         // 애니메이션 뷰
         Box(
             modifier = Modifier
@@ -108,7 +107,7 @@ fun DescriptionScreen(viewModel: ReceiveViewModel) {
 
         // 설명
         Text(
-            text = "송금을 하시려는 분과",
+            text = "송금을 받으시려는 분과",
             fontSize = 24.sp,
             modifier = Modifier
                 .constrainAs(description0){

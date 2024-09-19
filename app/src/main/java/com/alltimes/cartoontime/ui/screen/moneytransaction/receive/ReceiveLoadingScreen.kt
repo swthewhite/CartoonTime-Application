@@ -1,9 +1,6 @@
 package com.alltimes.cartoontime.ui.screen.moneytransaction.receive
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,20 +17,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.composable.ReceiveAnimation
-import com.alltimes.cartoontime.ui.screen.composable.SendAnimation
 import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun LoadingScreen(viewModel: ReceiveViewModel) {
+fun ReceiveLoadingScreen(viewModel: ReceiveViewModel) {
 
     var dots by remember { mutableStateOf("") }
 
@@ -70,7 +64,7 @@ fun LoadingScreen(viewModel: ReceiveViewModel) {
         )
 
         Button(
-            onClick = { viewModel.goScreen(ScreenType.CONFIRM) },
+            onClick = { viewModel.goScreen(ScreenType.RECEIVECONFIRM) },
             modifier = Modifier
                 .wrapContentSize()
                 .constrainAs(nextbtn){
