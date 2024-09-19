@@ -31,6 +31,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.composable.Numpad
 import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
 
 @Composable
@@ -162,7 +163,7 @@ fun PasswordInputScreen(viewModel: ChargeViewModel) {
 
         // 숫자패드
         // 0 ~ 9, 삭제 버튼
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .constrainAs(numPad) {
@@ -171,65 +172,7 @@ fun PasswordInputScreen(viewModel: ChargeViewModel) {
                     end.linkTo(parent.end)
                 }
         ) {
-            // 숫자 버튼들
-            (1..9 step 3).forEach { row ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    (row until row + 3).forEach { num ->
-                        Button(
-                            onClick = { viewModel.onPasswordClickedButton(num) },
-                            shape = RoundedCornerShape(0.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(btnSpace)
-                        ) {
-                            Text(
-                                text = num.toString(),
-                                color = Color(0xFF000000),
-                                fontSize = 40.sp
-                            )
-                        }
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Button(
-                    onClick = {  },
-                    shape = RoundedCornerShape(0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnSpace)
-                ) {
-                    Text(" ", color = Color(0xFF000000), fontSize = 40.sp)
-                }
-                Button(
-                    onClick = { viewModel.onPasswordClickedButton(0) },
-                    shape = RoundedCornerShape(0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnSpace)
-                ) {
-                    Text("0", color = Color(0xFF000000), fontSize = 40.sp)
-                }
-                Button(
-                    onClick = { viewModel.onPasswordClickedButton(-1) },
-                    shape = RoundedCornerShape(0.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(btnSpace)
-                ) {
-                    Text("<-", color = Color(0xFF000000), fontSize = 40.sp)
-                }
-            }
+            Numpad(viewModel)
         }
     }
 

@@ -54,7 +54,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
     private val _balance = MutableStateFlow(sharedPreferences.getInt("balance", 8000))
     val balance: StateFlow<Int> = _balance
 
-    private val _enteredTime = MutableStateFlow(sharedPreferences.getString("enteredTime", ""))
+    private val _enteredTime = MutableStateFlow(sharedPreferences.getString("enteredTime", "2024-08-19 09:00:00"))
     val enteredTime: MutableStateFlow<String?> = _enteredTime
 
     fun goActivity(activity: ActivityType) {

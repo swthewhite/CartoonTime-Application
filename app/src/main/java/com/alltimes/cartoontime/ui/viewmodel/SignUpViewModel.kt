@@ -9,14 +9,16 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.alltimes.cartoontime.common.NumpadAction
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class SignUpViewModel(private val context: Context?) : ViewModel() {
+class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -164,53 +166,46 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
 
     /////////////////////////// PasswordSetting ///////////////////////////
 
-    private val _password = MutableStateFlow("")
-    val password: StateFlow<String> = _password
-
     private val _passwordCheck = MutableStateFlow(false)
     val passwordCheck: StateFlow<Boolean> = _passwordCheck
 
     var inputEnable: Boolean = true
     var PassWord = ""
 
-    // 눌리는 버튼에 대한 구현
-    fun onClickedButton(type: Int) {
+    override fun onClickedButton(type: Int) {
+        numPadClickHandler.onClickedButton(type)
+    }
 
-        if (!inputEnable) return
+    val password: StateFlow<String> get() = numPadClickHandler.password
 
-        if (type == -1) {
-            if (_password.value != "") _password.value = _password.value.dropLast(1)
-            return
-        }
-        else _password.value += type.toString()
-
-
-        // 6자리 모두 입력시 한번 더 체크
-        if (password.value.length == 6) {
-            if (!passwordCheck.value) {
-                _passwordCheck.value = true
-                PassWord = password.value
-                _password.value = ""
+    private val numPadClickHandler: NumPadClickHandler by lazy {
+        NumPadClickHandler(
+            context = context!!,
+            onPasswordComplete = { password: String ->
+                if (!passwordCheck.value) {
+                    _passwordCheck.value = true
+                    PassWord = password
+                    numPadClickHandler.clearPassword()
+                }
+                else
+                {
+                    inputEnable = false
+                    checkPassword()
+                }
             }
-            else
-            {
-                inputEnable = false
-                checkPassword()
-            }
-        }
+        )
     }
 
     // 입력된 비밀번호 체크
     private fun checkPassword() {
         context?.let {
-            if (_password.value == PassWord) {
-
+            if (password.value == PassWord) {
                 // 회원가입이라면 naverlogin으로 screen 전환
                 // 로그인이라면 main으로 activity 전환
                 if (isSignUp) _screenNavigationTo.value = ScreenNavigationTo(ScreenType.NAVERLOGIN)
                 else _activityNavigationTo.value = ActivityNavigationTo(ActivityType.MAIN)
 
-                editor?.putString("password", _password.value)
+                editor?.putString("password", password.value)
                 editor?.apply()
 
                 Toast.makeText(it, "동일합니다", Toast.LENGTH_SHORT).show()
@@ -225,7 +220,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel() {
                 inputEnable = true
                 _passwordCheck.value = false
                 PassWord = ""
-                _password.value = ""
+                numPadClickHandler.clearPassword()
             }
         }
     }
