@@ -475,3 +475,63 @@ fun deviceFindingAnimation() {
         )
     }
 }
+
+@Composable
+fun LoadingAnimation() {
+// 0번부터 15번까지의 이미지 리소스 ID 리스트
+    val imageIds = (0..15).map { index ->
+        when (index) {
+            0 -> R.drawable.ic_loading0
+            1 -> R.drawable.ic_loading1
+            2 -> R.drawable.ic_loading2
+            3 -> R.drawable.ic_loading3
+            4 -> R.drawable.ic_loading4
+            5 -> R.drawable.ic_loading5
+            6 -> R.drawable.ic_loading6
+            7 -> R.drawable.ic_loading7
+            8 -> R.drawable.ic_loading8
+            9 -> R.drawable.ic_loading9
+            10 -> R.drawable.ic_loading10
+            11 -> R.drawable.ic_loading11
+            12 -> R.drawable.ic_loading12
+            13 -> R.drawable.ic_loading13
+            14 -> R.drawable.ic_loading14
+            15 -> R.drawable.ic_loading15
+            else -> R.drawable.ic_loading0 // 기본값
+        }
+    }
+
+    // 각 이미지의 visible 상태를 관리하는 상태값
+    var visibleImages by remember { mutableStateOf(List(16) { false }) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            // 순차적으로 이미지가 visible로 전환
+            for (i in imageIds.indices) {
+                visibleImages = visibleImages.mapIndexed { index, _ -> index <= i }
+                delay(100) // 0.5초 대기
+            }
+            // 모든 이미지 invisible 상태로 전환
+            visibleImages = List(16) { false }
+            delay(500) // 0.5초 대기 후 다시 시작
+        }
+    }
+
+    // 이미지를 화면의 중앙에 배치
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        imageIds.forEachIndexed { index, imageId ->
+            val alpha by animateFloatAsState(if (visibleImages[index]) 1f else 0f)
+
+            Image(
+                painter = painterResource(id = imageId),
+                contentDescription = "Loading Animation Image $index",
+                modifier = Modifier
+                    .graphicsLayer(alpha = alpha)
+                    .size(200.dp) // 원하는 크기로 설정
+            )
+        }
+    }
+}

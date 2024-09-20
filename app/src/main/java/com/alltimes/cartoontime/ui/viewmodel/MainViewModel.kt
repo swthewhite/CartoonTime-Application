@@ -100,19 +100,27 @@ class MainViewModel(private val context: Context) : ViewModel() {
     val uiState: StateFlow<UIStateModel> = bleScannerViewModel.uiState
 
     fun onLoginOut() {
+        _state.value = "입실 중"
         bleScannerViewModel.setMode(false)
         bleScannerViewModel.startScanningAndConnect()
-        goScreen(ScreenType.KIOSKLOADING)
     }
 
-    fun LoginOut() {
+    fun serverConnect() {
+        // 서버와 연결해서 값을 받아오는 함수
+        // 지속적으로 호출되어야 하나 ?
+        // state, enteredTime, usedTime, balance 값이 변경되어야 함
+    }
+
+    fun onKioskLoadingCompleted() {
 
         println("onLoginOut")
         println("state: ${_state.value}")
         println("get state : ${sharedPreferences.getString("state", "입실 전")}")
 
+        val currentState = sharedPreferences.getString("state", "입실")
         val currentTime = getCurrentTime()  // 현재 시각을 가져오는 함수
-        if (_state.value == "입실 전") {
+
+        if (currentState == "입실 전") {
             // 입실 완료 상태로 변경
             _state.value = "입실 완료"
             editor.putString("state", "입실 완료")
@@ -123,7 +131,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
             editor.putString("enteredTime", currentTime)
             editor.apply()
 
-        } else if (_state.value == "입실 완료") {
+        } else if (currentState == "입실 완료") {
 
             // 입실 시 기록된 시간과 현재 시간을 바탕으로 요금 계산
             val enteredTime = sharedPreferences.getString("enteredTime", currentTime)
@@ -133,20 +141,6 @@ class MainViewModel(private val context: Context) : ViewModel() {
             // 요금 정산 페이지로 넘어가기
             _screenNavigationTo.value = ScreenNavigationTo(ScreenType.CONFIRM)
         }
-    }
-
-    fun serverConnect() {
-        // 서버와 연결해서 값을 받아오는 함수
-        // 지속적으로 호출되어야 하나 ?
-        // state, enteredTime, usedTime, balance 값이 변경되어야 함
-    }
-
-    //
-
-    fun onKioskLoadingCompleted() {
-        // MainScreen으로 이동합니다.
-        goScreen(ScreenType.MAIN)
-        LoginOut()
     }
 
 
