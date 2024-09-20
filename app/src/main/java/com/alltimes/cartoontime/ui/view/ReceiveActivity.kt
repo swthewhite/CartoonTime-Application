@@ -14,6 +14,7 @@ import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveConfirmScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveDescriptionScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveLoadingScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceivePartnerCheckScreen
 import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
@@ -30,10 +31,11 @@ class ReceiveActivity : ComponentActivity() {
         setContent {
             navController = rememberNavController() // 전역 변수에 저장
 
-            NavHost(navController as NavHostController, startDestination = "receiveDescriptionScreen") {
+            NavHost(navController as NavHostController, startDestination = "receivePartnerCheckScreen") {
                 composable("receiveDescriptionScreen") { ReceiveDescriptionScreen(viewModel = viewModel) }
                 composable("receiveLoadingScreen") { ReceiveLoadingScreen(viewModel = viewModel) }
                 composable("receiveConfirmScreen") { ReceiveConfirmScreen(viewModel = viewModel) }
+                composable("receivePartnerCheckScreen") { ReceivePartnerCheckScreen(viewModel = viewModel) }
             }
         }
 
@@ -69,6 +71,7 @@ class ReceiveActivity : ComponentActivity() {
             ScreenType.RECEIVEDESCRIPTION -> "receiveDescriptionScreen"
             ScreenType.RECEIVELOADING -> "receiveLoadingScreen"
             ScreenType.RECEIVECONFIRM -> "receiveConfirmScreen"
+            ScreenType.RECEIVEPARTNERCHECK -> "receivePartnerCheckScreen"
             else -> return
         }
 

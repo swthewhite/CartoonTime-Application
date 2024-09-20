@@ -15,6 +15,7 @@ import com.alltimes.cartoontime.data.model.BLEConstants
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.uwb.UwbControleeCommunicator
 import com.alltimes.cartoontime.ui.viewmodel.BLEScannerViewModel
+import kotlinx.coroutines.flow.asStateFlow
 
 @Suppress("DEPRECATION")
 class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
@@ -31,6 +32,12 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     val successfulDataWrites = MutableStateFlow(0)
     // GATT 서비스 목록을 저장하는 MutableStateFlow
     val services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
+
+    // mode: true - login
+    // mode: false - money transaction
+    private val _mode = MutableStateFlow(false)
+    val mode = _mode.asStateFlow()
+
     // BluetoothGatt 객체를 저장하는 변수
     private var gatt: BluetoothGatt? = null
     private val uwbCommunicator =
@@ -42,6 +49,10 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     val serviceDiscoveryCompleted = MutableStateFlow(false)
     val passwordReadCompleted = MutableStateFlow(false)
     val nameWrittenCompleted = MutableStateFlow(false)
+
+    fun setMode(value: Boolean) {
+        _mode.update { value }
+    }
 
     // BluetoothGattCallback을 상속받은 callback 객체
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)

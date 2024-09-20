@@ -28,11 +28,13 @@ enum class ScreenType(val navigateTo: (NavController) -> Unit) {
     SENDLOADING({ navController -> navController.navigate("sendLoadingScreen") }),
     SENDDESCRIPTION({ navController -> navController.navigate("sendDescriptionScreen") }),
     SENDCONFIRM({ navController -> navController.navigate("sendConfirmScreen") }),
+    SENDPARTNERCHECK({ navController -> navController.navigate("sendPartnerCheckScreen") }),
 
     // 입금
     RECEIVELOADING({ navController -> navController.navigate("receiveLoadingScreen") }),
     RECEIVECONFIRM({ navController -> navController.navigate("receiveConfirmScreen") }),
     RECEIVEDESCRIPTION({ navController -> navController.navigate("receiveDescriptionScreen") }),
+    RECEIVEPARTNERCHECK({ navController -> navController.navigate("receivePartnerCheckScreen") }),
 
     // 충전
     CHARGEPOINTINPUT({ navController -> navController.navigate("chargePointInputScreen") }),

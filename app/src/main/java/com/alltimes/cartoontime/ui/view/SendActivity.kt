@@ -14,6 +14,7 @@ import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendConfirmScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendDescriptionScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendLoadingScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendPartnerCheckScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendPasswordInputScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendPointInputScreen
 import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
@@ -38,6 +39,7 @@ class SendActivity : ComponentActivity() {
                 composable("sendDescriptionScreen") { SendDescriptionScreen(viewModel = viewModel)}
                 composable("sendLoadingScreen") { SendLoadingScreen(viewModel = viewModel)}
                 composable("sendConfirmScreen") { SendConfirmScreen(viewModel = viewModel)}
+                composable("sendPartnerCheckScreen") { SendPartnerCheckScreen(viewModel = viewModel) }
             }
         }
 
@@ -75,6 +77,7 @@ class SendActivity : ComponentActivity() {
             ScreenType.SENDDESCRIPTION -> "sendDescriptionScreen"
             ScreenType.SENDLOADING -> "sendLoadingScreen"
             ScreenType.SENDCONFIRM -> "sendConfirmScreen"
+            ScreenType.SENDPARTNERCHECK -> "sendPartnerCheckScreen"
             else -> return
         }
 

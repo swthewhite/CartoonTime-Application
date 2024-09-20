@@ -22,6 +22,7 @@ import com.alltimes.cartoontime.ui.viewmodel.BLEServerViewModel
 import com.alltimes.cartoontime.ui.viewmodel.UWBControllerViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -43,6 +44,15 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
     val controllerReceived = MutableStateFlow(emptyList<String>())
     //private val uwbCommunicator = UWBControllerManager(context)
     private val uwbCommunicator = UwbControllerCommunicator(context)
+
+    // mode: true - login
+    // mode: false - money transaction
+    private val _mode = MutableStateFlow(false)
+    val mode = _mode.asStateFlow()
+
+    fun setMode(value: Boolean) {
+        _mode.update { value }
+    }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     suspend fun startServer() = withContext(Dispatchers.IO) {
@@ -182,6 +192,9 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
                 }
             }
         })
+
+        // mode: true - kiosk
+        // mode: false - money transaction
 
         val service = BluetoothGattService(BLEConstants.UWB_KIOSK_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
 

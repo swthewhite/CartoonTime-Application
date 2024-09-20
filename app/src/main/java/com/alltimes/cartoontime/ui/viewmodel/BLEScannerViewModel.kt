@@ -27,6 +27,11 @@ import kotlinx.coroutines.withContext
 
 class BLEScannerViewModel(private val context: Context) : ViewModel(), RangingCallback {
 
+    // mode: true - login
+    // mode: false - money transaction
+    private val _mode = MutableStateFlow(false)
+    val mode = _mode.asStateFlow()
+
     private val bleScanner = BLEScanner(context)
 
     // Now activeConnection and dataBLERead are MutableStateFlow
@@ -48,6 +53,9 @@ class BLEScannerViewModel(private val context: Context) : ViewModel(), RangingCa
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SendUiState())
 
+    fun setMode(value: Boolean) {
+        _mode.update { value }
+    }
 
     // 버튼 클릭 시 호출되는 함수
     fun onSendButtonClick() {
@@ -88,6 +96,8 @@ class BLEScannerViewModel(private val context: Context) : ViewModel(), RangingCa
 
         _activeConnection.value = BLEDeviceConnection(context, deviceInfo, this)
         val activeConnection: BLEDeviceConnection? = _activeConnection.value
+        // mode setting
+        activeConnection?.setMode(_mode.value)
 
         withContext(Dispatchers.Main) {
             activeConnection?.connect()

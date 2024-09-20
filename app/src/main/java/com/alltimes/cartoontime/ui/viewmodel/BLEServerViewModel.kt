@@ -21,12 +21,22 @@ class BLEServerViewModel(private val context: Context) : ViewModel(), RangingCal
     private val _uiState = MutableStateFlow(UIStateModel())
     val uiState = _uiState.asStateFlow()
 
+    // mode: true - login
+    // mode: false - money transaction
+    private val _mode = MutableStateFlow(false)
+    val mode = _mode.asStateFlow()
+
     private val server: BLEServerManager = BLEServerManager(context, this)
 
     init {
         viewModelScope.launch {
             _uiState.update { it.copy(isRunning = false) }
         }
+    }
+
+    fun setMode(value: Boolean) {
+        _mode.update { value }
+        server.setMode(value)
     }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])

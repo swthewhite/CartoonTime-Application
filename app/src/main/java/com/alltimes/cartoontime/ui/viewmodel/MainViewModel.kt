@@ -100,13 +100,12 @@ class MainViewModel(private val context: Context) : ViewModel() {
     val uiState: StateFlow<UIStateModel> = bleScannerViewModel.uiState
 
     fun onLoginOut() {
-        println("LOGIN START !!!!!!!!!!!!!!!!!!!!!!!!")
+        bleScannerViewModel.setMode(false)
         bleScannerViewModel.startScanningAndConnect()
         goScreen(ScreenType.KIOSKLOADING)
-
     }
 
-    fun Login() {
+    fun LoginOut() {
 
         println("onLoginOut")
         println("state: ${_state.value}")
@@ -146,9 +145,8 @@ class MainViewModel(private val context: Context) : ViewModel() {
 
     fun onKioskLoadingCompleted() {
         // MainScreen으로 이동합니다.
-        println("KIOSK LOGIN !!!!!!!!!!!!!!!!!!!!!!")
         goScreen(ScreenType.MAIN)
-        Login()
+        LoginOut()
     }
 
 
