@@ -79,7 +79,10 @@ fun ReceiveDescriptionScreen(viewModel: ReceiveViewModel) {
         )
 
         Button(
-            onClick = { viewModel.goScreen(ScreenType.RECEIVELOADING) },
+            onClick = {
+                viewModel.onButtonClick()
+                viewModel.goScreen(ScreenType.RECEIVELOADING)
+                      },
             modifier = Modifier
                 .wrapContentSize()
                 .constrainAs(nextbtn){

@@ -9,16 +9,18 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import java.util.UUID
 import com.alltimes.cartoontime.data.model.Permissions
 import com.alltimes.cartoontime.data.model.BLEConstants
+import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.uwb.UwbControleeCommunicator
+import com.alltimes.cartoontime.ui.viewmodel.UWBControleeViewModel
 
 @Suppress("DEPRECATION")
 class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
     // Context와 BluetoothDevice를 받아서 초기화
     private val context: Context,
-    private val bluetoothDevice: DeviceInfo
+    private val bluetoothDevice: DeviceInfo,
+    private val viewModel: UWBControleeViewModel
 ) {
     // 연결 상태를 저장하는 MutableStateFlow
     val isConnected = MutableStateFlow(false)
@@ -186,8 +188,15 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
 
             val success = gatt?.writeCharacteristic(characteristic)
 
-            // UWB 통신 생성, address와 channel로 설정
-            uwbCommunicator.startCommunication(address, channel)
+            // RangingCallback을 viewModel로 연결
+            val callback = object : RangingCallback {
+                override fun onDistanceMeasured(distance: Float) {
+                    viewModel.onDistanceMeasured(distance) // 뷰모델의 메서드 호출
+                }
+            }
+
+            // startCommunication 호출 시 콜백 전달
+            uwbCommunicator.startCommunication(address, channel, callback)
             Log.v("uwb", "communication started: $success, Address: $address, Channel: $channel")
         }
     }

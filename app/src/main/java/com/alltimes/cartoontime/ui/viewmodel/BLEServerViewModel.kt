@@ -1,9 +1,7 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
-import android.app.Application
 import android.content.Context
 import androidx.annotation.RequiresPermission
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.data.model.UIStateModel
@@ -13,12 +11,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class BLEViewModel(private val context: Context) : ViewModel() {
+class BLEServerViewModel(private val context: Context, private val viewModel: UWBControllerViewModel) : ViewModel() {
 
     private val _uiState = MutableStateFlow(UIStateModel())
     val uiState = _uiState.asStateFlow()
 
-    private val server: BLEServerManager = BLEServerManager(context)
+    private val server: BLEServerManager = BLEServerManager(context, viewModel)
 
     init {
         viewModelScope.launch {
