@@ -73,6 +73,24 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
     private fun checkSubmitButtonState() {
         // 인증번호 검사 로직
         context?.let {
+
+            // 이름 검사 로직
+            if (_name.value.text.length >= 2) {
+                _isNameCorrect.value = true
+            } else {
+                _isNameCorrect.value = false
+            }
+
+            // 전체적인 버튼 활성화 로직
+            _isSubmitButtonEnabled.value = _isVerificationCodeCorret.value && _isNameCorrect.value
+        }
+    }
+
+    fun onVerify() {
+        // 인증 처리 로직을 구현
+        // 서버로부터 응답을 보고 회원가입인지 아닌지 판별
+        // 인증번호 검사 로직
+        context?.let {
             if (_verificationCode.value.text.length == 6) {
                 if (_verificationCode.value.text == "123456") {
                     _isVerificationCodeCorret.value = true
@@ -99,16 +117,6 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
                 _verificationCode.value = TextFieldValue()
             }
-
-            // 이름 검사 로직
-            if (_name.value.text.length >= 2) {
-                _isNameCorrect.value = true
-            } else {
-                _isNameCorrect.value = false
-            }
-
-            // 전체적인 버튼 활성화 로직
-            _isSubmitButtonEnabled.value = _isVerificationCodeCorret.value && _isNameCorrect.value
         }
     }
 

@@ -34,6 +34,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
     val isSubmitButtonEnabled by viewModel.isSubmitButtonEnabled.collectAsState()
     val isNameCorrect by viewModel.isNameCorrect.collectAsState()
     val isPhoneNumberEnable by viewModel.isPhoneNumberEnable.collectAsState()
+    val isverificationCodeCorrect by viewModel.isVerificationCodeCorrect.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -42,7 +43,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             .padding(16.dp)
     ) {
         // References for the components
-        val (exitButton, titleText, instructionText, phoneText, phoneField, verifyCodeField, requestButton, codeRequestButton, plusTimeButton, nameText, nameField, submitButton) = createRefs()
+        val (exitButton, titleText, instructionText, phoneText, phoneField, verifyCodeField, requestButton, verficationButton, nameText, nameField, submitButton) = createRefs()
 
         // Exit button
         IconButton(
@@ -168,94 +169,80 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
 
             if (isVerificationCodeVisible) {
                 Button(
-                    onClick = { println("시간 연장") },
+                    onClick = { viewModel.onVerify() },
                     shape = RoundedCornerShape(15),
                     colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
                     modifier = Modifier
                         .padding(2.dp)
-                        .constrainAs(plusTimeButton) {
+                        .constrainAs(verficationButton) {
                             top.linkTo(verifyCodeField.bottom, margin = 3.dp)
                             end.linkTo(parent.end, margin = 5.dp)
                         }
                 ) {
                     Text(
-                        text = "시간 연장",
-                        color = Color(0xFF606060),
-                    )
-                }
-
-                Button(
-                    onClick = { println("인증번호 재요청") },
-                    shape = RoundedCornerShape(15),
-                    colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
-                    modifier = Modifier
-                        .padding(2.dp)
-                        .constrainAs(codeRequestButton) {
-                            top.linkTo(verifyCodeField.bottom, margin = 3.dp)
-                            end.linkTo(plusTimeButton.start, margin = 5.dp)
-                        }
-                ) {
-                    Text(
-                        text = "인증번호 재요청",
+                        text = "인증하기",
                         color = Color(0xFF606060),
                     )
                 }
             }
 
 
-            // Name Label
-            Text(
-                text = "이름",
-                fontSize = 16.sp,
-                modifier = Modifier.constrainAs(nameText) {
-                    top.linkTo(codeRequestButton.bottom, margin = 100.dp)
-                    start.linkTo(parent.start, margin = 5.dp)
-                }
-            )
-
-            // Name TextField
-            TextField(
-                value = name,
-                onValueChange = { viewModel.onNameChange(it) },
-                colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = Color.Black
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        width = 1.dp,
-                        color = Color.Black,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .constrainAs(nameField) {
-                        top.linkTo(nameText.bottom, margin = 3.dp)
+            if (isverificationCodeCorrect) {
+                // 회원 정보가 있는 경우에는 이름 입력불가
+                // 없는 경우에는 이름 입력
+                Text(
+                    text = "이름",
+                    fontSize = 16.sp,
+                    modifier = Modifier.constrainAs(nameText) {
+                        top.linkTo(verficationButton.bottom, margin = 100.dp)
                         start.linkTo(parent.start, margin = 5.dp)
-                        end.linkTo(parent.end, margin = 5.dp)
-                    },
-                label = {
-                    Text(text = "이름", color = Color.Black)
-                }
-            )
-
-            // Submit Button
-            Button(
-                onClick = { viewModel.onSubmit() },
-                shape = RoundedCornerShape(15),
-                enabled = isSubmitButtonEnabled,
-                colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .constrainAs(submitButton) {
-                        top.linkTo(nameField.bottom, margin = 50.dp)
-                        start.linkTo(parent.start, margin = 5.dp)
-                        end.linkTo(parent.end, margin = 5.dp)
-                        bottom.linkTo(parent.bottom, margin = 5.dp)
                     }
-            ) {
-                Text(text = "인증하기", color = Color(0xFF606060))
+                )
+
+                // Name TextField
+                TextField(
+                    value = name,
+                    onValueChange = { viewModel.onNameChange(it) },
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Color.Black
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.dp,
+                            color = Color.Black,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .constrainAs(nameField) {
+                            top.linkTo(nameText.bottom, margin = 3.dp)
+                            start.linkTo(parent.start, margin = 5.dp)
+                            end.linkTo(parent.end, margin = 5.dp)
+                        },
+                    label = {
+                        Text(text = "이름", color = Color.Black)
+                    }
+                )
+
+                // Submit Button
+                Button(
+                    onClick = { viewModel.onSubmit() },
+                    shape = RoundedCornerShape(15),
+                    enabled = isSubmitButtonEnabled,
+                    colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .constrainAs(submitButton) {
+                            top.linkTo(nameField.bottom, margin = 50.dp)
+                            start.linkTo(parent.start, margin = 5.dp)
+                            end.linkTo(parent.end, margin = 5.dp)
+                            bottom.linkTo(parent.bottom, margin = 5.dp)
+                        }
+                ) {
+                    Text(text = "등록하기", color = Color(0xFF606060))
+                }
             }
         }
     }
