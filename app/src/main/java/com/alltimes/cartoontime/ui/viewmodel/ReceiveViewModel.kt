@@ -57,10 +57,7 @@ class ReceiveViewModel(private val context: Context) : ViewModel() {
 
     /////////////////////////// Confirm ///////////////////////////
 
-
-    private val uwbViewModel: UWBControllerViewModel = UWBControllerViewModel(context)
-
-    private val bleServerViewModel: BLEServerViewModel = BLEServerViewModel(context, uwbViewModel)
+    private val bleServerViewModel: BLEServerViewModel = BLEServerViewModel(context)
 
     private val _uiState = MutableStateFlow(UIStateModel())
     val uiState = _uiState.asStateFlow()
@@ -76,9 +73,5 @@ class ReceiveViewModel(private val context: Context) : ViewModel() {
         println("서버 시작 ~~~~~")
         _uiState.update { it.copy(isRunning = !it.isRunning) }
         bleServerViewModel.onButtonClick()
-    }
-
-    fun connectToDevice(address: String) {
-        uwbViewModel.connectToDevice(address)
     }
 }

@@ -28,12 +28,15 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 
 @Composable
 fun KioskLoginLoadingScreen(viewModel: MainViewModel) {
 
     val uiState by viewModel.uiState.collectAsState()
+    val active = remember { mutableStateOf(false) }
 
     ConstraintLayout(
         modifier = Modifier
@@ -66,9 +69,10 @@ fun KioskLoginLoadingScreen(viewModel: MainViewModel) {
                 }
         )
 
-        if (uiState.isLogin) {
+        if (!active.value && uiState.isLogin) {
             // 장치가 연결되었을 때 UI 업데이트
             viewModel.onKioskLoadingCompleted()
+            active.value = true
         }
     }
 }
