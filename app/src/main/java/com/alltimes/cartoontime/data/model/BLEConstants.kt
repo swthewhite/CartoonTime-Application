@@ -5,19 +5,15 @@ import java.util.*
 import java.util.UUID
 
 object BLEConstants {
-    //
     val UWB_KIOSK_SERVICE_UUID: UUID = UUID.fromString(stringToUUIDFormat("KIOSKCARTOONTIME"))
     val UWB_WITCH_SERVICE_UUID: UUID = UUID.fromString(stringToUUIDFormat("WITCHCARTOONTIME"))
 
     val CONTROLEE_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("__CONTROLEE_CHAR"))
     val CONTROLLER_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("CONTROLLER_CHAR"))
 
-    // KIOSK CHARACTERISTIC
-    val CUSTOMER_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("___CUSTOMER_CHAR"))
 
-    // WITCH CHARACTERISTIC
-    val SENDER_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("_____SENDER_CHAR"))
-    val RECEIVER_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("___RECEIVER_CHAR"))
+    val MY_ID_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("______MY_ID_CHAR"))
+    val PARTNER_ID_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("_PARTNER_ID_CHAR"))
 }
 
 fun stringToUUIDFormat(input: String): String {
