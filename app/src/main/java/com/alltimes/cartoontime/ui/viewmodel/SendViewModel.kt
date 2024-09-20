@@ -67,7 +67,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             isPointExceeded = {
                 if (point.value.toIntOrNull() ?: 0 > balance.value) {
                     showPointError()
-                    pointPadClickHandler.setPoint(balance.toString())
+                    pointPadClickHandler.setPoint(balance.value.toString())
                 }
             }
         )
@@ -97,7 +97,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             onPasswordComplete = { password: String ->
                 val userPassword = sharedPreferences.getString("password", null)
                 if (userPassword == password) {
-                    goScreen(ScreenType.SENDDESCRIPTION)
+                    println("YEAHYEAH")
+                    goScreen(ScreenType.SENDPARTNERCHECK)
                 } else {
                     numPadClickHandler.clearPassword()
                     showPasswordError()
@@ -127,8 +128,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     /////////////////////////// Confirm ///////////////////////////
 
-   // private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
-    private val uwbViewModel: UWBControllerViewModel = UWBControllerViewModel(context)
+    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
 
     private val _uiState = MutableStateFlow(SendUiState())
     val uiState = _uiState.asStateFlow()
@@ -138,9 +138,10 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         _uiState.value = _uiState.value.copy(isSending = !_uiState.value.isSending)
 
         if (_uiState.value.isSending) {
-           // bleScannerViewModel.startScanningAndConnect()
+            bleScannerViewModel.setMode(true)
+            bleScannerViewModel.startScanningAndConnect()
         } else {
-           // bleScannerViewModel.disconnectDevice()
+            bleScannerViewModel.disconnectDevice()
         }
     }
 }

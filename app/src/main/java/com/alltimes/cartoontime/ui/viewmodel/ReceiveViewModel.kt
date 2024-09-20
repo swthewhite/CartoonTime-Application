@@ -72,6 +72,10 @@ class ReceiveViewModel(private val context: Context) : ViewModel() {
     fun onButtonClick() {
         println("서버 시작 ~~~~~")
         _uiState.update { it.copy(isRunning = !it.isRunning) }
+        // mode setting
+        bleServerViewModel.setMode(true)
+        // partnercheck
+
         bleServerViewModel.onButtonClick()
     }
 }
