@@ -58,8 +58,9 @@ class ReceiveViewModel(private val context: Context) : ViewModel() {
     /////////////////////////// Confirm ///////////////////////////
 
 
-    private val bleViewModel: BLEViewModel = BLEViewModel(context)
-    private val uwbViewModel: UWBViewModel = UWBViewModel(context)
+    private val uwbViewModel: UWBControllerViewModel = UWBControllerViewModel(context)
+
+    private val bleServerViewModel: BLEServerViewModel = BLEServerViewModel(context, uwbViewModel)
 
     private val _uiState = MutableStateFlow(UIStateModel())
     val uiState = _uiState.asStateFlow()
@@ -72,8 +73,9 @@ class ReceiveViewModel(private val context: Context) : ViewModel() {
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     fun onButtonClick() {
+        println("서버 시작 ~~~~~")
         _uiState.update { it.copy(isRunning = !it.isRunning) }
-        bleViewModel.onButtonClick()
+        bleServerViewModel.onButtonClick()
     }
 
     fun connectToDevice(address: String) {

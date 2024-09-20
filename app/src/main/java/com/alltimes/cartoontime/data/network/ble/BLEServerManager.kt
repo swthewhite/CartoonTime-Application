@@ -16,7 +16,9 @@ import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.alltimes.cartoontime.data.model.BLEConstants
 import com.alltimes.cartoontime.data.model.UwbAddressModel
+import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.uwb.UwbControllerCommunicator
+import com.alltimes.cartoontime.ui.viewmodel.UWBControllerViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -25,7 +27,7 @@ import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class BLEServerManager(private val context: Context) {
+class BLEServerManager(private val context: Context, private val uwbViewModel: UWBControllerViewModel) : RangingCallback {
 
     private val bluetooth = context.getSystemService(Context.BLUETOOTH_SERVICE)
             as? BluetoothManager ?: throw Exception("This device doesn't support Bluetooth")
@@ -224,9 +226,15 @@ class BLEServerManager(private val context: Context) {
                 Log.d("uwb", "me:" + uwbCommunicator.getUwbAddress() + " " + uwbCommunicator.getUwbChannel())
                 Log.d("uwb", "controlee:$address")
 
-                uwbCommunicator.startCommunication(address)//UwbAddressModel(address.toByteArray()).toString())
+                uwbCommunicator.startCommunication(address, this)
+                //uwbCommunicator.startCommunication(address)//UwbAddressModel(address.toByteArray()).toString())
                 //uwbCommunicator.UwbConnection(UwbAddressModel(address.toByteArray()))
             }
         }
+    }
+
+    override fun onDistanceMeasured(distance: Float) {
+        // UWBControllerViewModel의 onDistanceMeasured 호출
+        uwbViewModel.onDistanceMeasured(distance)
     }
 }

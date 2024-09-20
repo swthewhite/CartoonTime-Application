@@ -2,31 +2,20 @@ package com.alltimes.cartoontime.ui.viewmodel
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.appcompat.app.AppCompatActivity
-import androidx.biometric.BiometricPrompt
-import androidx.compose.animation.AnimatedContentScope
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.alltimes.cartoontime.data.model.AccelerometerDataModel
 import com.alltimes.cartoontime.data.model.Cartoon
+import com.alltimes.cartoontime.data.model.UIStateModel
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.Executor
 
 class MainViewModel(private val context: Context) : ViewModel() {
 
@@ -107,7 +96,19 @@ class MainViewModel(private val context: Context) : ViewModel() {
         return (usedTimeMinutes * chargePerMinute).toInt()
     }
 
+    private val uwbViewModel: UWBControleeViewModel = UWBControleeViewModel(context)
+    val uiState: StateFlow<UIStateModel> = uwbViewModel.uiState
+
+    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context, uwbViewModel)
+
     fun onLoginOut() {
+        println("LOGIN START !!!!!!!!!!!!!!!!!!!!!!!!")
+        bleScannerViewModel.startScanningAndConnect()
+        goScreen(ScreenType.KIOSKLOADING)
+
+    }
+
+    fun Login() {
 
         println("onLoginOut")
         println("state: ${_state.value}")
@@ -142,6 +143,16 @@ class MainViewModel(private val context: Context) : ViewModel() {
         // 지속적으로 호출되어야 하나 ?
         // state, enteredTime, usedTime, balance 값이 변경되어야 함
     }
+
+    //
+
+    fun onKioskLoadingCompleted() {
+        // MainScreen으로 이동합니다.
+        println("KIOSK LOGIN !!!!!!!!!!!!!!!!!!!!!!")
+        goScreen(ScreenType.MAIN)
+        Login()
+    }
+
 
     /////////////////////////// BookRecommend ///////////////////////////
 
