@@ -95,4 +95,13 @@ public class UwbControleeCommunicator {
             System.out.println("Caught Exception: " + e);
         }
     }
+    public void stopCommunication() {
+        if (rangingResultObservable.get() != null) {
+            rangingResultObservable.get().dispose();
+            rangingResultObservable.set(null);  // dispose 후에 null로 설정하여 재사용 가능하게 함
+            Log.d("UWB", "Ranging communication stopped.");
+        } else {
+            Log.d("UWB", "No active ranging session to stop.");
+        }
+    }
 }
