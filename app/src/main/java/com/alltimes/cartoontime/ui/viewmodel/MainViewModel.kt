@@ -96,10 +96,8 @@ class MainViewModel(private val context: Context) : ViewModel() {
         return (usedTimeMinutes * chargePerMinute).toInt()
     }
 
-    private val uwbViewModel: UWBControleeViewModel = UWBControleeViewModel(context)
-    val uiState: StateFlow<UIStateModel> = uwbViewModel.uiState
-
-    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context, uwbViewModel)
+    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
+    val uiState: StateFlow<UIStateModel> = bleScannerViewModel.uiState
 
     fun onLoginOut() {
         println("LOGIN START !!!!!!!!!!!!!!!!!!!!!!!!")

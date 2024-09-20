@@ -19,8 +19,6 @@ class UWBControleeViewModel(private val context: Context) : ViewModel(), Ranging
     private val _uiState = MutableStateFlow(UIStateModel())
     val uiState = _uiState.asStateFlow()
 
-    //private val uwbCommunicator: UwbControleeCommunicator = UwbControleeCommunicator(context)
-
     private var measurementCount = 0
     private var sessionActive = false
     private val timeoutHandler = Handler(Looper.getMainLooper())
