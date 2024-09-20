@@ -42,7 +42,6 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
     private val preparedWrites = HashMap<Int, ByteArray>()
     private val deviceNames = mutableMapOf<String, String>()
     val controllerReceived = MutableStateFlow(emptyList<String>())
-    //private val uwbCommunicator = UWBControllerManager(context)
     private val uwbCommunicator = UwbControllerCommunicator(context)
 
     // mode: true - login
@@ -141,7 +140,13 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
                 super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
                 val uwbAddress = uwbCommunicator.getUwbAddress()
                 val uwbChannel = uwbCommunicator.getUwbChannel()
-                val responseData = "$uwbAddress/$uwbChannel".toByteArray()
+
+                val responseData: ByteArray = when (characteristic?.uuid) {
+                    BLEConstants.CONTROLEE_CHARACTERISTIC_UUID -> "$uwbAddress/$uwbChannel".toByteArray()
+                    BLEConstants.MY_ID_CHARACTERISTIC_UUID -> "ct1298".toByteArray()
+                    else -> "UnknownCharacteristic".encodeToByteArray()
+                }
+
                 server?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, responseData)
             }
 
@@ -166,9 +171,11 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
                 )
 
                 if (preparedWrite) {
+                    Log.d("UWB", "Prepared write")
                     val bytes = preparedWrites.getOrDefault(requestId, byteArrayOf())
                     preparedWrites[requestId] = bytes.plus(value)
                 } else {
+                    Log.d("UWB", "Not prepared write")
                     val receivedData = String(value)
                     controllerReceived.update { it.plus(receivedData) }
                     val deviceName = device.name ?: "Unknown Device"
@@ -198,20 +205,34 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
 
         val service = BluetoothGattService(BLEConstants.UWB_KIOSK_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
 
-        val passwordCharacteristic = BluetoothGattCharacteristic(
+        val controleeCharacteristic = BluetoothGattCharacteristic(
             BLEConstants.CONTROLEE_CHARACTERISTIC_UUID,
             BluetoothGattCharacteristic.PROPERTY_READ,
             BluetoothGattCharacteristic.PERMISSION_READ
         )
 
-        val nameCharacteristic = BluetoothGattCharacteristic(
+        val myIDCharacteristic = BluetoothGattCharacteristic(
+            BLEConstants.MY_ID_CHARACTERISTIC_UUID,
+            BluetoothGattCharacteristic.PROPERTY_READ,
+            BluetoothGattCharacteristic.PERMISSION_READ
+        )
+
+        val controllerCharacteristic = BluetoothGattCharacteristic(
             BLEConstants.CONTROLLER_CHARACTERISTIC_UUID,
             BluetoothGattCharacteristic.PROPERTY_WRITE,
             BluetoothGattCharacteristic.PERMISSION_WRITE
         )
 
-        service.addCharacteristic(passwordCharacteristic)
-        service.addCharacteristic(nameCharacteristic)
+        val partnerIDCharacteristic = BluetoothGattCharacteristic(
+            BLEConstants.PARTNER_ID_CHARACTERISTIC_UUID,
+            BluetoothGattCharacteristic.PROPERTY_WRITE,
+            BluetoothGattCharacteristic.PERMISSION_WRITE
+        )
+
+        service.addCharacteristic(controleeCharacteristic)
+        service.addCharacteristic(controllerCharacteristic)
+        service.addCharacteristic(myIDCharacteristic)
+        service.addCharacteristic(partnerIDCharacteristic)
         server?.addService(service)
         ctfService = service
     }
