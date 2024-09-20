@@ -214,7 +214,8 @@ fun MainScreen(viewModel: MainViewModel) {
                         Text(text = "송금하기", color = Color.Black)
                     }
                     Button(
-                        onClick = { viewModel.onReceiveButtonClick() },
+                        onClick = { viewModel.onReceiveButtonClick()
+                                  },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5A911)),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.padding(start = 8.dp)

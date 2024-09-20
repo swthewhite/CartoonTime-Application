@@ -10,7 +10,8 @@ object PermissionsHelper {
         arrayOf(
             Manifest.permission.BLUETOOTH_CONNECT,
             Manifest.permission.BLUETOOTH_ADVERTISE,
-            Manifest.permission.UWB_RANGING
+            Manifest.permission.UWB_RANGING,
+            Manifest.permission.BLUETOOTH_SCAN
         )
 
     fun hasAllPermissions(activity: ComponentActivity): Boolean {

@@ -14,6 +14,7 @@ import androidx.core.uwb.UwbManager;
 import androidx.core.uwb.rxjava3.UwbClientSessionScopeRx;
 import androidx.core.uwb.rxjava3.UwbManagerRx;
 
+import com.alltimes.cartoontime.data.model.uwb.RangingCallback;
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.primitives.Shorts;
 
 import java.util.Collections;
@@ -52,7 +53,7 @@ public class UwbControleeCommunicator {
         }
     }
 
-    public void startCommunication(String controllerAddress, String controllerChannel) {
+    public void startCommunication(String controllerAddress, String controllerChannel, RangingCallback callback) {
         try {
             int otherSideLocalAddress = Integer.parseUnsignedInt(controllerAddress);
             UwbAddress partnerAddress = new UwbAddress(Shorts.toByteArray((short) otherSideLocalAddress));
@@ -76,8 +77,9 @@ public class UwbControleeCommunicator {
                         if (rangingResult instanceof RangingResult.RangingResultPosition) {
                             RangingResult.RangingResultPosition rangingResultPosition = (RangingResult.RangingResultPosition) rangingResult;
                             if (rangingResultPosition.getPosition().getDistance() != null) {
-                                String distance = "Distance: " + rangingResultPosition.getPosition().getDistance().getValue();
-                                Log.d("Distance", distance);
+                                float distance = rangingResultPosition.getPosition().getDistance().getValue();
+                                Log.d("UWB", "Distance: " + distance);
+                                callback.onDistanceMeasured(distance); // 거리 측정 콜백 호출
                             } else {
                                 Log.e("UWB", "Distance is null");
                             }
@@ -95,6 +97,7 @@ public class UwbControleeCommunicator {
             System.out.println("Caught Exception: " + e);
         }
     }
+  
     public void stopCommunication() {
         if (rangingResultObservable.get() != null) {
             rangingResultObservable.get().dispose();

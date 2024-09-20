@@ -1,5 +1,7 @@
 package com.alltimes.cartoontime.data.network.uwb;
 
+import static java.sql.DriverManager.println;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -13,6 +15,7 @@ import androidx.core.uwb.UwbManager;
 import androidx.core.uwb.rxjava3.UwbClientSessionScopeRx;
 import androidx.core.uwb.rxjava3.UwbManagerRx;
 
+import com.alltimes.cartoontime.data.model.uwb.RangingCallback;
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.primitives.Shorts;
 
 import java.util.Collections;
@@ -60,7 +63,7 @@ public class UwbControllerCommunicator {
         }
     }
 
-    public void startCommunication(String controlee) {
+    public void startCommunication(String controlee, RangingCallback callback) {
         try {
             int otherSideLocalAddress = Integer.parseUnsignedInt(controlee);
             UwbAddress partnerAddress = new UwbAddress(Shorts.toByteArray((short) otherSideLocalAddress));
@@ -87,26 +90,25 @@ public class UwbControllerCommunicator {
 
             rangingResultObservable.set(UwbClientSessionScopeRx.rangingResultsObservable(currentUwbSessionScope.get(), partnerParameters).subscribe(
                     rangingResult -> {
-                        Log.d("UWB", "DISTANCE REACHED");
                         if (rangingResult instanceof RangingResult.RangingResultPosition) {
-                            Log.d("UWB", "DISTANCE RESULT ON");
                             RangingResult.RangingResultPosition rangingResultPosition = (RangingResult.RangingResultPosition) rangingResult;
                             if (rangingResultPosition.getPosition().getDistance() != null) {
-                                Log.d("UWB", "DISTANCE : " + rangingResultPosition.getPosition().getDistance().getValue());
-                                System.out.println("Distance: " + rangingResultPosition.getPosition().getDistance().getValue());
+                                float distance = rangingResultPosition.getPosition().getDistance().getValue();
+                                Log.d("UWB", "Distance: " + distance);
+                                callback.onDistanceMeasured(distance); // 거리 측정 콜백 호출
                             }
                         } else {
                             System.out.println("CONNECTION LOST");
                         }
                     },
-                    System.out::println,
+                    throwable -> System.out.println("Error: " + throwable),
                     () -> System.out.println("Completed the observing of RangingResults")
             ));
-
         } catch (NumberFormatException e) {
             System.out.println("Caught Exception: " + e);
         }
     }
+
     public void stopCommunication() {
         if (rangingResultObservable.get() != null) {
             rangingResultObservable.get().dispose();

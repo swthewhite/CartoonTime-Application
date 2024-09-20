@@ -11,6 +11,7 @@ object BLEConstants {
     val CONTROLEE_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("__CONTROLEE_CHAR"))
     val CONTROLLER_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("CONTROLLER_CHAR"))
 
+
     val MY_ID_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("______MY_ID_CHAR"))
     val PARTNER_ID_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("_PARTNER_ID_CHAR"))
 }
