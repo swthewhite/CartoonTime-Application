@@ -14,9 +14,14 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.remote.RetrofitClient
+import com.alltimes.cartoontime.data.repository.UserRepository
 import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction {
 
@@ -37,6 +42,9 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     // 회원가입인가 ? 로그인인가 ?
     var isSignUp = true
+
+    // 서버 통신 관련 변수
+    private val repository = UserRepository(RetrofitClient.apiService)
 
     /////////////////////////// SignUp ///////////////////////////
 
@@ -72,64 +80,13 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     private fun checkSubmitButtonState() {
         // 인증번호 검사 로직
+        // 인증번호 검사 로직
         context?.let {
-
             // 이름 검사 로직
-            if (_name.value.text.length >= 2) {
-                _isNameCorrect.value = true
-            } else {
-                _isNameCorrect.value = false
-            }
-
+            _isNameCorrect.value = _name.value.text.length >= 2
             // 전체적인 버튼 활성화 로직
             _isSubmitButtonEnabled.value = _isVerificationCodeCorret.value && _isNameCorrect.value
         }
-    }
-
-    fun onVerify() {
-        // 인증 처리 로직을 구현
-        // 서버로부터 응답을 보고 회원가입인지 아닌지 판별
-        // 인증번호 검사 로직
-        context?.let {
-            if (_verificationCode.value.text.length == 6) {
-                if (_verificationCode.value.text == "123456") {
-                    _isVerificationCodeCorret.value = true
-                } else {
-                    _isVerificationCodeCorret.value = false
-                    Toast.makeText(it, "인증번호가 다릅니다.", Toast.LENGTH_SHORT).show()
-                    val vibrator = it.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                    if (vibrator.hasVibrator()) {
-                        val vibrationEffect =
-                            VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
-                        vibrator.vibrate(vibrationEffect)
-                    }
-
-                    _verificationCode.value = TextFieldValue()
-                }
-            } else if (_verificationCode.value.text.length > 6) {
-                Toast.makeText(it, "인증번호는 6자리 입니다.", Toast.LENGTH_SHORT).show()
-                val vibrator = it.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if (vibrator.hasVibrator()) {
-                    val vibrationEffect =
-                        VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
-                    vibrator.vibrate(vibrationEffect)
-                }
-
-                _verificationCode.value = TextFieldValue()
-            }
-        }
-    }
-
-    fun onSubmit() {
-        // 인증 처리 로직을 구현
-        // 서버로부터 응담을 보고 회원가입인지 아닌지 판별
-        isSignUp = true
-        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.PASSWORDSETTING)
-
-        editor?.putString("name", _name.value.text)
-        // 서버로부터 응답이 있을 때는 사용자 잔여금을 받아와서 저장
-        editor?.putInt("balance", 8000)
-        editor?.apply()
     }
 
     fun onRequestVerificationCode() {
@@ -141,6 +98,16 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             if (isValidPhoneNumber) {
                 _isVerificationCodeVisible.value = true
                 _isPhoneNumberEnable.value = false
+
+                // 인증 코드 요청
+                CoroutineScope(Dispatchers.IO).launch {
+                    val response = repository.requestAuthCode(phoneNumberString)
+                    if (response.success) {
+                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                    }
+                }
             } else {
                 Toast.makeText(it, "전화번호 형식을 지켜주세요", Toast.LENGTH_SHORT).show()
 
@@ -148,6 +115,65 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                 _phoneNumber.value = TextFieldValue()
             }
         }
+    }
+
+    fun onVerify() {
+        context?.let {
+            if (_verificationCode.value.text.length == 6) {
+                // 인증 확인 요청
+                CoroutineScope(Dispatchers.IO).launch {
+                    val response = repository.verifyAuthCode(
+                        phoneNumber.value.text,
+                        _name.value.text,
+                        _verificationCode.value.text
+                    )
+
+                    if (response.success) {
+                        _isVerificationCodeCorret.value = true
+
+                        // 사용자 정보 저장
+                        response.data?.let { data ->
+                            editor?.putInt("userId", data.user.id.toInt()) // 사용자 ID 저장
+                            editor?.putString("username", data.user.username) // 사용자 이름 저장
+                            editor?.putString("name", data.user.name) // 이름 저장
+                            editor?.putString("jwtAccessToken", data.jwtToken.accessToken) // 액세스 토큰 저장
+                            editor?.putString("jwtRefreshToken", data.jwtToken.refreshToken) // 리프레시 토큰 저장
+                            editor?.apply() // 변경사항 저장
+                        }
+
+                        // 성공 시 다음 단계로 진행
+                        onSubmit()
+                    } else {
+                        _isVerificationCodeCorret.value = false
+                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                        triggerVibration(it)
+                    }
+                }
+            } else {
+                Toast.makeText(it, "인증번호는 6자리 입니다.", Toast.LENGTH_SHORT).show()
+                triggerVibration(it)
+                _verificationCode.value = TextFieldValue() // 입력 필드 비움
+            }
+        }
+    }
+
+    private fun triggerVibration(context: Context) {
+        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        if (vibrator.hasVibrator()) {
+            val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            vibrator.vibrate(vibrationEffect)
+        }
+    }
+
+    fun onSubmit() {
+        // 유저 정보 저장 및 화면 전환
+        isSignUp = true
+        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.PASSWORDSETTING)
+
+        editor?.putString("name", _name.value.text)
+        // 서버로부터 응답이 있을 때는 사용자 잔여금을 받아와서 저장
+        editor?.putInt("balance", 8000) // 예시로 8000으로 설정
+        editor?.apply()
     }
 
     fun onPhoneNumberChange(newValue: TextFieldValue) {

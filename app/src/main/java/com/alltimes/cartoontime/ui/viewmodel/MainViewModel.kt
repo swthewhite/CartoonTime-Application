@@ -11,6 +11,8 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.remote.RetrofitClient
+import com.alltimes.cartoontime.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.text.SimpleDateFormat
@@ -55,6 +57,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
     }
 
     // 서버 통신 관련 변수
+    private val repository = UserRepository(RetrofitClient.apiService)
 
     /////////////////////////// Main ///////////////////////////
 
