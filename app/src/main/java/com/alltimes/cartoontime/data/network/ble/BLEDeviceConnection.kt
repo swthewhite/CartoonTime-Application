@@ -26,7 +26,9 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     // 연결 상태를 저장하는 MutableStateFlow
     val isConnected = MutableStateFlow(false)
     // 읽은 데이터를 저장하는 MutableStateFlow
-    val dataBLERead = MutableStateFlow<String?>(null)
+    val uwbData = MutableStateFlow<String?>(null)
+    val idData = MutableStateFlow<String?>(null)
+
     // 성공적으로 데이터를 쓴 횟수를 저장하는 MutableStateFlow
     val successfulDataWrites = MutableStateFlow(0)
     // GATT 서비스 목록을 저장하는 MutableStateFlow
@@ -111,10 +113,16 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     private fun handleCharacteristicRead(characteristic: BluetoothGattCharacteristic, status: Int) {
         if (characteristic.uuid == BLEConstants.CONTROLEE_CHARACTERISTIC_UUID) {
-            dataBLERead.value = String(characteristic.value)
-            Log.d("BLE", "Characteristic read successful: ${dataBLERead.value}")
+            uwbData.value = String(characteristic.value)
+            Log.d("BLE", "Characteristic read successful: ${uwbData.value}")
             passwordReadCompleted.value = true
-        } else {
+        }
+        else if (characteristic.uuid == BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID) {
+            idData.value = String(characteristic.value)
+            Log.d("BLE", "Characteristic read successful: ${idData.value}")
+            passwordReadCompleted.value = true
+        }
+        else {
             Log.e("BLE", "Characteristic read failed for UUID: ${characteristic.uuid}, status: $status")
             passwordReadCompleted.value = false
         }
@@ -158,12 +166,47 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         gatt?.discoverServices()
     }
 
+    @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
+    fun readFirstCharacteristic() {
+        Log.d("bluetooth", "Read First Characteristic")
+        val service = gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
+
+        val characteristic = service?.getCharacteristic(BLEConstants.CONTROLEE_CHARACTERISTIC_UUID)
+        if (characteristic != null) {
+            val success = gatt?.readCharacteristic(characteristic)
+            Log.v("bluetooth", "Read CONTROLEE_CHARACTERISTIC_UUID status: $success")
+        } else {
+            Log.e("bluetooth", "CONTROLEE_CHARACTERISTIC_UUID not found")
+        }
+    }
+
+    @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
+    fun readSecondCharacteristic() {
+        Log.d("bluetooth", "Read Second Characteristic")
+        val service = gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
+
+        val characteristic = service?.getCharacteristic(BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID)
+        if (characteristic != null) {
+            val success = gatt?.readCharacteristic(characteristic)
+            Log.v("bluetooth", "Read RECEIVER_ID_CHARACTERISTIC_UUID status: $success")
+        } else {
+            Log.e("bluetooth", "RECEIVER_ID_CHARACTERISTIC_UUID not found")
+        }
+    }
+
     // 특성 읽기 함수
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     fun readCharacteristic() {
         Log.d("bluetooth", "ReadCharacteristic")
         val service = gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
-        val characteristic = service?.getCharacteristic(BLEConstants.CONTROLEE_CHARACTERISTIC_UUID)
+
+        var characteristic = service?.getCharacteristic(BLEConstants.CONTROLEE_CHARACTERISTIC_UUID)
+        if (characteristic != null) {
+            val success = gatt?.readCharacteristic(characteristic)
+            Log.v("bluetooth", "Read status: $success, ${characteristic.value}")
+        }
+
+        characteristic = service?.getCharacteristic(BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID)
         if (characteristic != null) {
             val success = gatt?.readCharacteristic(characteristic)
             Log.v("bluetooth", "Read status: $success, ${characteristic.value}")
@@ -181,9 +224,13 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             val success = gatt?.writeCharacteristic(characteristic)
             Log.v("bluetooth", "Write status: $success, ${characteristic.value}")
         }
-        if (dataBLERead.value != null) {
-            // dataBLERead 값이 null이 아닌지 확인한 후 '/' 기준으로 분할
-            val data = dataBLERead.value?.split("/") ?: listOf("", "")
+
+        if (uwbData.value != null) {
+            // uwbData 값이 null이 아닌지 확인한 후 '/' 기준으로 분할
+            val id = idData.value?: ""
+            Log.v("bluetooth", "idData: $id")
+
+            val data = uwbData.value?.split("/") ?: listOf("", "")
             val address = data.getOrNull(0) ?: ""  // 앞부분이 address
             val channel = data.getOrNull(1) ?: ""  // 뒷부분이 channel
 

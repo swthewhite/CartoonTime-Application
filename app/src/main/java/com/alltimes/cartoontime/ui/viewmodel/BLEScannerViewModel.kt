@@ -108,13 +108,13 @@ class BLEScannerViewModel(private val context: Context) : ViewModel(), RangingCa
                                 activeConnection?.readCharacteristic()
                                 activeConnection?.passwordReadCompleted?.collectLatest { dataBLERead ->
                                     if (dataBLERead) {
-                                        //Log.d("BLEConnection", "Password read successfully.")
+                                        Log.d("BLEConnection", "Password read successfully.")
 
                                         // Wait for name writing to complete
                                         activeConnection?.writeCharacteristic()
                                         activeConnection?.nameWrittenCompleted?.collectLatest { nameWritten ->
                                             if (nameWritten) {
-                                                //Log.d("BLEConnection", "Name written successfully.")
+                                                Log.d("BLEConnection", "Name written successfully.")
                                                 _sendUiState.update {
                                                     it.copy(
                                                         isDeviceConnected = true,
