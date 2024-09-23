@@ -49,6 +49,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.composable.Map
 import com.alltimes.cartoontime.ui.screen.composable.cartoon
 import kotlinx.coroutines.delay
@@ -74,7 +75,7 @@ fun BookDetailScreen(viewModel: MainViewModel) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = {
-                        viewModel.onBookRecommendButtonClick()
+                        viewModel.goScreen(ScreenType.BOOKRECOMMEND)
                     }
                 )
                 .constrainAs(backButton) {

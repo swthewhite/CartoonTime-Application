@@ -34,6 +34,12 @@ interface ApiService {
     @POST("ct/pay")
     suspend fun pay(@Body request: PayRequest): PayResponse
 
+    @POST("ct/entry/{user_id}")
+    suspend fun entry(@Path("user_id") userId: Long): EntryLogResponse
+
+    @POST("ct/entry/{user_id}/exit")
+    suspend fun exit(@Path("user_id") userId: Long): EntryLogResponse
+
     @GET("ct/entries/all/{user_id}")
     suspend fun getEntryLog(@Path("user_id") userId: Long): EntryLogResponse
 }

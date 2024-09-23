@@ -49,6 +49,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.alltimes.cartoontime.data.model.ui.ActivityType
+import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.composable.LoadingAnimation
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -60,7 +62,7 @@ fun MainScreen(viewModel: MainViewModel) {
     var currentAnimation by remember { mutableStateOf(1) }
     var showExitDialog by remember { mutableStateOf(false) }
 
-    val name = viewModel.userName
+    val name = viewModel.name
     val balance by viewModel.balance.collectAsState()
     val state by viewModel.state.collectAsState()
     val enteredTime by viewModel.enteredTime.collectAsState()
@@ -212,7 +214,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     horizontalArrangement = Arrangement.End
                 ) {
                     Button(
-                        onClick = { viewModel.onSendButtonClick() },
+                        onClick = { viewModel.goActivity(ActivityType.SEND) },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5A911)),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.padding(start = 8.dp)
@@ -220,7 +222,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         Text(text = "송금하기", color = Color.Black)
                     }
                     Button(
-                        onClick = { viewModel.onReceiveButtonClick()
+                        onClick = { viewModel.goActivity(ActivityType.RECEIVE)
                                   },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5A911)),
                         shape = RoundedCornerShape(16.dp),
@@ -229,7 +231,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         Text(text = "송금받기", color = Color.Black)
                     }
                     Button(
-                        onClick = { viewModel.onChargeButtonClick() },
+                        onClick = { viewModel.goActivity(ActivityType.CHARGE) },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5A911)),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.padding(start = 8.dp)
@@ -255,9 +257,6 @@ fun MainScreen(viewModel: MainViewModel) {
                 AnimateSequence { animationId ->
                     currentAnimation = animationId
                 }
-            }
-            else if (state == "입실 중") {
-                LoadingAnimation()
             } else if (state == "입실 완료") {
                 Box(
                     modifier = Modifier
@@ -325,6 +324,10 @@ fun MainScreen(viewModel: MainViewModel) {
                     }
                 }
             }
+            // 입실 중 , 퇴실 중
+            else {
+                LoadingAnimation()
+            }
         }
 
         Text(
@@ -368,7 +371,7 @@ fun MainScreen(viewModel: MainViewModel) {
             )
         } else if (state == "입실 완료") {
             Button(
-                onClick = { viewModel.onBookRecommendButtonClick() },
+                onClick = { viewModel.goScreen(ScreenType.BOOKRECOMMEND) },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier

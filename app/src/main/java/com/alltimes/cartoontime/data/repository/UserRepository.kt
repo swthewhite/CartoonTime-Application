@@ -5,6 +5,7 @@ import com.alltimes.cartoontime.data.remote.AuthRequest
 import com.alltimes.cartoontime.data.remote.AuthResponse
 import com.alltimes.cartoontime.data.remote.ChargeRequest
 import com.alltimes.cartoontime.data.remote.ChargeResponse
+import com.alltimes.cartoontime.data.remote.EntryLog
 import com.alltimes.cartoontime.data.remote.EntryLogResponse
 import com.alltimes.cartoontime.data.remote.NaverAuthRequest
 import com.alltimes.cartoontime.data.remote.NavertAuthResponse
@@ -54,6 +55,14 @@ class UserRepository(private val apiService: ApiService) {
 
     suspend fun pay(request: PayRequest): PayResponse {
         return apiService.pay(request)
+    }
+
+    suspend fun entry(userId: Long): EntryLogResponse {
+        return apiService.entry(userId)
+    }
+
+    suspend fun exit(userId: Long): EntryLogResponse {
+        return apiService.exit(userId)
     }
 
     suspend fun getEntryLog(userId: Long): EntryLogResponse {
