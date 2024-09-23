@@ -1,9 +1,11 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
+import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.LiveData
@@ -17,6 +19,7 @@ import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.remote.NaverAuthRequest
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.remote.SignResponse
+import com.alltimes.cartoontime.data.remote.VerifyAuthRequest
 import com.alltimes.cartoontime.data.repository.UserRepository
 import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction {
 
@@ -118,10 +122,13 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                 // 인증 코드 요청
                 CoroutineScope(Dispatchers.IO).launch {
                     val response = repository.requestAuthCode(phoneNumberString)
-                    if (response.success) {
-                        //Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
-                    } else {
-                        //Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+
+                    withContext(Dispatchers.Main) {
+                        if (response.success) {
+                            Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             } else {
@@ -138,27 +145,30 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
         context?.let {
             // 인증번호는 6자리
             if (_verificationCode.value.text.length == 6) {
+
+                val verifyAuthRequest = VerifyAuthRequest(phoneNumber.value.text, _verificationCode.value.text)
+
                 // 인증 확인 요청
                 CoroutineScope(Dispatchers.IO).launch {
-                    val response = repository.verifyAuthCode(
-                        phoneNumber.value.text,
-                        _verificationCode.value.text
-                    )
+                    val response = repository.verifyAuthCode(verifyAuthRequest)
 
-                    println("response: $response")
+                    // 키패드 숨기기
+                    val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    val view = (context as Activity).currentFocus
+                    view?.let {
+                        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+                    }
+
+                    println("?????????????????????response: $response")
 
                     if (response.success) {
                         _isVerificationCodeCorret.value = true
-
-                        println("response.data: ${response.data}")
 
                         // 유저 정보 받아오기
                         val userId = response.data?.userId
 
                         // 응답 정보를 보고 회원가입인지 로그인인지 구분
                         // -1이면 회원가입, esle 로그인
-
-                        println("USERID: $userId")
 
                         if (userId == -1L || userId == null) {
                             isSignUp = true
@@ -168,12 +178,9 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
                         // userID가 있을 때 유저 정보를 받아와서 저장
                         if (userId != null && userId != -1L) {
-                            println("실행되었습니다")
                             CoroutineScope(Dispatchers.IO).launch {
                                 val response = repository.getUserInfo(userId)
                                 // 응답 데이터의 필수 필드를 확인하여 유효성 검증
-
-                                println("response: $response")
 
                                 if (response.success) {
 
@@ -187,6 +194,10 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                                     println("name: ${response.data?.name!!}")
 
                                     // 이 경우 이름 입력 필드 사용 불가
+                                    withContext(Dispatchers.Main) {
+                                        // 이름이 있을 때
+                                        Toast.makeText(it, "${response.data?.name}님 환영합니다.", Toast.LENGTH_SHORT).show()
+                                    }
                                     _name.value = TextFieldValue(response.data?.name!!)
                                     _isNameCorrect.value = true
                                     _isNameEnable.value = false
@@ -196,9 +207,11 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                         }
 
                     } else {
-                        _isVerificationCodeCorret.value = false
-                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
-                        triggerVibration(it)
+                        withContext(Dispatchers.Main) {
+                            _isVerificationCodeCorret.value = false
+                            Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                            triggerVibration(it)
+                        }
                     }
                 }
             } else {
@@ -374,14 +387,24 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
     private val _naverPassword = MutableStateFlow(TextFieldValue())
     val naverPassword: StateFlow<TextFieldValue> = _naverPassword
 
+    // 로그인 버튼 활성화 여부
+    private val _naverLoginEnable = MutableStateFlow(false)
+    val naverLoginEnable : StateFlow<Boolean> = _naverLoginEnable
+
     // 네이버 아이디 필드 변화 감지
     fun onNaverIDChanged(newValue: TextFieldValue) {
         _naverID.value = newValue
+        checkNaverLoginButtonState()
     }
 
     // 네이버 비밀번호 필드 변화 감지
     fun onNaverPasswordChanged(newValue: TextFieldValue) {
         _naverPassword.value = newValue
+        checkNaverLoginButtonState()
+    }
+
+    private fun checkNaverLoginButtonState() {
+        _naverLoginEnable.value = _naverID.value.text.isNotEmpty() && _naverPassword.value.text.isNotEmpty()
     }
 
     // 네이버 로그인
@@ -393,25 +416,17 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                 val userId = sharedPreferences?.getLong("userId", -1L).toString()
                 val response = repository.naverAuth(NaverAuthRequest(userId, _naverID.value.text, _naverPassword.value.text))
 
-                if (response.success) {
-                    Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
-                    goScreen(ScreenType.SIGNUPCOMPLETE)
-                } else {
-                    Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
-                    _naverID.value = TextFieldValue()
-                    _naverPassword.value = TextFieldValue()
+                withContext(Dispatchers.Main) {
+                    if (response.success) {
+                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                        goScreen(ScreenType.SIGNUPCOMPLETE)
+                    } else {
+                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                        _naverID.value = TextFieldValue()
+                        _naverPassword.value = TextFieldValue()
+                    }
                 }
             }
-
-
-//            if (_naverID.value.text == "naver" && _naverPassword.value.text == "1111") {
-//                Toast.makeText(it, "로그인 성공", Toast.LENGTH_SHORT).show()
-//                _screenNavigationTo.value = ScreenNavigationTo(ScreenType.SIGNUPCOMPLETE)
-//            } else {
-//                Toast.makeText(it, "로그인 실패", Toast.LENGTH_SHORT).show()
-//                _naverID.value = TextFieldValue()
-//                _naverPassword.value = TextFieldValue()
-//            }
         }
     }
 

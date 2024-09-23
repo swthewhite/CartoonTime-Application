@@ -25,8 +25,8 @@ class UserRepository(private val apiService: ApiService) {
         return apiService.requestAuthCode(AuthRequest(phoneNumber))
     }
 
-    suspend fun verifyAuthCode(phoneNumber: String, authCode: String): VerifyAuthResponse {
-        return apiService.verifyAuthCode(VerifyAuthRequest(phoneNumber, authCode))
+    suspend fun verifyAuthCode(verifyAuthRequest: VerifyAuthRequest): VerifyAuthResponse {
+        return apiService.verifyAuthCode(verifyAuthRequest)
     }
 
     suspend fun signUp(phoneNumber: String, name: String): SignResponse {

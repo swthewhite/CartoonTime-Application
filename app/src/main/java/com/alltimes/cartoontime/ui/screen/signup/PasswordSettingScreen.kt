@@ -35,6 +35,8 @@ import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @Composable
 fun PasswordSettingScreen(viewModel: SignUpViewModel) {
+
+    val passwordCheck by viewModel.passwordCheck.collectAsState()
     val password by viewModel.password.collectAsState()
 
     val imgSize = 40.dp
@@ -67,7 +69,7 @@ fun PasswordSettingScreen(viewModel: SignUpViewModel) {
             )
             Spacer(modifier = Modifier.height(36.dp))
             Text(
-                text = "사용할 비밀번호를 입력하세요",
+                text = if (!passwordCheck) "사용할 비밀번호를 입력하세요" else "한번 더 입력해주세요.",
                 fontSize = 16.sp,
                 color = Color.Gray
             )

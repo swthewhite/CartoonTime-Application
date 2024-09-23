@@ -5,6 +5,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.content.contentReceiver
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,8 +18,10 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -36,6 +40,8 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
     val isNameEnable by viewModel.isNameEnable.collectAsState()
     val isPhoneNumberEnable by viewModel.isPhoneNumberEnable.collectAsState()
     val isverificationCodeCorrect by viewModel.isVerificationCodeCorrect.collectAsState()
+
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     ConstraintLayout(
         modifier = Modifier
@@ -121,7 +127,15 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                 },
             label = {
                 Text(text = "- 없이 입력", color = Color.Black)
-            }
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next // 다음 필드로 이동
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = {
+                    keyboardController?.hide() // 키패드 숨기기
+                }
+            )
         )
 
         // 인증번호 요청 버튼
@@ -144,11 +158,13 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
         if (isVerificationCodeVisible) {
             TextField(
                 value = verificationCode,
+                enabled = !isverificationCodeCorrect,
                 onValueChange = { viewModel.onVerificationCodeChange(it) },
                 colors = TextFieldDefaults.textFieldColors(
                     containerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent, // 비활성 상태에서 밑줄 색상 제거
                     cursorColor = Color.Black
                 ),
                 modifier = Modifier
@@ -165,7 +181,15 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                     },
                 label = {
                     Text(text = "인증번호", color = Color.Black)
-                }
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Next // 다음 필드로 이동
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = {
+                        keyboardController?.hide() // 키패드 숨기기
+                    }
+                )
             )
 
             if (isVerificationCodeVisible) {
@@ -209,6 +233,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                         containerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent, // 비활성 상태에서 밑줄 색상 제거
                         cursorColor = Color.Black
                     ),
                     modifier = Modifier
@@ -225,7 +250,15 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                         },
                     label = {
                         Text(text = "이름", color = Color.Black)
-                    }
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Next // 다음 필드로 이동
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = {
+                            keyboardController?.hide() // 키패드 숨기기
+                        }
+                    )
                 )
 
                 // Submit Button

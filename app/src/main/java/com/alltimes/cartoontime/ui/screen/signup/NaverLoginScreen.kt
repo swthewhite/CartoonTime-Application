@@ -45,6 +45,7 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
     val name by viewModel.name.collectAsState()
     val naverID by viewModel.naverID.collectAsState()
     val naverPassword by viewModel.naverPassword.collectAsState()
+    val loginEnable by viewModel.naverLoginEnable.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -170,29 +171,31 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
             }
         )
 
-        Box(
-            modifier = Modifier
-                .width(200.dp)
-                .height(70.dp)
-                .background(Color.Transparent, RoundedCornerShape(8.dp))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = { viewModel.onNaverLogin() }
-                )
-                .constrainAs(loginButton) {
-                    top.linkTo(passwordField.bottom, margin = 50.dp)
-                    start.linkTo(parent.start, margin = 40.dp)
-                    end.linkTo(parent.end, margin = 40.dp)
-                },
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.btn_naver_login),
-                contentDescription = "Naver Login",
+        if (loginEnable) {
+            Box(
                 modifier = Modifier
                     .width(200.dp)
                     .height(70.dp)
-            )
+                    .background(Color.Transparent, RoundedCornerShape(8.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { viewModel.onNaverLogin() }
+                    )
+                    .constrainAs(loginButton) {
+                        top.linkTo(passwordField.bottom, margin = 50.dp)
+                        start.linkTo(parent.start, margin = 40.dp)
+                        end.linkTo(parent.end, margin = 40.dp)
+                    },
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.btn_naver_login),
+                    contentDescription = "Naver Login",
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(70.dp)
+                )
+            }
         }
 
         Text(
