@@ -41,8 +41,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     var inputEnable: Boolean = true
 
-    private val _balance = MutableStateFlow(sharedPreferences.getInt("balance", 0))
-    val balance: StateFlow<Int> = _balance
+    private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
+    val balance: StateFlow<Long> = _balance
 
     fun goActivity(activity: ActivityType) {
         _activityNavigationTo.value = ActivityNavigationTo(activity)

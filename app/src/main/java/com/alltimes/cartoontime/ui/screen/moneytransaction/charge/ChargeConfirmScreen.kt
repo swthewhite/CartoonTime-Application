@@ -99,7 +99,6 @@ fun ChargeConfirmScreen(viewModel: ChargeViewModel) {
         Button(
             onClick = {
                 viewModel.goActivity(ActivityType.MAIN)
-                viewModel.onCharge(point)
             },
             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
             modifier = Modifier

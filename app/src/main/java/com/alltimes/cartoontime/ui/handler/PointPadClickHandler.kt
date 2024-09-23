@@ -12,7 +12,7 @@ class PointPadClickHandler(private val context: Context,
 
     var inputEnable: Boolean = true
 
-    fun onClickedButton(type: Int, balance: Int) {
+    fun onClickedButton(type: Int, balance: Long) {
         if (!inputEnable) return
 
         if (type == -1) {
