@@ -14,7 +14,6 @@ import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.main.BookDetailScreen
 import com.alltimes.cartoontime.ui.screen.main.BookRecommendScreen
 import com.alltimes.cartoontime.ui.screen.main.ConfirmScreen
-import com.alltimes.cartoontime.ui.screen.main.KioskLoginLoadingScreen
 import com.alltimes.cartoontime.ui.screen.main.MainScreen
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.utils.AccelerometerManager
@@ -76,7 +75,6 @@ class MainActivity : ComponentActivity() {
                 composable("bookRecommendScreen") { BookRecommendScreen(viewModel = viewModel) }
                 composable("bookDetailScreen") { BookDetailScreen(viewModel = viewModel) }
                 composable("confirmScreen") { ConfirmScreen(viewModel = viewModel) }
-                composable("kioskLoadingScreen") { KioskLoginLoadingScreen(viewModel = viewModel)  }
             }
         }
 
@@ -128,7 +126,6 @@ class MainActivity : ComponentActivity() {
             ScreenType.BOOKRECOMMEND -> "bookRecommendScreen"
             ScreenType.BOOKDETAIL -> "bookDetailScreen"
             ScreenType.CONFIRM -> "confirmScreen"
-            ScreenType.KIOSKLOADING -> "kioskLoadingScreen"
             else -> return
         }
 

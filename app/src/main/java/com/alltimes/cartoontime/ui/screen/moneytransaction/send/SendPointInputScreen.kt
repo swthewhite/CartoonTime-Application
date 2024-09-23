@@ -139,26 +139,28 @@ fun SendPointInputScreen(viewModel: SendViewModel) {
 
         // 다음 버튼 visible
         if (point != "") {
-            Button(
-                onClick = {
-                    viewModel.goScreen(ScreenType.SENDPASSWORDINPUT)
-                },
-                colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
-                modifier = Modifier
-                    .width(350.dp)
-                    .height(50.dp)
+            if (point.toInt() > 0) {
+                Button(
+                    onClick = {
+                        viewModel.goScreen(ScreenType.SENDPASSWORDINPUT)
+                    },
+                    colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
+                    modifier = Modifier
+                        .width(350.dp)
+                        .height(50.dp)
 
-                    .constrainAs(nextButton) {
-                        bottom.linkTo(numPad.top, margin = 10.dp)
-                        start.linkTo(parent.start, margin = 15.dp)
-                        end.linkTo(parent.end, margin = 15.dp)
-                    }
-            ) {
-                Text(
-                    text = "다음",
-                    fontSize = 20.sp,
-                    color = Color.Black
-                )
+                        .constrainAs(nextButton) {
+                            bottom.linkTo(numPad.top, margin = 10.dp)
+                            start.linkTo(parent.start, margin = 15.dp)
+                            end.linkTo(parent.end, margin = 15.dp)
+                        }
+                ) {
+                    Text(
+                        text = "다음",
+                        fontSize = 20.sp,
+                        color = Color.Black
+                    )
+                }
             }
         }
 

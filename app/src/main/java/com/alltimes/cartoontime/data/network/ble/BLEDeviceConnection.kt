@@ -18,10 +18,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.UUID
 import kotlin.coroutines.resume
+
 
 @Suppress("DEPRECATION")
 class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
@@ -40,6 +42,12 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     val successfulDataWrites = MutableStateFlow(0)
     // GATT 서비스 목록을 저장하는 MutableStateFlow
     val services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
+
+    // mode: true - login
+    // mode: false - money transaction
+    private val _mode = MutableStateFlow(false)
+    val mode = _mode.asStateFlow()
+
     // BluetoothGatt 객체를 저장하는 변수
     private var gatt: BluetoothGatt? = null
     private val uwbCommunicator =
@@ -53,6 +61,10 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     val receiverIdReadCompleted = MutableStateFlow(false)
     val controllerWrittenCompleted = MutableStateFlow(false)
     val senderIdWrittenCompleted = MutableStateFlow(false)
+
+    fun setMode(value: Boolean) {
+        _mode.update { value }
+    }
 
     // BluetoothGattCallback을 상속받은 callback 객체
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)

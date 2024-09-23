@@ -5,6 +5,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,8 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.alltimes.cartoontime.R
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -396,5 +399,139 @@ fun ReceiveAnimation() {
                 .offset(y = offsets[4].value.dp)
                 .graphicsLayer(alpha = visibilities[4].value)
         )
+    }
+}
+
+@Composable
+fun deviceFindingAnimation() {
+    // 이미지 리소스 ID를 배열로 정의
+    val imageIds = listOf(
+        R.drawable.image_loading0, // 0번 이미지
+        R.drawable.image_loading1, // 1번 이미지
+        R.drawable.image_loading2  // 2번 이미지
+    )
+
+    // 각 이미지의 visible 상태를 관리하는 상태값
+    var visibleImages by remember { mutableStateOf(listOf(false, false, false)) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            // 순차적으로 이미지가 visible로 전환
+            for (i in imageIds.indices) {
+                visibleImages = visibleImages.mapIndexed { index, _ -> index <= i }
+                delay(1000)
+            }
+            // 모든 이미지 invisible 상태로 전환
+            visibleImages = listOf(false, false, false)
+            delay(1000)
+        }
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        // 애니메이션 이미지들 (고정 이미지와 겹치도록 같은 Box에 배치)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .offset(y = 0.dp), // 고정 이미지와 약간 겹치게 오프셋을 줄여서 조정
+            contentAlignment = Alignment.Center
+        ) {
+            imageIds.reversed().forEachIndexed { index, imageId ->
+                val alpha by animateFloatAsState(if (visibleImages[2 - index]) 1f else 0f)
+
+                Image(
+                    painter = painterResource(imageId),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .graphicsLayer(alpha = alpha)
+                        .width(300.dp)  // 이미지의 가로 크기
+                        .height(300.dp) // 이미지의 세로 크기
+                        .offset(y = -50.dp)
+                )
+            }
+        }
+
+        // 항상 보여지는 추가 이미지 (애니메이션 이미지들과 겹치도록 위치 조정)
+        Image(
+            painter = painterResource(id = R.drawable.ic_phone_front), // 고정 이미지 리소스
+            contentDescription = "Static Image",
+            modifier = Modifier
+                .width(70.dp)  // 이미지의 가로 크기
+                .height(70.dp) // 이미지의 세로 크기
+                .offset(y = 50.dp) // 약간 위로 올려 애니메이션 이미지와 겹치도록 설정
+        )
+
+        // 고정된 텍스트 (추가된 이미지 아래쪽에 위치)
+        Text(
+            text = "Send Witch를 켠 다른 장치를 찾고 있어요.",
+            fontSize = 20.sp,
+            color = Color.Black,
+            modifier = Modifier
+                .offset(y = 150.dp) // 추가된 이미지 아래에 텍스트 위치
+            ,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun LoadingAnimation() {
+// 0번부터 15번까지의 이미지 리소스 ID 리스트
+    val imageIds = (0..15).map { index ->
+        when (index) {
+            0 -> R.drawable.ic_loading0
+            1 -> R.drawable.ic_loading1
+            2 -> R.drawable.ic_loading2
+            3 -> R.drawable.ic_loading3
+            4 -> R.drawable.ic_loading4
+            5 -> R.drawable.ic_loading5
+            6 -> R.drawable.ic_loading6
+            7 -> R.drawable.ic_loading7
+            8 -> R.drawable.ic_loading8
+            9 -> R.drawable.ic_loading9
+            10 -> R.drawable.ic_loading10
+            11 -> R.drawable.ic_loading11
+            12 -> R.drawable.ic_loading12
+            13 -> R.drawable.ic_loading13
+            14 -> R.drawable.ic_loading14
+            15 -> R.drawable.ic_loading15
+            else -> R.drawable.ic_loading0 // 기본값
+        }
+    }
+
+    // 각 이미지의 visible 상태를 관리하는 상태값
+    var visibleImages by remember { mutableStateOf(List(16) { false }) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            // 순차적으로 이미지가 visible로 전환
+            for (i in imageIds.indices) {
+                visibleImages = visibleImages.mapIndexed { index, _ -> index <= i }
+                delay(100) // 0.5초 대기
+            }
+            // 모든 이미지 invisible 상태로 전환
+            visibleImages = List(16) { false }
+            delay(500) // 0.5초 대기 후 다시 시작
+        }
+    }
+
+    // 이미지를 화면의 중앙에 배치
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        imageIds.forEachIndexed { index, imageId ->
+            val alpha by animateFloatAsState(if (visibleImages[index]) 1f else 0f)
+
+            Image(
+                painter = painterResource(id = imageId),
+                contentDescription = "Loading Animation Image $index",
+                modifier = Modifier
+                    .graphicsLayer(alpha = alpha)
+                    .size(200.dp) // 원하는 크기로 설정
+            )
+        }
     }
 }

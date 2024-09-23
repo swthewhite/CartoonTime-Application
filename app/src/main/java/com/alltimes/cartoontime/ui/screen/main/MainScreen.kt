@@ -49,6 +49,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.delay
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.alltimes.cartoontime.ui.screen.composable.LoadingAnimation
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -63,7 +64,12 @@ fun MainScreen(viewModel: MainViewModel) {
     val balance by viewModel.balance.collectAsState()
     val state by viewModel.state.collectAsState()
     val enteredTime by viewModel.enteredTime.collectAsState()
+    
+    // 입실 중
+    val uiState by viewModel.uiState.collectAsState()
+    val active = remember { mutableStateOf(false) }
 
+    // 입실 완료
     var usedTime by remember { mutableStateOf("") }
 
 // 실시간으로 현재 시간과 enteredTime 차이를 계산하는 LaunchedEffect
@@ -249,6 +255,9 @@ fun MainScreen(viewModel: MainViewModel) {
                 AnimateSequence { animationId ->
                     currentAnimation = animationId
                 }
+            }
+            else if (state == "입실 중") {
+                LoadingAnimation()
             } else if (state == "입실 완료") {
                 Box(
                     modifier = Modifier
@@ -345,6 +354,18 @@ fun MainScreen(viewModel: MainViewModel) {
                         end.linkTo(parent.end)
                     }
             )
+        } else if (state == "입실 중") {
+            Text(
+                text = "잠시만 기다려주세요.",
+                fontSize = 15.sp,
+                modifier = Modifier
+                    .constrainAs(stateTextDescription) {
+                        top.linkTo(stateText.bottom, margin = 10.dp)
+                        bottom.linkTo(parent.bottom, margin = 5.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+            )
         } else if (state == "입실 완료") {
             Button(
                 onClick = { viewModel.onBookRecommendButtonClick() },
@@ -369,6 +390,12 @@ fun MainScreen(viewModel: MainViewModel) {
     // 팝업 표시
     if (showExitDialog) {
         ExitDialog(onDismiss = { showExitDialog = false })
+    }
+
+    // 입퇴실
+    if (!active.value && uiState.isLogin) {
+        viewModel.onKioskLoadingCompleted()
+        active.value = true
     }
 }
 
