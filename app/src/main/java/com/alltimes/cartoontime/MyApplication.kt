@@ -10,7 +10,7 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         // RetrofitClient 초기화
-        RetrofitClient.initialize(this)
+        //RetrofitClient.initialize(this)
 
         println("초기화 완료")
     }

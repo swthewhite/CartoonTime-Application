@@ -145,11 +145,15 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                         _verificationCode.value.text
                     )
 
+                    println("response: $response")
+
                     if (response.success) {
                         _isVerificationCodeCorret.value = true
 
+                        println("response.data: ${response.data}")
+
                         // 유저 정보 받아오기
-                        val userId = response.data?.user?.id
+                        val userId = response.data?.userId
 
                         // 응답 정보를 보고 회원가입인지 로그인인지 구분
                         // -1이면 회원가입, esle 로그인
@@ -164,19 +168,29 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
                         // userID가 있을 때 유저 정보를 받아와서 저장
                         if (userId != null && userId != -1L) {
+                            println("실행되었습니다")
                             CoroutineScope(Dispatchers.IO).launch {
                                 val response = repository.getUserInfo(userId)
                                 // 응답 데이터의 필수 필드를 확인하여 유효성 검증
-                                if (response.id != null && response.currentMoney != null) {
 
-                                    editor?.putLong("balance", response.currentMoney)
-                                    editor?.putLong("userId", response.id)
-                                    editor?.putString("userName", response.username)
-                                    editor?.putString("name", response.name)
+                                println("response: $response")
+
+                                if (response.success) {
+
+                               // if (response.id != null && response.currentMoney != null) {
+
+                                    editor?.putLong("balance", response.data?.currentMoney!!)
+                                    editor?.putLong("userId", response.data?.id!!)
+                                    editor?.putString("userName", response.data?.username!!)
+                                    editor?.putString("name", response.data?.name!!)
+
+                                    println("name: ${response.data?.name!!}")
 
                                     // 이 경우 이름 입력 필드 사용 불가
-                                    _name.value = TextFieldValue(response.name)
+                                    _name.value = TextFieldValue(response.data?.name!!)
+                                    _isNameCorrect.value = true
                                     _isNameEnable.value = false
+                                    checkSubmitButtonState()
                                 }
                             }
                         }

@@ -72,16 +72,12 @@ data class VerifyAuthRequest(
 data class VerifyAuthResponse(
     val success: Boolean,
     val message: String,
-    val data: VerifyAuthData?,
+    val data: UserID?,
     val error: Any?
 )
 
-data class VerifyAuthData(
-    val user: UserID?
-)
-
 data class UserID(
-    val id: Long
+    val userId: Long
 )
 
 // 회원가입 /ct/sign-up
@@ -122,12 +118,19 @@ data class JwtToken(
 
 // 유저 정보 조회 /ct/user/{user_id}
 data class UserResponse(
+    val success: Boolean,
+    val message: String,
+    val data: UserData?,
+    val error: Any?
+)
+
+data class UserData(
     val id: Long,
     val username: String,
     val name: String,
     val currentMoney: Long,
     val roles: List<String>,
-    val mainAccount: MainAccount
+    //val mainAccount: MainAccount
 )
 
 data class MainAccount(

@@ -45,7 +45,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
     val charge: StateFlow<Long> = _charge
 
     // 잔액
-    private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
+    private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 1000000L))
     val balance: StateFlow<Long> = _balance
 
     // 입퇴실 상태
