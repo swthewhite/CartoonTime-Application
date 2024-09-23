@@ -38,12 +38,12 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
     val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
-    
+
     private val sharedPreferences: SharedPreferences?
         get() = context?.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
-    
+
     val editor = sharedPreferences?.edit()
-    
+
     // 회원가입, 로그인 구분
     var isSignUp = false
 
@@ -146,14 +146,16 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             // 인증번호는 6자리
             if (_verificationCode.value.text.length == 6) {
 
-                val verifyAuthRequest = VerifyAuthRequest(phoneNumber.value.text, _verificationCode.value.text)
+                val verifyAuthRequest =
+                    VerifyAuthRequest(phoneNumber.value.text, _verificationCode.value.text)
 
                 // 인증 확인 요청
                 CoroutineScope(Dispatchers.IO).launch {
                     val response = repository.verifyAuthCode(verifyAuthRequest)
 
                     // 키패드 숨기기
-                    val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    val inputMethodManager =
+                        context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
                     val view = (context as Activity).currentFocus
                     view?.let {
                         inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
@@ -184,7 +186,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
                                 if (response.success) {
 
-                               // if (response.id != null && response.currentMoney != null) {
+                                    // if (response.id != null && response.currentMoney != null) {
 
                                     editor?.putLong("balance", response.data?.currentMoney!!)
                                     editor?.putLong("userId", response.data?.id!!)
@@ -196,7 +198,11 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                                     // 이 경우 이름 입력 필드 사용 불가
                                     withContext(Dispatchers.Main) {
                                         // 이름이 있을 때
-                                        Toast.makeText(it, "${response.data?.name}님 환영합니다.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            it,
+                                            "${response.data?.name}님 환영합니다.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                     _name.value = TextFieldValue(response.data?.name!!)
                                     _isNameCorrect.value = true
@@ -227,7 +233,8 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
     private fun triggerVibration(context: Context) {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (vibrator.hasVibrator()) {
-            val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            val vibrationEffect =
+                VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
             vibrator.vibrate(vibrationEffect)
         }
     }
@@ -305,8 +312,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
         // 이름은 아무렇게나
         if (_name.value.text.length >= 2) {
             _isNameCorrect.value = true
-        }
-        else {
+        } else {
             _isNameCorrect.value = false
         }
     }
@@ -316,9 +322,10 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
     // 비밀번호는 두번 입력받아야 함
     private val _passwordCheck = MutableStateFlow(false)
     val passwordCheck: StateFlow<Boolean> = _passwordCheck
+
     // 첫번째 입력된 비밀번호
     var PassWord = ""
-    
+
     // 비밀번호 입력 필드 활성화 여부
     var inputEnable: Boolean = true
 
@@ -338,9 +345,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                     // 첫 번째 비밀번호 입력
                     PassWord = password
                     numPadClickHandler.clearPassword()
-                }
-                else
-                {
+                } else {
                     // 두 번째 비밀번호 입력 후 체크 로직
                     inputEnable = false
                     checkPassword()
@@ -389,7 +394,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     // 로그인 버튼 활성화 여부
     private val _naverLoginEnable = MutableStateFlow(false)
-    val naverLoginEnable : StateFlow<Boolean> = _naverLoginEnable
+    val naverLoginEnable: StateFlow<Boolean> = _naverLoginEnable
 
     // 네이버 아이디 필드 변화 감지
     fun onNaverIDChanged(newValue: TextFieldValue) {
@@ -404,7 +409,8 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
     }
 
     private fun checkNaverLoginButtonState() {
-        _naverLoginEnable.value = _naverID.value.text.isNotEmpty() && _naverPassword.value.text.isNotEmpty()
+        _naverLoginEnable.value =
+            _naverID.value.text.isNotEmpty() && _naverPassword.value.text.isNotEmpty()
     }
 
     // 네이버 로그인
@@ -414,7 +420,13 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             // 인증 코드 요청
             CoroutineScope(Dispatchers.IO).launch {
                 val userId = sharedPreferences?.getLong("userId", -1L).toString()
-                val response = repository.naverAuth(NaverAuthRequest(userId, _naverID.value.text, _naverPassword.value.text))
+                val response = repository.naverAuth(
+                    NaverAuthRequest(
+                        userId,
+                        _naverID.value.text,
+                        _naverPassword.value.text
+                    )
+                )
 
                 withContext(Dispatchers.Main) {
                     if (response.success) {

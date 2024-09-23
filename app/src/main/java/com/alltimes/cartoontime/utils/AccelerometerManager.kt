@@ -11,8 +11,10 @@ import com.alltimes.cartoontime.data.model.AccelerometerDataModel
 
 class AccelerometerManager(context: Context) : SensorEventListener {
 
-    private val sensorManager: SensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val accelerometerSensor: Sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!!
+    private val sensorManager: SensorManager =
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    private val accelerometerSensor: Sensor =
+        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)!!
 
     private val _accelerometerData = MutableLiveData<AccelerometerDataModel>()
     val accelerometerData: LiveData<AccelerometerDataModel> = _accelerometerData

@@ -43,11 +43,11 @@ fun ChargePasswordInputScreen(viewModel: ChargeViewModel) {
     val password by viewModel.password.collectAsState()
 
     ConstraintLayout(
-    modifier = Modifier
-    .fillMaxSize()
-    .background(color = Color(0xFFF4F2EE))
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, description0, description1, passwordRow, description2, numPad, ) = createRefs()
+        val (backButton, title, description0, description1, passwordRow, description2, numPad) = createRefs()
 
         // 뒤로가기 버튼
         Box(
@@ -148,7 +148,7 @@ fun ChargePasswordInputScreen(viewModel: ChargeViewModel) {
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 }
-        ){
+        ) {
             Text(
                 text = "비밀번호를 잊어버리셨나요?",
                 fontSize = 16.sp,

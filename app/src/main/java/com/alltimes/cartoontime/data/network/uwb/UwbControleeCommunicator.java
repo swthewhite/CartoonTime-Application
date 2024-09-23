@@ -97,7 +97,7 @@ public class UwbControleeCommunicator {
             System.out.println("Caught Exception: " + e);
         }
     }
-  
+
     public void stopCommunication() {
         if (rangingResultObservable.get() != null) {
             rangingResultObservable.get().dispose();

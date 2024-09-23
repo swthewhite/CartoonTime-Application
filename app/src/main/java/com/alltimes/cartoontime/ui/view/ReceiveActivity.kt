@@ -31,7 +31,10 @@ class ReceiveActivity : ComponentActivity() {
         setContent {
             navController = rememberNavController() // 전역 변수에 저장
 
-            NavHost(navController as NavHostController, startDestination = "receivePartnerCheckScreen") {
+            NavHost(
+                navController as NavHostController,
+                startDestination = "receivePartnerCheckScreen"
+            ) {
                 composable("receiveDescriptionScreen") { ReceiveDescriptionScreen(viewModel = viewModel) }
                 composable("receiveLoadingScreen") { ReceiveLoadingScreen(viewModel = viewModel) }
                 composable("receiveConfirmScreen") { ReceiveConfirmScreen(viewModel = viewModel) }

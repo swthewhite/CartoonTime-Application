@@ -35,10 +35,10 @@ class SendActivity : ComponentActivity() {
 
             NavHost(navController as NavHostController, startDestination = "sendPointInputScreen") {
                 composable("sendPointInputScreen") { SendPointInputScreen(viewModel = viewModel) }
-                composable("sendPasswordInputScreen") { SendPasswordInputScreen(viewModel = viewModel)}
-                composable("sendDescriptionScreen") { SendDescriptionScreen(viewModel = viewModel)}
-                composable("sendLoadingScreen") { SendLoadingScreen(viewModel = viewModel)}
-                composable("sendConfirmScreen") { SendConfirmScreen(viewModel = viewModel)}
+                composable("sendPasswordInputScreen") { SendPasswordInputScreen(viewModel = viewModel) }
+                composable("sendDescriptionScreen") { SendDescriptionScreen(viewModel = viewModel) }
+                composable("sendLoadingScreen") { SendLoadingScreen(viewModel = viewModel) }
+                composable("sendConfirmScreen") { SendConfirmScreen(viewModel = viewModel) }
                 composable("sendPartnerCheckScreen") { SendPartnerCheckScreen(viewModel = viewModel) }
             }
         }

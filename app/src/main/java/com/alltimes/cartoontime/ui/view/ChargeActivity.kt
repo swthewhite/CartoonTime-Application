@@ -30,9 +30,12 @@ class ChargeActivity : ComponentActivity() {
         setContent {
             navController = rememberNavController() // 전역 변수에 저장
 
-            NavHost(navController as NavHostController, startDestination = "chargePointInputScreen") {
+            NavHost(
+                navController as NavHostController,
+                startDestination = "chargePointInputScreen"
+            ) {
                 composable("chargePointInputScreen") { ChargePointInputScreen(viewModel = viewModel) }
-                composable("chargePasswordInputScreen") { ChargePasswordInputScreen(viewModel = viewModel)  }
+                composable("chargePasswordInputScreen") { ChargePasswordInputScreen(viewModel = viewModel) }
                 composable("chargeConfirmScreen") { ChargeConfirmScreen(viewModel = viewModel) }
             }
         }

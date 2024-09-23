@@ -100,7 +100,7 @@ fun SendLoadingScreen(viewModel: SendViewModel) {
             onClick = { viewModel.goScreen(ScreenType.SENDCONFIRM) },
             modifier = Modifier
                 .wrapContentSize()
-                .constrainAs(nextbtn){
+                .constrainAs(nextbtn) {
                     top.linkTo(title.top)
                     bottom.linkTo(title.bottom)
                     start.linkTo(title.end, margin = 10.dp)

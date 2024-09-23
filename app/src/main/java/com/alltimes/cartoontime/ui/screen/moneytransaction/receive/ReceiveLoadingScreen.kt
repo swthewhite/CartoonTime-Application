@@ -67,7 +67,7 @@ fun ReceiveLoadingScreen(viewModel: ReceiveViewModel) {
             onClick = { viewModel.goScreen(ScreenType.RECEIVECONFIRM) },
             modifier = Modifier
                 .wrapContentSize()
-                .constrainAs(nextbtn){
+                .constrainAs(nextbtn) {
                     top.linkTo(title.top)
                     bottom.linkTo(title.bottom)
                     start.linkTo(title.end, margin = 10.dp)

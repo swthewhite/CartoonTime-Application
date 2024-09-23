@@ -34,7 +34,7 @@ fun SendDescriptionScreen(viewModel: SendViewModel) {
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, animationBox, description0, description1, nextbtn ) = createRefs()
+        val (backButton, title, animationBox, description0, description1, nextbtn) = createRefs()
 
         // 뒤로가기 버튼
         Box(
@@ -81,7 +81,7 @@ fun SendDescriptionScreen(viewModel: SendViewModel) {
             onClick = { viewModel.goScreen(ScreenType.SENDLOADING) },
             modifier = Modifier
                 .wrapContentSize()
-                .constrainAs(nextbtn){
+                .constrainAs(nextbtn) {
                     top.linkTo(title.top)
                     bottom.linkTo(title.bottom)
                     start.linkTo(title.end, margin = 10.dp)
@@ -89,7 +89,7 @@ fun SendDescriptionScreen(viewModel: SendViewModel) {
         ) {
             Text("다음")
         }
-        
+
         // 애니메이션 뷰
         Box(
             modifier = Modifier
@@ -101,7 +101,7 @@ fun SendDescriptionScreen(viewModel: SendViewModel) {
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                 }
-        ){
+        ) {
             SendDescription()
         }
 
@@ -110,7 +110,7 @@ fun SendDescriptionScreen(viewModel: SendViewModel) {
             text = "송금을 받으시려는 분과",
             fontSize = 24.sp,
             modifier = Modifier
-                .constrainAs(description0){
+                .constrainAs(description0) {
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                     top.linkTo(animationBox.bottom, margin = 30.dp)
@@ -121,7 +121,7 @@ fun SendDescriptionScreen(viewModel: SendViewModel) {
             text = "핸드폰 앞면을 맞대주세요.",
             fontSize = 24.sp,
             modifier = Modifier
-                .constrainAs(description1){
+                .constrainAs(description1) {
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                     top.linkTo(description0.bottom)
