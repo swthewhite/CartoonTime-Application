@@ -13,6 +13,12 @@ interface ApiService {
     @POST("ct/verify-auth")
     suspend fun verifyAuthCode(@Body request: VerifyAuthRequest): VerifyAuthResponse
 
+    @POST("ct/sign-up")
+    suspend fun signUp(@Body request: SignUpRequest): SignResponse
+
+    @POST("ct/sign-in")
+    suspend fun signIn(@Body request: SignInRequest): SignResponse
+
     @GET("ct/user/{user_id}")
     suspend fun getUserInfo(@Path("user_id") userId: Long): UserResponse
 
@@ -52,7 +58,6 @@ data class AuthResponse(
 // 인증 번호 확인 /ct/verify-auth
 data class VerifyAuthRequest(
     val phoneNumber: String,
-    val name: String,
     val authCode: String
 )
 
@@ -64,6 +69,33 @@ data class VerifyAuthResponse(
 )
 
 data class VerifyAuthData(
+    val user: UserID?
+)
+
+data class UserID(
+    val id: Long
+)
+
+// 회원가입 /ct/sign-up
+data class SignUpRequest(
+    val phoneNumber: String,
+    val name: String,
+)
+
+data class SignInRequest(
+    val phoneNumber: String,
+)
+
+// 회원가입, 로그인 응답
+// /ct/sign-up, /ct/sign-in
+data class SignResponse(
+    val success: Boolean,
+    val message: String,
+    val data: SignResponseData?,
+    val error: Any?
+)
+
+data class SignResponseData(
     val user: User,
     val jwtToken: JwtToken
 )

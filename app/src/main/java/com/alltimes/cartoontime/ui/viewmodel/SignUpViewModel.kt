@@ -15,6 +15,7 @@ import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.remote.RetrofitClient
+import com.alltimes.cartoontime.data.remote.SignResponse
 import com.alltimes.cartoontime.data.repository.UserRepository
 import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
 import kotlinx.coroutines.CoroutineScope
@@ -32,69 +33,82 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
     val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
-
-    // SharedPreferences 객체를 가져옵니다.
+    
     private val sharedPreferences: SharedPreferences?
         get() = context?.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
-
-    // Editor 객체를 가져옵니다.
+    
     val editor = sharedPreferences?.edit()
-
-    // 회원가입인가 ? 로그인인가 ?
-    var isSignUp = true
+    
+    // 회원가입, 로그인 구분
+    var isSignUp = false
 
     // 서버 통신 관련 변수
     private val repository = UserRepository(RetrofitClient.apiService)
 
+    fun goActivity(activity: ActivityType) {
+        _activityNavigationTo.value = ActivityNavigationTo(activity)
+    }
+
+    fun goScreen(screen: ScreenType) {
+        _screenNavigationTo.value = ScreenNavigationTo(screen)
+    }
+
     /////////////////////////// SignUp ///////////////////////////
 
+    // 전화번호
     private val _phoneNumber = MutableStateFlow(TextFieldValue())
     val phoneNumber: StateFlow<TextFieldValue> = _phoneNumber
 
+    // 인증번호
     private val _verificationCode = MutableStateFlow(TextFieldValue())
     val verificationCode: StateFlow<TextFieldValue> = _verificationCode
 
+    // 이름 , isSignUp 이 true 일 때만 사용
     private val _name = MutableStateFlow(TextFieldValue())
     val name: StateFlow<TextFieldValue> = _name
 
+    // 전화번호 입력 가능 여부
     private val _isPhoneNumberEnable = MutableStateFlow(true)
     val isPhoneNumberEnable: StateFlow<Boolean> = _isPhoneNumberEnable
 
+    // 이름 입력 가능 여부
+    private val _isNameEnable = MutableStateFlow(true)
+    val isNameEnable: StateFlow<Boolean> = _isNameEnable
+
+    // 인증번호 입력 창 표시 여부
     private val _isVerificationCodeVisible = MutableStateFlow(false)
     val isVerificationCodeVisible: StateFlow<Boolean> = _isVerificationCodeVisible
 
+    // 인증번호 확인용
     private val _isVerificationCodeCorret = MutableStateFlow(false)
     val isVerificationCodeCorrect: StateFlow<Boolean> = _isVerificationCodeCorret
 
+    // 이름 검사, 버튼 활성화용
     private val _isNameCorrect = MutableStateFlow(false)
     val isNameCorrect: StateFlow<Boolean> = _isNameCorrect
 
+    // 버튼 활성화용 (회원가입, 로그인)
     private val _isSubmitButtonEnabled = MutableStateFlow(false)
     val isSubmitButtonEnabled: StateFlow<Boolean> = _isSubmitButtonEnabled
 
-
-    fun onLogout() {
-        // 로그아웃 처리 로직
-        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.FINISH)
-    }
-
+    // 등록하기 버튼 활성화 여부 검사
     private fun checkSubmitButtonState() {
-        // 인증번호 검사 로직
-        // 인증번호 검사 로직
         context?.let {
             // 이름 검사 로직
             _isNameCorrect.value = _name.value.text.length >= 2
-            // 전체적인 버튼 활성화 로직
+            // 전체적인 버튼 활성화 로직 ( 인증번호가 맞고, 이름이 제대로 입력되었다면 )
             _isSubmitButtonEnabled.value = _isVerificationCodeCorret.value && _isNameCorrect.value
         }
     }
 
+    // 인증번호 요청
     fun onRequestVerificationCode() {
         context?.let {
-            // TextFieldValue의 text 프로퍼티를 사용하여 문자열을 얻어옴
+            // 전화번호를 받아와서
             val phoneNumberString = phoneNumber.value.text
             val isValidPhoneNumber = phoneNumberString.matches(Regex("^010\\d{8}$"))
 
+            // 전화번호 형식이 맞다면
             if (isValidPhoneNumber) {
                 _isVerificationCodeVisible.value = true
                 _isPhoneNumberEnable.value = false
@@ -111,38 +125,57 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             } else {
                 Toast.makeText(it, "전화번호 형식을 지켜주세요", Toast.LENGTH_SHORT).show()
 
-                // 전화번호 입력 필드를 비웁니다.
+                // 전화번호 필드 초기화
                 _phoneNumber.value = TextFieldValue()
             }
         }
     }
 
+    // 인증하기 버튼 클릭
     fun onVerify() {
         context?.let {
+            // 인증번호는 6자리
             if (_verificationCode.value.text.length == 6) {
                 // 인증 확인 요청
                 CoroutineScope(Dispatchers.IO).launch {
                     val response = repository.verifyAuthCode(
                         phoneNumber.value.text,
-                        _name.value.text,
                         _verificationCode.value.text
                     )
 
                     if (response.success) {
                         _isVerificationCodeCorret.value = true
 
-                        // 사용자 정보 저장
-                        response.data?.let { data ->
-                            editor?.putInt("userId", data.user.id.toInt()) // 사용자 ID 저장
-                            editor?.putString("username", data.user.username) // 사용자 이름 저장
-                            editor?.putString("name", data.user.name) // 이름 저장
-                            editor?.putString("jwtAccessToken", data.jwtToken.accessToken) // 액세스 토큰 저장
-                            editor?.putString("jwtRefreshToken", data.jwtToken.refreshToken) // 리프레시 토큰 저장
-                            editor?.apply() // 변경사항 저장
+                        // 유저 정보 받아오기
+                        val userId = response.data?.user?.id
+
+                        // 응답 정보를 보고 회원가입인지 로그인인지 구분
+                        // -1이면 회원가입, esle 로그인
+                        if (userId == -1L) {
+                            isSignUp = true
+                        } else {
+                            isSignUp = false
                         }
 
-                        // 성공 시 다음 단계로 진행
-                        onSubmit()
+                        // userID가 있을 때 유저 정보를 받아와서 저장
+                        if (userId != null && userId != -1L) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val response = repository.getUserInfo(userId)
+                                // 응답 데이터의 필수 필드를 확인하여 유효성 검증
+                                if (response.id != null && response.currentMoney != null) {
+
+                                    editor?.putLong("balance", response.currentMoney)
+                                    editor?.putLong("userId", response.id)
+                                    editor?.putString("userName", response.username)
+                                    editor?.putString("name", response.name)
+
+                                    // 이 경우 이름 입력 필드 사용 불가
+                                    _name.value = TextFieldValue(response.name)
+                                    _isNameEnable.value = false
+                                }
+                            }
+                        }
+
                     } else {
                         _isVerificationCodeCorret.value = false
                         Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
@@ -152,11 +185,13 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             } else {
                 Toast.makeText(it, "인증번호는 6자리 입니다.", Toast.LENGTH_SHORT).show()
                 triggerVibration(it)
-                _verificationCode.value = TextFieldValue() // 입력 필드 비움
+                // 인증번호 필드 초기화
+                _verificationCode.value = TextFieldValue()
             }
         }
     }
 
+    // 휴대폰 진동
     private fun triggerVibration(context: Context) {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (vibrator.hasVibrator()) {
@@ -165,27 +200,66 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
         }
     }
 
+    // 등록하기 버튼
     fun onSubmit() {
-        // 유저 정보 저장 및 화면 전환
-        isSignUp = true
-        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.PASSWORDSETTING)
-
-        editor?.putString("name", _name.value.text)
-        // 서버로부터 응답이 있을 때는 사용자 잔여금을 받아와서 저장
-        editor?.putInt("balance", 8000) // 예시로 8000으로 설정
-        editor?.apply()
+        if (isSignUp) {
+            // sign-up api 호출
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = repository.signUp(phoneNumber.value.text, name.value.text)
+                    handleResponse(response)
+                } catch (e: Exception) {
+                    // 오류 처리
+                }
+            }
+        } else {
+            // sign-in api 호출
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = repository.signIn(phoneNumber.value.text)
+                    handleResponse(response)
+                } catch (e: Exception) {
+                    // 오류 처리
+                }
+            }
+        }
     }
 
+    // 회원 가입, 로그인 처리 로직
+    private fun handleResponse(response: SignResponse?) {
+        if (response?.success == true) {
+            // 유저 정보 저장
+            editor?.putLong("userId", response.data?.user?.id ?: -1)
+            editor?.putString("username", response.data?.user?.username ?: "")
+            editor?.putString("name", response.data?.user?.name ?: "")
+
+            // jwtToken 저장
+            editor?.putString("grantType", response.data?.jwtToken?.grantType)
+            editor?.putString("accessToken", response.data?.jwtToken?.accessToken)
+            editor?.putString("refreshToken", response.data?.jwtToken?.refreshToken)
+
+            editor?.apply()
+
+            // 화면 전환
+            goScreen(ScreenType.PASSWORDSETTING)
+        } else {
+            // 실패 처리
+        }
+    }
+
+    // 전화번호 필드 변화 감지
     fun onPhoneNumberChange(newValue: TextFieldValue) {
         _phoneNumber.value = newValue
         checkSubmitButtonState()
     }
 
+    // 인증번호 필드 변화 감지
     fun onVerificationCodeChange(newValue: TextFieldValue) {
         _verificationCode.value = newValue
         checkSubmitButtonState()
     }
 
+    // 이름 필드 변화 감지
     fun onNameChange(newValue: TextFieldValue) {
         _name.value = newValue
         checkSubmitButtonState()

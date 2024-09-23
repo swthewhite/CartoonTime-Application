@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
+import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,7 +33,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
     val name by viewModel.name.collectAsState()
     val isVerificationCodeVisible by viewModel.isVerificationCodeVisible.collectAsState()
     val isSubmitButtonEnabled by viewModel.isSubmitButtonEnabled.collectAsState()
-    val isNameCorrect by viewModel.isNameCorrect.collectAsState()
+    val isNameEnable by viewModel.isNameEnable.collectAsState()
     val isPhoneNumberEnable by viewModel.isPhoneNumberEnable.collectAsState()
     val isverificationCodeCorrect by viewModel.isVerificationCodeCorrect.collectAsState()
 
@@ -47,7 +48,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
 
         // Exit button
         IconButton(
-            onClick = { viewModel.onLogout() },
+            onClick = { viewModel.goActivity(ActivityType.FINISH) },
             modifier = Modifier
                 .size(24.dp)
                 .constrainAs(exitButton) {
@@ -202,6 +203,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                 // Name TextField
                 TextField(
                     value = name,
+                    enabled = isNameEnable,
                     onValueChange = { viewModel.onNameChange(it) },
                     colors = TextFieldDefaults.textFieldColors(
                         containerColor = Color.Transparent,

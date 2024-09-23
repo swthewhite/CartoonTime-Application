@@ -10,6 +10,9 @@ import com.alltimes.cartoontime.data.remote.NaverAuthRequest
 import com.alltimes.cartoontime.data.remote.NavertAuthResponse
 import com.alltimes.cartoontime.data.remote.PayRequest
 import com.alltimes.cartoontime.data.remote.PayResponse
+import com.alltimes.cartoontime.data.remote.SignInRequest
+import com.alltimes.cartoontime.data.remote.SignResponse
+import com.alltimes.cartoontime.data.remote.SignUpRequest
 import com.alltimes.cartoontime.data.remote.TransferRequest
 import com.alltimes.cartoontime.data.remote.TransferResponse
 import com.alltimes.cartoontime.data.remote.UserResponse
@@ -21,8 +24,16 @@ class UserRepository(private val apiService: ApiService) {
         return apiService.requestAuthCode(AuthRequest(phoneNumber))
     }
 
-    suspend fun verifyAuthCode(phoneNumber: String, name: String, authCode: String): VerifyAuthResponse {
-        return apiService.verifyAuthCode(VerifyAuthRequest(phoneNumber, name, authCode))
+    suspend fun verifyAuthCode(phoneNumber: String, authCode: String): VerifyAuthResponse {
+        return apiService.verifyAuthCode(VerifyAuthRequest(phoneNumber, authCode))
+    }
+
+    suspend fun signUp(phoneNumber: String, name: String): SignResponse {
+        return apiService.signUp(SignUpRequest(phoneNumber, name))
+    }
+
+    suspend fun signIn(phoneNumber: String): SignResponse {
+        return apiService.signIn(SignInRequest(phoneNumber))
     }
 
     suspend fun getUserInfo(userId: Long): UserResponse {
