@@ -54,7 +54,7 @@ import androidx.constraintlayout.compose.Dimension
 
 @Composable
 fun BookRecommendScreen(viewModel: MainViewModel) {
-    val name = viewModel.userName
+    val name = viewModel.name
     val cartoons by viewModel.cartoons.collectAsState()
     val clickedCartoon by viewModel.clickedCartoon.collectAsState()
     val category by viewModel.category.collectAsState()

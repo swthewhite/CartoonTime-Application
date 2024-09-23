@@ -37,6 +37,7 @@ class BootActivity : ComponentActivity() {
         fingerprintLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 // 지문인식 성공이면 mainActivity로 이동
+                viewModel.authenticationSuccess()
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
             }

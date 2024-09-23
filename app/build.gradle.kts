@@ -78,6 +78,12 @@ dependencies {
     // constraint layout
     implementation(libs.androidx.constraintlayout.compose)
 
+    // http 통신
+    implementation(libs.com.squareup.retrofit2.retrofit3)
+    implementation(libs.converter.gson)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -17,7 +17,12 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.remote.ChargeRequest
+import com.alltimes.cartoontime.data.remote.RetrofitClient
+import com.alltimes.cartoontime.data.repository.UserRepository
 import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -39,6 +44,9 @@ class BootViewModel(private val context: Context) : ViewModel(), NumpadAction {
     // Editor 객체를 가져옵니다.
     val editor = sharedPreferences.edit()
 
+    // 서버 통신 관련 변수
+    private val repository = UserRepository(RetrofitClient.apiService)
+
     /////////////////////////// Boot ///////////////////////////
 
     fun onLoginClick() {
@@ -54,8 +62,33 @@ class BootViewModel(private val context: Context) : ViewModel(), NumpadAction {
     // ViewModel에서 상태를 직접 접근할 수 있도록
     val password: StateFlow<String> get() = numPadClickHandler.password
 
-    private fun authenticationSuccess() {
+    fun authenticationSuccess() {
         _activityNavigationTo.value = ActivityNavigationTo(ActivityType.MAIN)
+
+        println("인증 성공입니다 `~~~")
+
+        // 로그인하면서 서버로부터 유저 정보 받아와서 다시 저장.
+        CoroutineScope(Dispatchers.IO).launch {
+            // userId와 amount를 ChargeRequest 객체에 담아서 전달
+            val userId = sharedPreferences.getLong("userId", -1L)
+
+            // API 호출
+            val response = repository.getUserInfo(userId)
+
+            println("response: $response")
+
+            // 응답 처리
+            if (response.success) {
+
+                editor?.putLong("balance", response.data?.currentMoney!!)
+                editor?.putLong("userId", response.data?.id!!)
+                editor?.putString("userName", response.data?.username!!)
+                editor?.putString("name", response.data?.name!!)
+
+                editor.apply()
+
+            }
+        }
     }
 
     private val numPadClickHandler: NumPadClickHandler by lazy {

@@ -2,6 +2,7 @@ package com.alltimes.cartoontime.ui.viewmodel
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -11,8 +12,13 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.remote.RetrofitClient
+import com.alltimes.cartoontime.data.repository.UserRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -27,22 +33,26 @@ class MainViewModel(private val context: Context) : ViewModel() {
     private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
     val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
 
-    // SharedPreferences 객체를 가져옵니다.
     private val sharedPreferences: SharedPreferences
         get() = context.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
 
-    // Editor 객체를 가져옵니다.
     val editor = sharedPreferences.edit()
 
-    val userName = sharedPreferences.getString("name", "")
+    val name = sharedPreferences.getString("name", "")
 
+    // 요금
+    private val _charge = MutableStateFlow(-1L)
+    val charge: StateFlow<Long> = _charge
+
+    // 잔액
+    private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 1000000L))
+    val balance: StateFlow<Long> = _balance
+
+    // 입퇴실 상태
     private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
     val state: MutableStateFlow<String?> = _state
 
-    // MutableStateFlow로 balance 값을 관리
-    private val _balance = MutableStateFlow(sharedPreferences.getInt("balance", 8000))
-    val balance: StateFlow<Int> = _balance
-
+    // 입실 시간
     private val _enteredTime = MutableStateFlow(sharedPreferences.getString("enteredTime", "2024-08-19 09:00:00"))
     val enteredTime: MutableStateFlow<String?> = _enteredTime
 
@@ -55,24 +65,9 @@ class MainViewModel(private val context: Context) : ViewModel() {
     }
 
     // 서버 통신 관련 변수
+    private val repository = UserRepository(RetrofitClient.apiService)
 
     /////////////////////////// Main ///////////////////////////
-
-    fun onSendButtonClick() {
-        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.SEND)
-    }
-
-    fun onReceiveButtonClick() {
-        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.RECEIVE)
-    }
-
-    fun onChargeButtonClick() {
-        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.CHARGE)
-    }
-
-    fun onBookRecommendButtonClick() {
-        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.BOOKRECOMMEND)
-    }
 
     // 현재 시각을 가져오는 함수
     private fun getCurrentTime(): String {
@@ -91,55 +86,108 @@ class MainViewModel(private val context: Context) : ViewModel() {
     }
 
     // 요금을 계산하는 함수 (예: 분당 100원)
+    // 서버에서 해결해줘야하는 부분 ?
     private fun calculateCharge(usedTimeMinutes: Long): Int {
         val chargePerMinute = 100  // 분당 요금
         return (usedTimeMinutes * chargePerMinute).toInt()
     }
 
+    // BleScanner 변수
     private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
     val uiState: StateFlow<UIStateModel> = bleScannerViewModel.uiState
 
+    // 각속도 측정 후 입퇴실 진행
     fun onLoginOut() {
-        _state.value = "입실 중"
+        if (_state.value == "입실 전") _state.value = "입실 중"
+        else _state.value = "퇴실 중"
+
         bleScannerViewModel.setMode(false)
         bleScannerViewModel.startScanningAndConnect()
     }
 
-    fun serverConnect() {
-        // 서버와 연결해서 값을 받아오는 함수
-        // 지속적으로 호출되어야 하나 ?
-        // state, enteredTime, usedTime, balance 값이 변경되어야 함
-    }
-
+    // 입실 중 -> 입실 완료
+    // 퇴실 중 -> 입실 전
     fun onKioskLoadingCompleted() {
 
         println("onLoginOut")
         println("state: ${_state.value}")
         println("get state : ${sharedPreferences.getString("state", "입실 전")}")
 
-        val currentState = sharedPreferences.getString("state", "입실")
-        val currentTime = getCurrentTime()  // 현재 시각을 가져오는 함수
+        // 서버에서 입퇴실 로그 조회
+        CoroutineScope(Dispatchers.IO).launch {
+            val userId = sharedPreferences.getLong("userId", -1L)
+            val response = repository.getEntryLog(userId)
+            
+            if (response.success) {
+                val logs = response.data
+                val lastLog = logs.lastOrNull() // 최신 입퇴실 로그 가져오기
 
-        if (currentState == "입실 전") {
-            // 입실 완료 상태로 변경
+                if (lastLog != null) {
+                    if (lastLog.exitDate == null) {
+                        // 퇴실 기록이 없는 경우 퇴실 진행
+                        completeExit(userId)
+                    } else {
+                        // 퇴실 기록이 있는 경우 입실 진행
+                        // 단, charge가 -1이 아니라면 잔액 부족으로 다시 퇴실하려는 상황이므로 예외처리
+                        if (_charge.value != -1L) {
+                            // 잔액 부족으로 퇴실 진행
+                            completeExit(userId)
+                        } else {
+                            completeEntry(userId)
+                        }
+                    }
+                }
+            } else {
+                // 오류 처리
+                Log.e("Kiosk", "입퇴실 로그 조회 실패: ${response.message}")
+            }
+        }
+    }
+
+    // 퇴실 완료 API 호출
+    private suspend fun completeExit(userId: Long) {
+
+        if (_charge.value != -1L)
+        {
+            goScreen(ScreenType.CONFIRM)
+        } else {
+            val response = repository.exit(userId)
+
+            if (response.success) {
+                // 퇴실 완료 처리
+                _state.value = "입실 전"
+                editor.putString("state", "입실 전")
+                editor.apply()
+
+                // 요금 처리 및 화면 전환 등 추가 로직
+                val fee = response.data.lastOrNull()?.fee
+                _charge.value = fee!!
+                goScreen(ScreenType.CONFIRM)
+            } else {
+                // 오류 처리
+                Log.e("Kiosk", "퇴실 처리 실패: ${response.message}")
+            }
+        }
+    }
+
+    // 입실 완료 API 호출
+    private suspend fun completeEntry(userId: Long) {
+        val response = repository.entry(userId)
+
+        if (response.success) {
+            // 입실 완료 처리
             _state.value = "입실 완료"
             editor.putString("state", "입실 완료")
             editor.apply()
 
             // 현재 시각을 기록
+            val currentTime = getCurrentTime()  // 현재 시각을 가져오는 함수
             _enteredTime.value = currentTime
             editor.putString("enteredTime", currentTime)
             editor.apply()
-
-        } else if (currentState == "입실 완료") {
-
-            // 입실 시 기록된 시간과 현재 시간을 바탕으로 요금 계산
-            val enteredTime = sharedPreferences.getString("enteredTime", currentTime)
-            val usedTimeMinutes = calculateUsedTime(enteredTime, currentTime)  // 사용 시간을 분 단위로 계산
-            _charge.value = calculateCharge(usedTimeMinutes) + 50000 // 요금을 계산
-
-            // 요금 정산 페이지로 넘어가기
-            _screenNavigationTo.value = ScreenNavigationTo(ScreenType.CONFIRM)
+        } else {
+            // 오류 처리
+            Log.e("Kiosk", "입실 처리 실패: ${response.message}")
         }
     }
 
@@ -213,9 +261,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
 
     /////////////////////////// Confirm ///////////////////////////
 
-    private val _charge = MutableStateFlow(0)
-    val charge: StateFlow<Int> = _charge
-
+    // 결제 완료
     fun onConfirmButtonClick() {
         // 입실 전 상태로 변경
         _state.value = "입실 전"
@@ -224,10 +270,12 @@ class MainViewModel(private val context: Context) : ViewModel() {
 
         // 요금 정산
         _balance.value -= _charge.value
-        editor.putInt("balance", _balance.value)
+        editor.putLong("balance", _balance.value)
         editor.apply()
 
-        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.MAIN)
+        _charge.value = -1L
+
+        goScreen(ScreenType.MAIN)
     }
 
 }

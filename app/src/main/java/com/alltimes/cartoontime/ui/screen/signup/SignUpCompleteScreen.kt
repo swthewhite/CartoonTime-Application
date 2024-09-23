@@ -25,10 +25,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
+import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @Composable
 fun SignUpCompleteScreen(viewModel: SignUpViewModel) {
+
+    val isSignup = viewModel.isSignUp
 
     ConstraintLayout(
         modifier = Modifier
@@ -52,7 +55,7 @@ fun SignUpCompleteScreen(viewModel: SignUpViewModel) {
         )
 
         Text(
-            text = "가입이 완료 되었어요.",
+            text = if (isSignup) "회원가입이 완료 되었어요." else "로그인이 완료 되었어요.",
             fontSize = 24.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -78,7 +81,7 @@ fun SignUpCompleteScreen(viewModel: SignUpViewModel) {
         )
 
         Button(
-            onClick = { viewModel.onClick() },
+            onClick = { viewModel.goActivity(ActivityType.MAIN) },
             shape = RoundedCornerShape(15),
             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
             modifier = Modifier
