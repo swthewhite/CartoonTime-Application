@@ -91,7 +91,7 @@ class BLEScannerViewModel(private val context: Context) : ViewModel(), RangingCa
 
     @SuppressLint("MissingPermission")
     private suspend fun connectToDeviceSequentially(deviceInfo: DeviceInfo) {
-        // Add device to the tried list
+        // 시도한 기기를 기록
         triedDevices.add(deviceInfo.device.address)
 
         _activeConnection.value = BLEDeviceConnection(context, deviceInfo, this)
@@ -102,55 +102,44 @@ class BLEScannerViewModel(private val context: Context) : ViewModel(), RangingCa
         withContext(Dispatchers.Main) {
             activeConnection?.connect()
 
-            // Ensure we wait until the device is connected
+            // 기기가 연결될 때까지 대기
             activeConnection?.isConnected?.collectLatest { isConnected ->
                 if (isConnected) {
-                    //Log.w("BLEConnection", "Connected to device: ${deviceInfo.device.name}")
+                    Log.d("BLEConnection", "기기 연결 성공: ${deviceInfo.device.name}")
 
-                    // Wait for service discovery to complete
+                    // 서비스 검색 완료 대기
                     CoroutineScope(Dispatchers.Main).launch {
                         activeConnection?.discoverServices()
                         activeConnection?.serviceDiscoveryCompleted?.collectLatest { servicesDiscovered ->
                             if (servicesDiscovered) {
-                                //Log.d("BLEConnection", "Services discovered successfully.")
+                                Log.d("BLEConnection", "서비스 검색 완료.")
 
-                                // Wait for password reading to complete
-                                activeConnection?.readCharacteristic()
-                                activeConnection?.passwordReadCompleted?.collectLatest { dataBLERead ->
-                                    if (dataBLERead) {
-                                        //Log.d("BLEConnection", "Password read successfully.")
+                                // 특성 작업을 순차적으로 실행
+                                val characteristicSuccess = activeConnection?.performCharacteristicOperationsSequentially()
 
-                                        // Wait for name writing to complete
-                                        activeConnection?.writeCharacteristic()
-                                        activeConnection?.nameWrittenCompleted?.collectLatest { nameWritten ->
-                                            if (nameWritten) {
-                                                //Log.d("BLEConnection", "Name written successfully.")
-                                                _sendUiState.update {
-                                                    it.copy(
-                                                        isDeviceConnected = true,
-                                                        activeDevice = deviceInfo.device
-                                                    )
-                                                }
-                                                //Log.d("BLEConnection Data", "$dataBLERead $nameWritten")
-                                            } else {
-                                                //Log.e("BLEConnection", "Failed to write name.")
-                                            }
-                                        }
-                                    } else {
-                                        //Log.e("BLEConnection", "Failed to read password.")
+                                if (characteristicSuccess == true) {
+                                    Log.d("BLEConnection", "특성 읽기 및 쓰기 작업 완료.")
+                                    _sendUiState.update {
+                                        it.copy(
+                                            isDeviceConnected = true,
+                                            activeDevice = deviceInfo.device
+                                        )
                                     }
+                                } else {
+                                    Log.e("BLEConnection", "특성 작업 중 실패.")
                                 }
                             } else {
-                                //Log.e("BLEConnection", "Failed to discover services.")
+                                Log.e("BLEConnection", "서비스 검색 실패.")
                             }
                         }
                     }
                 } else {
-                    //Log.d("BLEConnection", "Failed to connect to device: ${deviceInfo.device.name}")
+                    Log.e("BLEConnection", "기기 연결 실패: ${deviceInfo.device.name}")
                 }
             }
         }
     }
+
 
     @SuppressLint("MissingPermission")
     fun disconnectDevice() {

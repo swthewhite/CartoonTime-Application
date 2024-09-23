@@ -9,11 +9,11 @@ object BLEConstants {
     val UWB_WITCH_SERVICE_UUID: UUID = UUID.fromString(stringToUUIDFormat("WITCHCARTOONTIME"))
 
     val CONTROLEE_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("__CONTROLEE_CHAR"))
+    val RECEIVER_ID_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("RECEIVER_ID_CHAR"))
+
     val CONTROLLER_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("CONTROLLER_CHAR"))
+    val SENDER_ID_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("__SENDER_ID_CHAR"))
 
-
-    val MY_ID_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("______MY_ID_CHAR"))
-    val PARTNER_ID_CHARACTERISTIC_UUID: UUID = UUID.fromString(stringToUUIDFormat("_PARTNER_ID_CHAR"))
 }
 
 fun stringToUUIDFormat(input: String): String {
