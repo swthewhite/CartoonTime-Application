@@ -42,7 +42,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 @Composable
 fun NaverLoginScreen(viewModel: SignUpViewModel) {
 
-    val name = viewModel.userName
+    val name by viewModel.name.collectAsState()
     val naverID by viewModel.naverID.collectAsState()
     val naverPassword by viewModel.naverPassword.collectAsState()
 
@@ -178,7 +178,7 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = { viewModel.onLogin() }
+                    onClick = { viewModel.onNaverLogin() }
                 )
                 .constrainAs(loginButton) {
                     top.linkTo(passwordField.bottom, margin = 50.dp)

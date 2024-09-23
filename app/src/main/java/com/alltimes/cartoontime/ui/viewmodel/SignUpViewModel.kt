@@ -14,6 +14,7 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.remote.NaverAuthRequest
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.remote.SignResponse
 import com.alltimes.cartoontime.data.repository.UserRepository
@@ -274,12 +275,16 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     /////////////////////////// PasswordSetting ///////////////////////////
 
+    // 비밀번호는 두번 입력받아야 함
     private val _passwordCheck = MutableStateFlow(false)
     val passwordCheck: StateFlow<Boolean> = _passwordCheck
-
-    var inputEnable: Boolean = true
+    // 첫번째 입력된 비밀번호
     var PassWord = ""
+    
+    // 비밀번호 입력 필드 활성화 여부
+    var inputEnable: Boolean = true
 
+    // 키패드 클릭 이벤트 처리
     override fun onClickedButton(type: Int) {
         numPadClickHandler.onClickedButton(type)
     }
@@ -292,11 +297,13 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             onPasswordComplete = { password: String ->
                 if (!passwordCheck.value) {
                     _passwordCheck.value = true
+                    // 첫 번째 비밀번호 입력
                     PassWord = password
                     numPadClickHandler.clearPassword()
                 }
                 else
                 {
+                    // 두 번째 비밀번호 입력 후 체크 로직
                     inputEnable = false
                     checkPassword()
                 }
@@ -304,27 +311,26 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
         )
     }
 
-    // 입력된 비밀번호 체크
+    // 입력된 두 개의 비밀번호 체크
     private fun checkPassword() {
         context?.let {
             if (password.value == PassWord) {
-                // 회원가입이라면 naverlogin으로 screen 전환
-                // 로그인이라면 main으로 activity 전환
-                if (isSignUp) _screenNavigationTo.value = ScreenNavigationTo(ScreenType.NAVERLOGIN)
-                else _activityNavigationTo.value = ActivityNavigationTo(ActivityType.MAIN)
+                // 회원가입이라면 naverlogin으로 전환
+                // 로그인이라면 signupscreen으로 전환
+                if (isSignUp) goScreen(ScreenType.NAVERLOGIN)
+                else goScreen(ScreenType.SIGNUPCOMPLETE)
 
+                // 비밀번호 저장
                 editor?.putString("password", password.value)
                 editor?.apply()
 
-                Toast.makeText(it, "동일합니다", Toast.LENGTH_SHORT).show()
+                Toast.makeText(it, "비밀번호를 저장했습니다.", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(it, "비밀번호가 다릅니다", Toast.LENGTH_SHORT).show()
-                val vibrator = it.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                if (vibrator.hasVibrator()) {
-                    val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
-                    vibrator.vibrate(vibrationEffect)
-                }
 
+                triggerVibration(it)
+
+                // 입력 초기화
                 inputEnable = true
                 _passwordCheck.value = false
                 PassWord = ""
@@ -335,41 +341,56 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     /////////////////////////// NaverLogin ///////////////////////////
 
+    // 네이버 아이디 필드
     private val _naverID = MutableStateFlow(TextFieldValue())
     val naverID: StateFlow<TextFieldValue> = _naverID
 
+    // 네이버 비밀번호 필드
     private val _naverPassword = MutableStateFlow(TextFieldValue())
     val naverPassword: StateFlow<TextFieldValue> = _naverPassword
 
-    val userName: String?
-        get() = sharedPreferences?.getString("name", "")
-
+    // 네이버 아이디 필드 변화 감지
     fun onNaverIDChanged(newValue: TextFieldValue) {
         _naverID.value = newValue
     }
 
+    // 네이버 비밀번호 필드 변화 감지
     fun onNaverPasswordChanged(newValue: TextFieldValue) {
         _naverPassword.value = newValue
     }
 
-    fun onLogin() {
-        // 로그인 처리 로직
+    // 네이버 로그인
+    fun onNaverLogin() {
         context?.let {
-            if (_naverID.value.text == "naver" && _naverPassword.value.text == "1111") {
-                Toast.makeText(it, "로그인 성공", Toast.LENGTH_SHORT).show()
-                _screenNavigationTo.value = ScreenNavigationTo(ScreenType.SIGNUPCOMPLETE)
-            } else {
-                Toast.makeText(it, "로그인 실패", Toast.LENGTH_SHORT).show()
-                _naverID.value = TextFieldValue()
-                _naverPassword.value = TextFieldValue()
+            // 네이버 로그인 api 호출
+            // 인증 코드 요청
+            CoroutineScope(Dispatchers.IO).launch {
+                val userId = sharedPreferences?.getLong("userId", -1L).toString()
+                val response = repository.naverAuth(NaverAuthRequest(userId, _naverID.value.text, _naverPassword.value.text))
+
+                if (response.success) {
+                    Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                    goScreen(ScreenType.SIGNUPCOMPLETE)
+                } else {
+                    Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                    _naverID.value = TextFieldValue()
+                    _naverPassword.value = TextFieldValue()
+                }
             }
+
+
+//            if (_naverID.value.text == "naver" && _naverPassword.value.text == "1111") {
+//                Toast.makeText(it, "로그인 성공", Toast.LENGTH_SHORT).show()
+//                _screenNavigationTo.value = ScreenNavigationTo(ScreenType.SIGNUPCOMPLETE)
+//            } else {
+//                Toast.makeText(it, "로그인 실패", Toast.LENGTH_SHORT).show()
+//                _naverID.value = TextFieldValue()
+//                _naverPassword.value = TextFieldValue()
+//            }
         }
     }
 
     /////////////////////////// SignUpComplete ///////////////////////////
 
-    fun onClick() {
-        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.MAIN)
-    }
 
 }
