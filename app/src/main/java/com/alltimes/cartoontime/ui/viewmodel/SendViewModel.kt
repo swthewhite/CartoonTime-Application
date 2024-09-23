@@ -15,11 +15,18 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.remote.RetrofitClient
+import com.alltimes.cartoontime.data.remote.TransferRequest
+import com.alltimes.cartoontime.data.repository.UserRepository
 import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
 import com.alltimes.cartoontime.ui.handler.PointPadClickHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction {
 //class SendViewModel(private val application: Application) : AndroidViewModel(application) {
@@ -32,17 +39,17 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
     val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
 
-    // SharedPreferences 객체를 가져옵니다.
     private val sharedPreferences: SharedPreferences
         get() = context.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
 
-    // Editor 객체를 가져옵니다.
     val editor = sharedPreferences.edit()
 
     var inputEnable: Boolean = true
 
     private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
+
+    private val repository = UserRepository(RetrofitClient.apiService)
 
     fun goActivity(activity: ActivityType) {
         _activityNavigationTo.value = ActivityNavigationTo(activity)
@@ -97,8 +104,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             onPasswordComplete = { password: String ->
                 val userPassword = sharedPreferences.getString("password", null)
                 if (userPassword == password) {
-                    println("YEAHYEAH")
-                    goScreen(ScreenType.SENDPARTNERCHECK)
+                    transferPoint()
+                    //goScreen(ScreenType.SENDPARTNERCHECK)
                 } else {
                     numPadClickHandler.clearPassword()
                     showPasswordError()
@@ -125,6 +132,35 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     // UWB 연결
     // 포인트 송금 함수
+
+    fun transferPoint() {
+
+        CoroutineScope(Dispatchers.IO).launch {
+
+            val fromUserId = sharedPreferences.getLong("userId", -1L)
+            val toUserId = 11L
+            val transferRequest = TransferRequest(fromUserId, toUserId, point.value.toLong())
+
+            val response = repository.transfer(transferRequest)
+
+            withContext(Dispatchers.Main) {
+                if (response.success) {
+
+                    val currentBalance = sharedPreferences.getLong("balance", 0)
+                    val newBalance = currentBalance - point.value.toLong()
+
+                    editor.putLong("balance", newBalance)
+                    editor.apply()
+
+                    _balance.value = newBalance
+
+                    goScreen(ScreenType.SENDCONFIRM)
+                } else {
+
+                }
+            }
+        }
+    }
 
     /////////////////////////// Confirm ///////////////////////////
 
