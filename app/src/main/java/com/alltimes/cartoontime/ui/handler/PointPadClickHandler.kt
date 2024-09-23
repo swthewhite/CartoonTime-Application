@@ -4,8 +4,9 @@ import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class PointPadClickHandler(private val context: Context,
-                           private val isPointExceeded: () -> Unit
+class PointPadClickHandler(
+    private val context: Context,
+    private val isPointExceeded: () -> Unit
 ) {
     private val _point = MutableStateFlow("")
     val point: StateFlow<String> = _point

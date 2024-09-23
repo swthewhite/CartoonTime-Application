@@ -134,7 +134,8 @@ class MainActivity : ComponentActivity() {
             navController.navigate(route) {
                 // 메인 -> 책 추천, 책 추천 -> 책 상세 일 경우 스택 초기화 X
                 if ((currentRoute == "bookRecommendScreen" && route == "bookDetailScreen")
-                    || (currentRoute == "mainscreen" && route == "bookRecommendScreen")) {
+                    || (currentRoute == "mainscreen" && route == "bookRecommendScreen")
+                ) {
                     // 아무 행동 하지 않음
                 } else {
                     // 그 외에는 현재 화면 스택에서 제거 && 화면 이동

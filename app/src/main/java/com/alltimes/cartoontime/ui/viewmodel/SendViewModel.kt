@@ -84,7 +84,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         Toast.makeText(context, "포인트가 초과되었습니다", Toast.LENGTH_SHORT).show()
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (vibrator.hasVibrator()) {
-            val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            val vibrationEffect =
+                VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
             vibrator.vibrate(vibrationEffect)
         }
     }
@@ -118,7 +119,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         Toast.makeText(context, "비밀번호가 다릅니다", Toast.LENGTH_SHORT).show()
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (vibrator.hasVibrator()) {
-            val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            val vibrationEffect =
+                VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
             vibrator.vibrate(vibrationEffect)
         }
     }

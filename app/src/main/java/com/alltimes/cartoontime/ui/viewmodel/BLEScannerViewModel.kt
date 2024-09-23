@@ -115,7 +115,8 @@ class BLEScannerViewModel(private val context: Context) : ViewModel(), RangingCa
                                 Log.d("BLEConnection", "서비스 검색 완료.")
 
                                 // 특성 작업을 순차적으로 실행
-                                val characteristicSuccess = activeConnection?.performCharacteristicOperationsSequentially()
+                                val characteristicSuccess =
+                                    activeConnection?.performCharacteristicOperationsSequentially()
 
                                 if (characteristicSuccess == true) {
                                     Log.d("BLEConnection", "특성 읽기 및 쓰기 작업 완료.")

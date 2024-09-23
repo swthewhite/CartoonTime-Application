@@ -53,7 +53,8 @@ class MainViewModel(private val context: Context) : ViewModel() {
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
-    private val _enteredTime = MutableStateFlow(sharedPreferences.getString("enteredTime", "2024-08-19 09:00:00"))
+    private val _enteredTime =
+        MutableStateFlow(sharedPreferences.getString("enteredTime", "2024-08-19 09:00:00"))
     val enteredTime: MutableStateFlow<String?> = _enteredTime
 
     fun goActivity(activity: ActivityType) {
@@ -117,7 +118,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
         CoroutineScope(Dispatchers.IO).launch {
             val userId = sharedPreferences.getLong("userId", -1L)
             val response = repository.getEntryLog(userId)
-            
+
             if (response.success) {
                 val logs = response.data
                 val lastLog = logs.lastOrNull() // 최신 입퇴실 로그 가져오기
@@ -147,8 +148,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
     // 퇴실 완료 API 호출
     private suspend fun completeExit(userId: Long) {
 
-        if (_charge.value != -1L)
-        {
+        if (_charge.value != -1L) {
             goScreen(ScreenType.CONFIRM)
         } else {
             val response = repository.exit(userId)
@@ -238,8 +238,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
                 Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
                 // 추가 데이터...
             )
-        }
-        else if (category == "베스트 셀러 만화") {
+        } else if (category == "베스트 셀러 만화") {
             _cartoons.value = listOf(
                 Cartoon("만화 4", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
                 Cartoon("만화 3", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
@@ -247,8 +246,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
                 Cartoon("만화 1", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
                 // 추가 데이터...
             )
-        }
-        else if (category == "오늘의 추천 만화") {
+        } else if (category == "오늘의 추천 만화") {
             _cartoons.value = listOf(
                 Cartoon("만화 2", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
                 Cartoon("만화 4", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),

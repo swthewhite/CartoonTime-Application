@@ -39,11 +39,11 @@ fun ChargePointInputScreen(viewModel: ChargeViewModel) {
     val balance by viewModel.balance.collectAsState()
 
     ConstraintLayout(
-    modifier = Modifier
-    .fillMaxSize()
-    .background(color = Color(0xFFF4F2EE))
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, description0, description1, description2, points, nextButton, numPad, ) = createRefs()
+        val (backButton, title, description0, description1, description2, points, nextButton, numPad) = createRefs()
 
         // 뒤로가기 버튼
         Box(

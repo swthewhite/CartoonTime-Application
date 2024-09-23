@@ -34,7 +34,9 @@ fun SendScreen(viewModel: SendViewModel) {
             TopAppBar(title = { Text("Send Activity") })
         },
         content = {
-            Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)) {
                 Text(
                     text = if (uiState.isScanning) "Scanning for devices..." else "Not scanning",
                     style = MaterialTheme.typography.bodyMedium

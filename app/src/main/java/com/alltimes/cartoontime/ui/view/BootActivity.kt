@@ -34,23 +34,26 @@ class BootActivity : ComponentActivity() {
 
         // fingerprintLauncher 초기화
         // 지문인식을 먼저 진행
-        fingerprintLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                // 지문인식 성공이면 mainActivity로 이동
-                viewModel.authenticationSuccess()
-                startActivity(Intent(this, MainActivity::class.java))
-                finish()
+        fingerprintLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    // 지문인식 성공이면 mainActivity로 이동
+                    viewModel.authenticationSuccess()
+                    startActivity(Intent(this, MainActivity::class.java))
+                    finish()
+                } else {
+                    // 지문인식 취소시 로그인 페이지 활성화 여기서 안해도 됨
+                }
             }
-            else {
-                // 지문인식 취소시 로그인 페이지 활성화 여기서 안해도 됨
-            }
-        }
 
         // 화면 초기화
         setContent {
             navController = rememberNavController()
 
-            NavHost(navController = navController as NavHostController, startDestination = "bootscreen") {
+            NavHost(
+                navController = navController as NavHostController,
+                startDestination = "bootscreen"
+            ) {
                 composable("bootscreen") { BootScreen(viewModel = viewModel) }
                 composable("loginscreen") { LoginScreen(viewModel = viewModel) }
             }

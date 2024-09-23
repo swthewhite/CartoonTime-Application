@@ -26,6 +26,7 @@ class BLEScanner(context: Context) {
 
     // 스캔 중인지 여부를 저장하는 MutableStateFlow
     val isScanning = MutableStateFlow(false)
+
     // 찾은 디바이스 목록을 저장하는 MutableStateFlow
     val foundDevices = MutableStateFlow<List<DeviceInfo>>(emptyList())
 
@@ -96,7 +97,7 @@ class BLEScanner(context: Context) {
         // txPower 값이 없는 경우,
         // RSSI만으로는 정확한 계산이 불가능하여,
         // 일단 기본 거리를 반환
-        if (txPower == Integer.MIN_VALUE)  return -1.0
+        if (txPower == Integer.MIN_VALUE) return -1.0
 
         val ratio = rssi * 1.0 / txPower
         return if (ratio < 1.0) {

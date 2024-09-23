@@ -29,7 +29,8 @@ fun ReceiveScreen(viewModel: ReceiveViewModel) {
         },
         content = {
             Button(
-                onClick = { viewModel.onButtonClick()
+                onClick = {
+                    viewModel.onButtonClick()
                 },
                 modifier = Modifier
                     .fillMaxSize()

@@ -108,7 +108,7 @@ fun LoginScreen(viewModel: BootViewModel) {
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 }
-        ){
+        ) {
             Numpad(viewModel)
         }
     }

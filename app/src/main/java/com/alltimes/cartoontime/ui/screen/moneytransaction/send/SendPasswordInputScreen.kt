@@ -49,7 +49,7 @@ fun SendPasswordInputScreen(viewModel: SendViewModel) {
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, description0, description1, passwordRow, description2, numPad, ) = createRefs()
+        val (backButton, title, description0, description1, passwordRow, description2, numPad) = createRefs()
 
         // 뒤로가기 버튼
         Box(
