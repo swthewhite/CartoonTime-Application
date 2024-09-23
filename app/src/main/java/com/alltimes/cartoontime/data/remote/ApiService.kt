@@ -7,7 +7,9 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
-    @POST("ct/auth")
+    // ct/auth-test 는 문자 비용 x
+    // ct/auth 는 문자 비용 o
+    @POST("ct/auth-test")
     suspend fun requestAuthCode(@Body request: AuthRequest): AuthResponse
 
     @POST("ct/verify-auth")

@@ -80,7 +80,7 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
         )
 
         Text(
-            text = "${name}님 반가워요!",
+            text = "${name.text}님 반가워요!",
             fontSize = 24.sp,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             modifier = Modifier

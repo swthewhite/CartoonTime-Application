@@ -51,6 +51,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
     }
 
     fun goScreen(screen: ScreenType) {
+        println("스크린 전환")
         _screenNavigationTo.value = ScreenNavigationTo(screen)
     }
 
@@ -118,9 +119,9 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                 CoroutineScope(Dispatchers.IO).launch {
                     val response = repository.requestAuthCode(phoneNumberString)
                     if (response.success) {
-                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                        //Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                        //Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
                     }
                 }
             } else {
@@ -152,7 +153,10 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
                         // 응답 정보를 보고 회원가입인지 로그인인지 구분
                         // -1이면 회원가입, esle 로그인
-                        if (userId == -1L) {
+
+                        println("USERID: $userId")
+
+                        if (userId == -1L || userId == null) {
                             isSignUp = true
                         } else {
                             isSignUp = false
@@ -228,7 +232,11 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     // 회원 가입, 로그인 처리 로직
     private fun handleResponse(response: SignResponse?) {
+        println("response: $response")
         if (response?.success == true) {
+
+            println("성공")
+
             // 유저 정보 저장
             editor?.putLong("userId", response.data?.user?.id ?: -1)
             editor?.putString("username", response.data?.user?.username ?: "")
@@ -241,10 +249,13 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
             editor?.apply()
 
-            // 화면 전환
-            goScreen(ScreenType.PASSWORDSETTING)
+            // 화면 전환은 메인 스레드에서
+            CoroutineScope(Dispatchers.Main).launch {
+                goScreen(ScreenType.PASSWORDSETTING)
+            }
         } else {
             // 실패 처리
+            println("실패")
         }
     }
 
