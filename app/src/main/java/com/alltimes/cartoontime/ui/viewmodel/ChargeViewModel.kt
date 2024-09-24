@@ -73,8 +73,10 @@ class ChargeViewModel(private val context: Context) : ViewModel(), NumpadAction,
         PointPadClickHandler(
             context = context,
             isPointExceeded = {
+                val currentPoint = point.value.toIntOrNull() ?: 0 // 안전하게 변환
+                
                 // 천만 이하만 충전 가능
-                if (point.value.toInt() > 10000000) {
+                if (currentPoint > 10000000) {
                     pointPadClickHandler.setPoint("10000000")
                     showPointError()
                 }
@@ -116,10 +118,15 @@ class ChargeViewModel(private val context: Context) : ViewModel(), NumpadAction,
                             ChargeRequest(userId = userId, amount = point.value.toLong())
 
                         // API 호출
-                        val response = repository.charge(chargeRequest)
+                        val response = try {
+                            repository.charge(chargeRequest)
+                        } catch (e: Exception) {
+                            // 에러처리
+                            null
+                        }
 
                         // 응답 처리
-                        if (response.success) {
+                        if (response!!.success) {
                             // 메인 스레드에서 값 변경 및 UI 업데이트
                             withContext(Dispatchers.Main) {
                                 val currentBalance = sharedPreferences.getLong("balance", 0)
