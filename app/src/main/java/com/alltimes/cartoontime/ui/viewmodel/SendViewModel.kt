@@ -49,6 +49,9 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
 
+    private val _toUserName = MutableStateFlow("")
+    val toUserName: StateFlow<String> = _toUserName
+
     private val repository = UserRepository(RetrofitClient.apiService)
 
     fun goActivity(activity: ActivityType) {
@@ -133,6 +136,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     // UWB 연결
     // 포인트 송금 함수
 
+    // 테스트용 코드
     fun transferPoint() {
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -140,6 +144,14 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             val fromUserId = sharedPreferences.getLong("userId", -1L)
             val toUserId = 11L
             val transferRequest = TransferRequest(fromUserId, toUserId, point.value.toLong())
+
+            val userResponse = repository.getUserInfo(toUserId)
+
+            if (userResponse.success)
+            {
+                _toUserName.value = userResponse.data?.name!!
+            }
+
 
             val response = repository.transfer(transferRequest)
 
