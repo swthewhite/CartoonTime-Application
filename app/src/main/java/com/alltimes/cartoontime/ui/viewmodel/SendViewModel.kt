@@ -5,9 +5,11 @@ import android.content.SharedPreferences
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.common.MessageListener
 import com.alltimes.cartoontime.common.NumpadAction
 import com.alltimes.cartoontime.common.PointpadAction
@@ -23,16 +25,20 @@ import com.alltimes.cartoontime.data.repository.FCMRepository
 import com.alltimes.cartoontime.data.repository.UserRepository
 import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
 import com.alltimes.cartoontime.ui.handler.PointPadClickHandler
+import com.alltimes.cartoontime.utils.AccelerometerManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.properties.Delegates
 
 class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction {
 //class SendViewModel(private val application: Application) : AndroidViewModel(application) {
@@ -66,6 +72,41 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     fun goScreen(screen: ScreenType) {
         _screenNavigationTo.value = ScreenNavigationTo(screen)
+    }
+
+    // 각속도 측정
+    private lateinit var accelerometerManager: AccelerometerManager
+    private var accelerometerCount by Delegates.notNull<Int>()
+
+    fun accelerometerStart(lifecycleOwner: LifecycleOwner) {
+        println("각속도 측정 시작")
+        accelerometerManager = AccelerometerManager(context)
+        accelerometerCount = 0
+        accelerometerManager.start()
+
+        accelerometerManager.accelerometerData.observe(lifecycleOwner) { data ->
+            // 데이터 업데이트
+            println("x: ${data.x}, y: ${data.y}, z: ${data.z}")
+            if (data.z <= -9.0) {
+                // 아래를 보는 중
+                accelerometerCount++
+                if (accelerometerCount >= 10) {
+                    // 승인
+                    transferPoint()
+                    accelerometerCount = 0
+                    accelerometerStop()
+                }
+            } else if (data.z >= 0) {
+                // 위를 보는 중
+                accelerometerCount = 0
+            }
+        }
+
+    }
+
+    fun accelerometerStop() {
+        println("각속도 측정 중지")
+        accelerometerManager.stop()
     }
 
     /////////////////////////// PointInput ///////////////////////////
@@ -114,8 +155,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             onPasswordComplete = { password: String ->
                 val userPassword = sharedPreferences.getString("password", null)
                 if (userPassword == password) {
-                    transferPoint()
-                    //goScreen(ScreenType.SENDPARTNERCHECK)
+                    //transferPoint()
+                    goScreen(ScreenType.SENDPARTNERCHECK)
                 } else {
                     numPadClickHandler.clearPassword()
                     showPasswordError()
@@ -140,6 +181,17 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     private val _uiState = MutableStateFlow(SendUiState())
     val uiState = _uiState.asStateFlow()
+
+    fun startTransaction() {
+        // UWB 세션 생성 및 연결
+        goScreen(ScreenType.SENDDESCRIPTION)
+    }
+
+    fun setUiState(value: Boolean) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDeviceConnected = value) }
+        }
+    }
 
     // 버튼 클릭 시 호출되는 함수
     fun onSendButtonClick() {

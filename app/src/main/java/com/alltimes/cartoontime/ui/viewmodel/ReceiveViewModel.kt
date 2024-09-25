@@ -14,7 +14,11 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.repository.FCMRepository
+import com.alltimes.cartoontime.data.repository.UserRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,6 +57,8 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
         _screenNavigationTo.value = ScreenNavigationTo(screen)
     }
 
+    private val repository = UserRepository(RetrofitClient.apiService)
+
     val fcmRepository = FCMRepository(this)
 
     init {
@@ -71,9 +77,38 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
             _content.value = message.content
             println("포인트 입금 메시지 수신: $message")
 
+            UpdateUserInfo()
+
             // 메인 스레드에서 goScreen 호출
             viewModelScope.launch {
                 goScreen(ScreenType.RECEIVECONFIRM)
+            }
+        }
+
+    }
+
+    fun UpdateUserInfo() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val userId = sharedPreferences.getLong("userId", -1L)
+
+            // API 호출
+            val response = try {
+                repository.getUserInfo(userId)
+            } catch (e: Exception) {
+                // 에러처리
+                null
+            }
+
+            // 응답 처리
+            if (response?.success == true) {
+
+                editor.putLong("balance", response.data?.currentMoney!!)
+                editor.putLong("userId", response.data?.id!!)
+                editor.putString("userName", response.data?.username!!)
+                editor.putString("name", response.data?.name!!)
+
+                editor.apply()
+
             }
         }
     }

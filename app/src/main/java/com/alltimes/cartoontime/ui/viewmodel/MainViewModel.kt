@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -19,9 +20,11 @@ import com.alltimes.cartoontime.data.remote.FCMRequest
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.repository.FCMRepository
 import com.alltimes.cartoontime.data.repository.UserRepository
+import com.alltimes.cartoontime.utils.AccelerometerManager
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -29,6 +32,7 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.properties.Delegates
 
 class MainViewModel(private val context: Context) : ViewModel(), MessageListener {
 
@@ -81,8 +85,6 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
         val fcmToken = sharedPreferences.getString("fcmToken", "")
         val userId = sharedPreferences.getLong("userId", 0L)
 
-        println("bbbbbbbbbbbb userId: $userId, fcmToken: $fcmToken")
-
         fcmRepository.listenForMessages(fcmToken!!)
         
         // 서버 api 호출
@@ -90,15 +92,11 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
         CoroutineScope(Dispatchers.IO).launch {
             val fcmRequest = FCMRequest(userId, fcmToken)
 
-            println("qqqqqqqqqqqqqqq userId: $userId, fcmToken: $fcmToken")
-
             val response = try{
                 repository.saveFcmToken(fcmRequest)
             } catch (e: Exception) {
                 null
             }
-
-            println("response: $response")
 
             if (response?.success == true) {
                 println("fcmToken 저장 성공")
@@ -108,12 +106,60 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
         }
     }
 
+    // FCM 메시지 수신
     override fun onMessageReceived(message: FcmMessage) {
         println("메시지 수신 완료: $message")
         if (message.content.contains("입퇴실")) {
             // 특정 동작 수행
             println("입퇴실 메시지 수신: $message")
             onKioskLoadingCompleted()
+        }
+    }
+
+    // 각속도 측정
+    private lateinit var accelerometerManager: AccelerometerManager
+    private var accelerometerCount by Delegates.notNull<Int>()
+    private var accelerometerIsCounting = true // 1분 동안 카운팅 방지용 플래그
+    private var accelerometerIsStarted = false
+
+    fun accelerometerStart(lifecycleOwner: LifecycleOwner) {
+        println("각속도 측정 시작")
+        accelerometerIsStarted = true
+        accelerometerManager = AccelerometerManager(context)
+        accelerometerCount = 0
+        accelerometerManager.start()
+
+        accelerometerManager.accelerometerData.observe(lifecycleOwner) { data ->
+            // 데이터 업데이트
+            if (accelerometerIsStarted) {
+                println("x: ${data.x}, y: ${data.y}, z: ${data.z}")
+                if (data.z <= -9.0 && accelerometerIsCounting) {
+                    // 아래를 보는 중
+                    accelerometerCount++
+                    if (accelerometerCount >= 10) {
+                        onLoginOut()
+                        accelerometerCount = 0
+                        disableCounting() // 카운팅 방지
+                    }
+                } else if (data.z >= 0) {
+                    // 위를 보는 중
+                    accelerometerCount = 0
+                }
+            }
+        }
+    }
+
+    fun accelerometerStop() {
+        println("각속도 측정 중지")
+        accelerometerManager.stop()
+        //accelerometerIsStarted = false
+    }
+
+    private fun disableCounting() {
+        accelerometerIsCounting = false // 카운팅 방지
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(10000) // 대기
+            accelerometerIsCounting = true // 다시 카운팅 활성화
         }
     }
 
@@ -137,6 +183,32 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
             sendMessage(myFcmToken!!, toFcmToken!!, "입퇴실완료")
         }
 
+    }
+
+    fun UpdateUserInfo() {
+            CoroutineScope(Dispatchers.IO).launch {
+            val userId = sharedPreferences.getLong("userId", -1L)
+
+            // API 호출
+            val response = try {
+                repository.getUserInfo(userId)
+            } catch (e: Exception) {
+                // 에러처리
+                null
+            }
+
+            // 응답 처리
+            if (response?.success == true) {
+
+                editor.putLong("balance", response.data?.currentMoney!!)
+                editor.putLong("userId", response.data?.id!!)
+                editor.putString("userName", response.data?.username!!)
+                editor.putString("name", response.data?.name!!)
+
+                editor.apply()
+
+            }
+        }
     }
 
     /////////////////////////// Main ///////////////////////////

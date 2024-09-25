@@ -1,5 +1,6 @@
 package com.alltimes.cartoontime.ui.screen.moneytransaction.send
 
+import android.accessibilityservice.AccessibilityService.ScreenshotResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -107,7 +108,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                 }
         ) {
             // 장치 연결 여부에 따른 UI 구현
-            if (uiState.value.isDeviceConnected) {
+            if (!uiState.value.isDeviceConnected) {
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally, // Column 안에서 수평 중앙 정렬
@@ -130,7 +131,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                         // 수락 버튼
                         Button(
                             onClick = {
-                                // 수락 버튼 클릭 시 로직 추가
+                                viewModel.startTransaction()
                             },
                             shape = RoundedCornerShape(15),
                             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
@@ -144,7 +145,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                         // 거절 버튼
                         Button(
                             onClick = {
-                                // 거절 버튼 클릭 시 로직 추가
+                                viewModel.setUiState(!uiState.value.isDeviceConnected)
                             },
                             shape = RoundedCornerShape(15),
                             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),

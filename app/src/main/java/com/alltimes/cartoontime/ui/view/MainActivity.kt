@@ -30,14 +30,11 @@ class MainActivity : ComponentActivity() {
     private lateinit var navController: NavController
     private lateinit var viewModel: MainViewModel
 
-    private lateinit var accelerometerManager: AccelerometerManager
-    private var accelerometerCount by Delegates.notNull<Int>()
-    private var isCounting = true // 1분 동안 카운팅 방지용 플래그
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         viewModel = MainViewModel(this) // ViewModel 생성
+        viewModel.UpdateUserInfo()
 
         // 권한 요청 부분을 PermissionsHelper로 처리
         if (!PermissionsHelper.hasAllPermissions(this)) {
@@ -45,6 +42,17 @@ class MainActivity : ComponentActivity() {
         } else {
             initializeApp() // 권한이 이미 있을 경우 초기화
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        viewModel.UpdateUserInfo()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.accelerometerStop() // 메인 스크린 외의 화면에서 센서 멈춤
     }
 
     override fun onRequestPermissionsResult(
@@ -64,8 +72,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun initializeApp() {
-        accelerometerManager = AccelerometerManager(this)
-        accelerometerCount = 0
+
+        viewModel.accelerometerStart(lifecycleOwner = this)
 
         setContent {
             navController = rememberNavController() // 전역 변수에 저장
@@ -90,30 +98,6 @@ class MainActivity : ComponentActivity() {
             navigationTo?.screenType?.let { screenType ->
                 navigateToScreen(screenType)
             }
-        }
-
-        accelerometerManager.accelerometerData.observe(this) { data ->
-            // 데이터 업데이트
-            if (data.z <= -9.0 && isCounting) {
-                // 아래를 보는 중
-                accelerometerCount++
-                if (accelerometerCount >= 10) {
-                    viewModel.onLoginOut()
-                    accelerometerCount = 0
-                    disableCounting() // 카운팅 방지
-                }
-            } else if (data.z >= 0) {
-                // 위를 보는 중
-                accelerometerCount = 0
-            }
-        }
-    }
-
-    private fun disableCounting() {
-        isCounting = false // 카운팅 방지
-        CoroutineScope(Dispatchers.Main).launch {
-            delay(10000) // 대기
-            isCounting = true // 다시 카운팅 활성화
         }
     }
 
@@ -143,6 +127,14 @@ class MainActivity : ComponentActivity() {
                 }
                 // 동일 화면 중복 쌓임 방지
                 launchSingleTop = true
+            }
+
+            // 스크린 전환 시 각속도 측정 멈추기
+            viewModel.accelerometerStop()
+
+            // 메인 스크린으로 이동할 경우에만 각속도 측정 시작
+            if (screenType == ScreenType.MAIN) {
+                viewModel.accelerometerStart(lifecycleOwner = this)
             }
         }
     }
