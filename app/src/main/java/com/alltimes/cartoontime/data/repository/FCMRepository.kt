@@ -28,9 +28,23 @@ class FCMRepository {
 
                 snapshots.documents.forEach { document ->
                     val message = document.toObject(FcmMessage::class.java)
-                    // 메시지 처리 로직 (UI 업데이트 등)
+                    // 메시지 처리 로직 (예: UI 업데이트 등)
                     println("새 메시지 수신: $message")
+
+                    // 메시지를 읽은 후 Firestore에서 삭제
+                    deleteMessage(document.id)
                 }
+            }
+    }
+
+    private fun deleteMessage(documentId: String) {
+        firestore.collection("messages").document(documentId)
+            .delete()
+            .addOnSuccessListener {
+                println("메시지가 성공적으로 삭제되었습니다. ID: $documentId")
+            }
+            .addOnFailureListener { e ->
+                println("메시지 삭제 실패: ${e.message}")
             }
     }
 
