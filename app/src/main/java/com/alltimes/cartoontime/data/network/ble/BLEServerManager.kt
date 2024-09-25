@@ -1,16 +1,7 @@
 package com.alltimes.cartoontime.data.network.ble
 
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattServer
-import android.bluetooth.BluetoothGattServerCallback
-import android.bluetooth.BluetoothGattService
-import android.bluetooth.BluetoothManager
-import android.bluetooth.le.AdvertiseCallback
-import android.bluetooth.le.AdvertiseData
-import android.bluetooth.le.AdvertiseSettings
-import android.bluetooth.le.BluetoothLeAdvertiser
+import android.bluetooth.*
+import android.bluetooth.le.*
 import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
@@ -19,6 +10,8 @@ import com.alltimes.cartoontime.data.model.UwbAddressModel
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.uwb.UwbControllerCommunicator
 import com.alltimes.cartoontime.ui.viewmodel.BLEServerViewModel
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import com.alltimes.cartoontime.ui.viewmodel.UWBControllerViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,7 +35,9 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
     private val preparedWrites = HashMap<Int, ByteArray>()
     private val deviceNames = mutableMapOf<String, String>()
     val controllerReceived = MutableStateFlow(emptyList<String>())
+    val partnerID = MutableStateFlow<String?>(null) // 변경: partnerID를 MutableStateFlow로 변경
     private val uwbCommunicator = UwbControllerCommunicator(context)
+
 
     // mode: true - login
     // mode: false - money transaction
@@ -141,13 +136,28 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
                 val uwbAddress = uwbCommunicator.getUwbAddress()
                 val uwbChannel = uwbCommunicator.getUwbChannel()
 
+                Log.d("BLE", "${characteristic?.uuid}")
                 val responseData: ByteArray = when (characteristic?.uuid) {
-                    BLEConstants.CONTROLEE_CHARACTERISTIC_UUID -> "$uwbAddress/$uwbChannel".toByteArray()
-                    BLEConstants.MY_ID_CHARACTERISTIC_UUID -> "ct1298".toByteArray()
+                    BLEConstants.CONTROLEE_CHARACTERISTIC_UUID -> {
+                        Log.d("BLE", "Reading Controlee Characteristic")
+                        "$uwbAddress/$uwbChannel".toByteArray()
+                    }
+
+                    BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID -> {
+                        Log.d("BLE", "Reading Receiver ID Characteristic")
+                        "ct1298".toByteArray()
+                    }
+
                     else -> "UnknownCharacteristic".encodeToByteArray()
                 }
 
-                server?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, responseData)
+                server?.sendResponse(
+                    device,
+                    requestId,
+                    BluetoothGatt.GATT_SUCCESS,
+                    offset,
+                    responseData
+                )
             }
 
             @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
@@ -170,6 +180,25 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
                     value
                 )
 
+                when (characteristic.uuid) {
+                    BLEConstants.CONTROLLER_CHARACTERISTIC_UUID -> {
+                        Log.d("UWB", "Writing to Controller Characteristic")
+                        val receivedData = String(value)
+                        controllerReceived.update { it.plus(receivedData) }
+                    }
+
+                    BLEConstants.SENDER_ID_CHARACTERISTIC_UUID -> {
+                        Log.d("UWB", "Writing to Sender ID Characteristic")
+                        val receivedData = String(value)
+                        // 파트너 ID 처리
+                        partnerID.value = receivedData // 변경: partnerID에 실제로 받은 SenderID를 저장
+                    }
+
+                    else -> {
+                        Log.d("UWB", "Unknown Characteristic UUID")
+                    }
+                }
+
                 if (preparedWrite) {
                     Log.d("UWB", "Prepared write")
                     val bytes = preparedWrites.getOrDefault(requestId, byteArrayOf())
@@ -183,7 +212,13 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
                 }
 
                 if (responseNeeded) {
-                    server?.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, byteArrayOf())
+                    server?.sendResponse(
+                        device,
+                        requestId,
+                        BluetoothGatt.GATT_SUCCESS,
+                        0,
+                        byteArrayOf()
+                    )
                 }
             }
 
@@ -203,7 +238,10 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
         // mode: true - kiosk
         // mode: false - money transaction
 
-        val service = BluetoothGattService(BLEConstants.UWB_KIOSK_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+        val service = BluetoothGattService(
+            BLEConstants.UWB_KIOSK_SERVICE_UUID,
+            BluetoothGattService.SERVICE_TYPE_PRIMARY
+        )
 
         val controleeCharacteristic = BluetoothGattCharacteristic(
             BLEConstants.CONTROLEE_CHARACTERISTIC_UUID,
@@ -212,7 +250,7 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
         )
 
         val myIDCharacteristic = BluetoothGattCharacteristic(
-            BLEConstants.MY_ID_CHARACTERISTIC_UUID,
+            BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID,
             BluetoothGattCharacteristic.PROPERTY_READ,
             BluetoothGattCharacteristic.PERMISSION_READ
         )
@@ -224,7 +262,7 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
         )
 
         val partnerIDCharacteristic = BluetoothGattCharacteristic(
-            BLEConstants.PARTNER_ID_CHARACTERISTIC_UUID,
+            BLEConstants.SENDER_ID_CHARACTERISTIC_UUID,
             BluetoothGattCharacteristic.PROPERTY_WRITE,
             BluetoothGattCharacteristic.PERMISSION_WRITE
         )
@@ -252,14 +290,20 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
 
     private suspend fun collectControllerReceived() {
         Log.d("UWB", "DATA IS COMING")
-        controllerReceived.collect { receivedDataList ->
-            if (receivedDataList.isNotEmpty()) {
+        // 변경: controllerReceived와 partnerID를 함께 수집
+        combine(controllerReceived, partnerID) { receivedDataList, partnerIDValue ->
+            Pair(receivedDataList, partnerIDValue)
+        }.collect { (receivedDataList, partnerIDValue) ->
+            if (receivedDataList.isNotEmpty() && partnerIDValue != null) {
                 val lastReceivedData = receivedDataList.last()
                 val address = parseReceivedData(lastReceivedData)
-                val deviceName = deviceNames[address] ?: "Unknown Device"
+                //val deviceName = deviceNames[address] ?: "Unknown Device"
 
-                Log.d("uwb", "me:" + uwbCommunicator.getUwbAddress() + " " + uwbCommunicator.getUwbChannel())
-                Log.d("uwb", "controlee:$address")
+                Log.d(
+                    "uwb",
+                    "me: ${uwbCommunicator.getUwbAddress()} ${uwbCommunicator.getUwbChannel()} ${partnerIDValue}"
+                )
+                Log.d("uwb", "controlee: $address, SenderID: $partnerIDValue") // 변경: SenderID 출력
 
                 // RangingCallback을 viewModel로 연결
                 val callback = object : RangingCallback {
@@ -270,8 +314,6 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
 
                 viewModel.setSession(true)
                 uwbCommunicator.startCommunication(address, callback)
-                //uwbCommunicator.startCommunication(address)//UwbAddressModel(address.toByteArray()).toString())
-                //uwbCommunicator.UwbConnection(UwbAddressModel(address.toByteArray()))
             }
         }
     }

@@ -7,18 +7,22 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.alltimes.cartoontime.common.MessageListener
+import com.alltimes.cartoontime.data.model.FcmMessage
 import com.alltimes.cartoontime.data.model.UIStateModel
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.repository.FCMRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ReceiveViewModel(private val context: Context) : ViewModel() {
+class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListener {
+
 //class ReceiverViewModel(application: Application) : AndroidViewModel(application) {
 
     /////////////////////////// 공용 ///////////////////////////
@@ -38,8 +42,8 @@ class ReceiveViewModel(private val context: Context) : ViewModel() {
 
     var inputEnable: Boolean = true
 
-    private val _balance = MutableStateFlow(sharedPreferences.getInt("balance", 0))
-    val balance: StateFlow<Int> = _balance
+    private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
+    val balance: StateFlow<Long> = _balance
 
     fun goActivity(activity: ActivityType) {
         _activityNavigationTo.value = ActivityNavigationTo(activity)
@@ -47,6 +51,31 @@ class ReceiveViewModel(private val context: Context) : ViewModel() {
 
     fun goScreen(screen: ScreenType) {
         _screenNavigationTo.value = ScreenNavigationTo(screen)
+    }
+
+    val fcmRepository = FCMRepository(this)
+
+    init {
+        val fcmToekn = sharedPreferences.getString("fcmToken", "") ?: ""
+        println("receiveViewModel FCM Token: $fcmToekn")
+        fcmRepository.listenForMessages(fcmToekn)
+    }
+
+    private val _content = MutableStateFlow("")
+    val content = _content.asStateFlow()
+
+    override fun onMessageReceived(message: FcmMessage) {
+        println("메시지 수신 완료: $message")
+        if (message.content.contains("포인트")) {
+            // 특정 동작 수행
+            _content.value = message.content
+            println("포인트 입금 메시지 수신: $message")
+
+            // 메인 스레드에서 goScreen 호출
+            viewModelScope.launch {
+                goScreen(ScreenType.RECEIVECONFIRM)
+            }
+        }
     }
 
     /////////////////////////// Description ///////////////////////////
@@ -62,16 +91,9 @@ class ReceiveViewModel(private val context: Context) : ViewModel() {
     private val _uiState = MutableStateFlow(UIStateModel())
     val uiState = _uiState.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isRunning = false) }
-        }
-    }
-
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     fun onButtonClick() {
         println("서버 시작 ~~~~~")
-        _uiState.update { it.copy(isRunning = !it.isRunning) }
         // mode setting
         bleServerViewModel.setMode(true)
         // partnercheck

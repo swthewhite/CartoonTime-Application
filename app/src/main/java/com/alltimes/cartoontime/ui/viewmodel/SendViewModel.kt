@@ -8,8 +8,10 @@ import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.alltimes.cartoontime.common.MessageListener
 import com.alltimes.cartoontime.common.NumpadAction
 import com.alltimes.cartoontime.common.PointpadAction
+import com.alltimes.cartoontime.data.model.FcmMessage
 import com.alltimes.cartoontime.data.model.SendUiState
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
@@ -17,6 +19,7 @@ import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.remote.TransferRequest
+import com.alltimes.cartoontime.data.repository.FCMRepository
 import com.alltimes.cartoontime.data.repository.UserRepository
 import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
 import com.alltimes.cartoontime.ui.handler.PointPadClickHandler
@@ -27,6 +30,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction {
 //class SendViewModel(private val application: Application) : AndroidViewModel(application) {
@@ -87,7 +93,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         Toast.makeText(context, "포인트가 초과되었습니다", Toast.LENGTH_SHORT).show()
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (vibrator.hasVibrator()) {
-            val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            val vibrationEffect =
+                VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
             vibrator.vibrate(vibrationEffect)
         }
     }
@@ -121,7 +128,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         Toast.makeText(context, "비밀번호가 다릅니다", Toast.LENGTH_SHORT).show()
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (vibrator.hasVibrator()) {
-            val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            val vibrationEffect =
+                VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
             vibrator.vibrate(vibrationEffect)
         }
     }
@@ -137,12 +145,21 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     // 포인트 송금 함수
 
     // 테스트용 코드
+
+    private val fcmMessageRepository = FCMRepository()
+
+    fun sendMessage(senderId: String, receiverId: String, content: String) {
+        println("메시지 전송을 시작합니다.")
+        fcmMessageRepository.saveMessage(senderId, receiverId, content)
+        // SaveMessage 메서드에서 Firestore에 데이터를 비동기로 저장하고 결과를 처리해야 합니다.
+    }
+
     fun transferPoint() {
 
         CoroutineScope(Dispatchers.IO).launch {
 
             val fromUserId = sharedPreferences.getLong("userId", -1L)
-            val toUserId = 11L
+            val toUserId = 1L
             val transferRequest = TransferRequest(fromUserId, toUserId, point.value.toLong())
 
             val userResponse = repository.getUserInfo(toUserId)
@@ -152,7 +169,9 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                 _toUserName.value = userResponse.data?.name!!
             }
 
-
+            // 상대 정보 받아오기
+            val toUser = repository.getUserInfo(toUserId)
+            // 송금
             val response = repository.transfer(transferRequest)
 
             withContext(Dispatchers.Main) {
@@ -165,6 +184,12 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                     editor.apply()
 
                     _balance.value = newBalance
+
+                    val myFcmToken = sharedPreferences.getString("fcmToken", null)
+                    val toFcmToken = toUser.data?.fcmToken
+                    val name = sharedPreferences.getString("name", null)
+
+                    sendMessage(myFcmToken!!, toFcmToken!!,"${name}님 지갑에서\n${point.value} 포인트를\n받았습니다.")
 
                     goScreen(ScreenType.SENDCONFIRM)
                 } else {

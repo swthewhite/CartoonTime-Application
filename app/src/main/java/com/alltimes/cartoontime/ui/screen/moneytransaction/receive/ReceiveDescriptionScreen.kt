@@ -35,7 +35,7 @@ fun ReceiveDescriptionScreen(viewModel: ReceiveViewModel) {
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, animationBox, description0, description1, nextbtn ) = createRefs()
+        val (backButton, title, animationBox, description0, description1, nextbtn) = createRefs()
 
         // 뒤로가기 버튼
         Box(
@@ -82,10 +82,10 @@ fun ReceiveDescriptionScreen(viewModel: ReceiveViewModel) {
             onClick = {
                 viewModel.onButtonClick()
                 viewModel.goScreen(ScreenType.RECEIVELOADING)
-                      },
+            },
             modifier = Modifier
                 .wrapContentSize()
-                .constrainAs(nextbtn){
+                .constrainAs(nextbtn) {
                     top.linkTo(title.top)
                     bottom.linkTo(title.bottom)
                     start.linkTo(title.end, margin = 10.dp)
@@ -105,7 +105,7 @@ fun ReceiveDescriptionScreen(viewModel: ReceiveViewModel) {
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                 }
-        ){
+        ) {
             SendDescription()
         }
 
@@ -114,7 +114,7 @@ fun ReceiveDescriptionScreen(viewModel: ReceiveViewModel) {
             text = "송금을 하시려는 분과",
             fontSize = 24.sp,
             modifier = Modifier
-                .constrainAs(description0){
+                .constrainAs(description0) {
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                     top.linkTo(animationBox.bottom, margin = 30.dp)
@@ -125,7 +125,7 @@ fun ReceiveDescriptionScreen(viewModel: ReceiveViewModel) {
             text = "핸드폰 앞면을 맞대주세요.",
             fontSize = 24.sp,
             modifier = Modifier
-                .constrainAs(description1){
+                .constrainAs(description1) {
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                     top.linkTo(description0.bottom)

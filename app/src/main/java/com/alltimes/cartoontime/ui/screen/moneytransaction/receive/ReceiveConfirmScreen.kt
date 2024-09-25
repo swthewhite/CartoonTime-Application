@@ -9,9 +9,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -23,6 +25,7 @@ import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
 @Composable
 fun ReceiveConfirmScreen(viewModel: ReceiveViewModel) {
 
+    val content = viewModel.content.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -60,37 +63,16 @@ fun ReceiveConfirmScreen(viewModel: ReceiveViewModel) {
 
         Text(
             // 통신으로 받아와야하는 이름 정보
-            text = "상빈님 지갑에서",
+            text = content.value,
             fontSize = 20.sp,
+            lineHeight = 30.sp,
             modifier = Modifier
                 .constrainAs(description0) {
                     top.linkTo(checkImage.bottom, margin = 50.dp)
                     start.linkTo(parent.start, margin = 10.dp)
                     end.linkTo(parent.end, margin = 10.dp)
-                }
-        )
-
-        Text(
-            // 통신 혹은 내 지갑으로 들어온 돈 정보
-            text = "000 포인트를",
-            fontSize = 20.sp,
-            modifier = Modifier
-                .constrainAs(description1) {
-                    top.linkTo(description0.bottom, margin = 5.dp)
-                    start.linkTo(description0.start)
-                    end.linkTo(description0.end)
-                }
-        )
-
-        Text(
-            text = "받았어요.",
-            fontSize = 20.sp,
-            modifier = Modifier
-                .constrainAs(description2) {
-                    top.linkTo(description1.bottom, margin = 5.dp)
-                    start.linkTo(description1.start)
-                    end.linkTo(description1.end)
-                }
+                },
+            textAlign = TextAlign.Center
         )
 
         Button(

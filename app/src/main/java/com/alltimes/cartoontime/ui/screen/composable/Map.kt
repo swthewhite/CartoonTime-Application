@@ -55,7 +55,7 @@ fun Map(viewModel: MainViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 20.dp, start = 25.dp)
-        ){
+        ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -63,7 +63,7 @@ fun Map(viewModel: MainViewModel) {
                     .height(60.dp)
                     .background(Color(0xFFF9B912))
                     .border(width = 1.dp, Color.Black)
-            ){
+            ) {
                 if (clickedCartoon.sector == "A") {
                     Box(
                         modifier = Modifier
@@ -87,7 +87,7 @@ fun Map(viewModel: MainViewModel) {
                     .height(60.dp)
                     .background(Color(0xFFF9B912))
                     .border(width = 1.dp, Color.Black)
-            ){
+            ) {
                 if (clickedCartoon.sector == "D") {
                     Box(
                         modifier = Modifier
@@ -110,7 +110,7 @@ fun Map(viewModel: MainViewModel) {
                     .height(60.dp)
                     .background(Color(0xFFF9B912))
                     .border(width = 1.dp, Color.Black)
-            ){
+            ) {
                 if (clickedCartoon.sector == "G") {
                     Box(
                         modifier = Modifier
@@ -131,7 +131,7 @@ fun Map(viewModel: MainViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 1.dp, start = 25.dp)
-        ){
+        ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -139,7 +139,7 @@ fun Map(viewModel: MainViewModel) {
                     .height(60.dp)
                     .background(Color(0xFFF9B912))
                     .border(width = 1.dp, Color.Black)
-            ){
+            ) {
                 if (clickedCartoon.sector == "B") {
                     Box(
                         modifier = Modifier
@@ -162,7 +162,7 @@ fun Map(viewModel: MainViewModel) {
                     .height(60.dp)
                     .background(Color(0xFFF9B912))
                     .border(width = 1.dp, Color.Black)
-            ){
+            ) {
                 if (clickedCartoon.sector == "E") {
                     Box(
                         modifier = Modifier
@@ -185,7 +185,7 @@ fun Map(viewModel: MainViewModel) {
                     .height(60.dp)
                     .background(Color(0xFFF9B912))
                     .border(width = 1.dp, Color.Black)
-            ){
+            ) {
                 if (clickedCartoon.sector == "H") {
                     Box(
                         modifier = Modifier
@@ -214,7 +214,7 @@ fun Map(viewModel: MainViewModel) {
                     .height(60.dp)
                     .background(Color(0xFFF9B912))
                     .border(width = 1.dp, Color.Black)
-            ){
+            ) {
                 if (clickedCartoon.sector == "C") {
                     Box(
                         modifier = Modifier
@@ -237,7 +237,7 @@ fun Map(viewModel: MainViewModel) {
                     .height(60.dp)
                     .background(Color(0xFFF9B912))
                     .border(width = 1.dp, Color.Black)
-            ){
+            ) {
                 if (clickedCartoon.sector == "F") {
                     Box(
                         modifier = Modifier
@@ -266,7 +266,7 @@ fun Map(viewModel: MainViewModel) {
                         .width(30.dp)
                         .height(30.dp)
                         .background(Color(0xFF606060))
-                ){
+                ) {
 
                 }
 

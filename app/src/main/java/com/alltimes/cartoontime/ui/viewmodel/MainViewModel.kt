@@ -3,27 +3,34 @@ package com.alltimes.cartoontime.ui.viewmodel
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.alltimes.cartoontime.common.MessageListener
 import com.alltimes.cartoontime.data.model.Cartoon
+import com.alltimes.cartoontime.data.model.FcmMessage
 import com.alltimes.cartoontime.data.model.UIStateModel
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.remote.FCMRequest
 import com.alltimes.cartoontime.data.remote.RetrofitClient
+import com.alltimes.cartoontime.data.repository.FCMRepository
 import com.alltimes.cartoontime.data.repository.UserRepository
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class MainViewModel(private val context: Context) : ViewModel() {
+class MainViewModel(private val context: Context) : ViewModel(), MessageListener {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -53,7 +60,8 @@ class MainViewModel(private val context: Context) : ViewModel() {
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
-    private val _enteredTime = MutableStateFlow(sharedPreferences.getString("enteredTime", "2024-08-19 09:00:00"))
+    private val _enteredTime =
+        MutableStateFlow(sharedPreferences.getString("enteredTime", "2024-08-19 09:00:00"))
     val enteredTime: MutableStateFlow<String?> = _enteredTime
 
     fun goActivity(activity: ActivityType) {
@@ -66,6 +74,52 @@ class MainViewModel(private val context: Context) : ViewModel() {
 
     // 서버 통신 관련 변수
     private val repository = UserRepository(RetrofitClient.apiService)
+
+    init {
+        val fcmRepository = FCMRepository(this)
+        val fcmToken = sharedPreferences.getString("fcmToken", "") ?: ""
+        val userId = sharedPreferences.getLong("userId", 0L)
+        fcmRepository.listenForMessages(fcmToken)
+        
+        // 서버 api 호출
+        // 인증 코드 요청
+        CoroutineScope(Dispatchers.IO).launch {
+            val fcmRequest = FCMRequest(userId, fcmToken)
+
+            val response = repository.saveFcmToken(fcmRequest)
+        }
+    }
+
+    override fun onMessageReceived(message: FcmMessage) {
+        println("메시지 수신 완료: $message")
+        if (message.content.contains("입퇴실")) {
+            // 특정 동작 수행
+            println("입퇴실 메시지 수신: $message")
+            onKioskLoadingCompleted()
+        }
+    }
+
+    private val fcmMessageRepository = FCMRepository()
+
+    fun sendMessage(senderId: String, receiverId: String, content: String) {
+        fcmMessageRepository.saveMessage(senderId, receiverId, content)
+    }
+
+    fun testSendToggleMessage() {
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val fromUserId = sharedPreferences.getLong("userId", -1L)
+            val toUserId = 1L
+            // 상대 정보 받아오기
+            val toUser = repository.getUserInfo(toUserId)
+
+            val myFcmToken = sharedPreferences.getString("fcmToken", null)
+            val toFcmToken = toUser.data?.fcmToken
+
+            sendMessage(myFcmToken!!, toFcmToken!!, "입퇴실완료")
+        }
+
+    }
 
     /////////////////////////// Main ///////////////////////////
 
@@ -113,69 +167,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
         println("state: ${_state.value}")
         println("get state : ${sharedPreferences.getString("state", "입실 전")}")
 
-        // 서버에서 입퇴실 로그 조회
-        CoroutineScope(Dispatchers.IO).launch {
-            val userId = sharedPreferences.getLong("userId", -1L)
-            val response = repository.getEntryLog(userId)
-            
-            if (response.success) {
-                val logs = response.data
-                val lastLog = logs.lastOrNull() // 최신 입퇴실 로그 가져오기
-
-                if (lastLog != null) {
-                    if (lastLog.exitDate == null) {
-                        // 퇴실 기록이 없는 경우 퇴실 진행
-                        completeExit(userId)
-                    } else {
-                        // 퇴실 기록이 있는 경우 입실 진행
-                        // 단, charge가 -1이 아니라면 잔액 부족으로 다시 퇴실하려는 상황이므로 예외처리
-                        if (_charge.value != -1L) {
-                            // 잔액 부족으로 퇴실 진행
-                            completeExit(userId)
-                        } else {
-                            completeEntry(userId)
-                        }
-                    }
-                }
-            } else {
-                // 오류 처리
-                Log.e("Kiosk", "입퇴실 로그 조회 실패: ${response.message}")
-            }
-        }
-    }
-
-    // 퇴실 완료 API 호출
-    private suspend fun completeExit(userId: Long) {
-
-        if (_charge.value != -1L)
-        {
-            goScreen(ScreenType.CONFIRM)
-        } else {
-            val response = repository.exit(userId)
-
-            if (response.success) {
-                // 퇴실 완료 처리
-                _state.value = "입실 전"
-                editor.putString("state", "입실 전")
-                editor.apply()
-
-                // 요금 처리 및 화면 전환 등 추가 로직
-                val fee = response.data.lastOrNull()?.fee
-                _charge.value = fee!!
-                goScreen(ScreenType.CONFIRM)
-            } else {
-                // 오류 처리
-                Log.e("Kiosk", "퇴실 처리 실패: ${response.message}")
-            }
-        }
-    }
-
-    // 입실 완료 API 호출
-    private suspend fun completeEntry(userId: Long) {
-        val response = repository.entry(userId)
-
-        if (response.success) {
-            // 입실 완료 처리
+        if (_state.value == "입실 중") {
             _state.value = "입실 완료"
             editor.putString("state", "입실 완료")
             editor.apply()
@@ -185,12 +177,13 @@ class MainViewModel(private val context: Context) : ViewModel() {
             _enteredTime.value = currentTime
             editor.putString("enteredTime", currentTime)
             editor.apply()
-        } else {
-            // 오류 처리
-            Log.e("Kiosk", "입실 처리 실패: ${response.message}")
+        } else if (_state.value == "퇴실 중") {
+            _state.value = "입실 전"
+            editor.putString("state", "입실 전")
+            editor.apply()
+            goScreen(ScreenType.CONFIRM)
         }
     }
-
 
     /////////////////////////// BookRecommend ///////////////////////////
 
@@ -238,8 +231,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
                 Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
                 // 추가 데이터...
             )
-        }
-        else if (category == "베스트 셀러 만화") {
+        } else if (category == "베스트 셀러 만화") {
             _cartoons.value = listOf(
                 Cartoon("만화 4", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
                 Cartoon("만화 3", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
@@ -247,8 +239,7 @@ class MainViewModel(private val context: Context) : ViewModel() {
                 Cartoon("만화 1", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
                 // 추가 데이터...
             )
-        }
-        else if (category == "오늘의 추천 만화") {
+        } else if (category == "오늘의 추천 만화") {
             _cartoons.value = listOf(
                 Cartoon("만화 2", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
                 Cartoon("만화 4", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),

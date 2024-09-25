@@ -19,7 +19,11 @@ class UUIDEncryptionUtilTest {
         val decryptedUUID = UUIDEncryptionUtil.decrypt(encryptedUUID, SECRET_KEY)
 
         // Then
-        assertNotEquals("Encrypted UUID should not be the same as original UUID", originalUUID, encryptedUUID)
+        assertNotEquals(
+            "Encrypted UUID should not be the same as original UUID",
+            originalUUID,
+            encryptedUUID
+        )
         assertEquals("Decrypted UUID should match the original UUID", originalUUID, decryptedUUID)
     }
 
@@ -33,6 +37,10 @@ class UUIDEncryptionUtilTest {
         val encryptedUUID2 = UUIDEncryptionUtil.encrypt(originalUUID, SECRET_KEY)
 
         // Then
-        assertNotEquals("Each encryption should produce different results even with the same input", encryptedUUID1, encryptedUUID2)
+        assertNotEquals(
+            "Each encryption should produce different results even with the same input",
+            encryptedUUID1,
+            encryptedUUID2
+        )
     }
 }

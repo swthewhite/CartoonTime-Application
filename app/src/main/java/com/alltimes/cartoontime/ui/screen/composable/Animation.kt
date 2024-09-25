@@ -175,14 +175,13 @@ fun SendDescription() {
     LaunchedEffect(spacerHeight) {
         // Check if spacer height is 0
         if (spacerHeight == 0f) {
-            while(true)
-            {
-            isDelayVisible = true
-            delay(3000) // 1-second delay
-            isDelayVisible = false
+            while (true) {
+                isDelayVisible = true
+                delay(3000) // 1-second delay
+                isDelayVisible = false
 
             }
-            }
+        }
     }
 
     Box(
@@ -242,7 +241,8 @@ fun SendAnimation() {
     val initialOffsets = listOf(-150.dp, -88.dp, -50.dp, 12.dp, 50.dp, 100.dp)
 
     // 각 이미지의 Y 위치와 가시성을 관리하는 리스트
-    val offsets = remember { List(images.size) { index -> Animatable(initialOffsets[index].value) } }
+    val offsets =
+        remember { List(images.size) { index -> Animatable(initialOffsets[index].value) } }
     val visibilities = remember { List(images.size) { Animatable(1f) } }
 
     LaunchedEffect(Unit) {
@@ -329,8 +329,10 @@ fun ReceiveAnimation() {
     val initialOffsets = listOf(-180.dp, -130.dp, -68.dp, -30.dp, 32.dp, 70.dp)
 
     // 각 이미지의 Y 위치와 가시성을 관리하는 리스트
-    val offsets = remember { List(images.size) { index -> Animatable(initialOffsets[index].value) } }
-    val visibilities = remember { List(images.size) { Animatable(0f) } }  // 처음엔 전부 invisible (alpha = 0)
+    val offsets =
+        remember { List(images.size) { index -> Animatable(initialOffsets[index].value) } }
+    val visibilities =
+        remember { List(images.size) { Animatable(0f) } }  // 처음엔 전부 invisible (alpha = 0)
 
     LaunchedEffect(Unit) {
         while (true) {

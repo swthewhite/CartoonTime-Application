@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -53,7 +54,6 @@ dependencies {
     // uwb
     implementation("androidx.core.uwb:uwb:1.0.0-alpha08")
     implementation("androidx.core.uwb:uwb-rxjava3:1.0.0-alpha08")
-    implementation(libs.firebase.crashlytics.buildtools)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -83,6 +83,13 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+
+    // firebase cloud messaging
+    implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
+    implementation("com.google.firebase:firebase-messaging-ktx:24.0.1")
+    implementation("com.google.firebase:firebase-crashlytics-buildtools:3.0.2")
+    implementation("com.google.firebase:firebase-firestore-ktx:25.1.0")
+
 
 
     testImplementation(libs.junit)

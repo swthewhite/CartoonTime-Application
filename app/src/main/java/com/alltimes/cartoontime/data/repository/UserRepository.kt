@@ -7,6 +7,8 @@ import com.alltimes.cartoontime.data.remote.ChargeRequest
 import com.alltimes.cartoontime.data.remote.ChargeResponse
 import com.alltimes.cartoontime.data.remote.EntryLog
 import com.alltimes.cartoontime.data.remote.EntryLogResponse
+import com.alltimes.cartoontime.data.remote.FCMRequest
+import com.alltimes.cartoontime.data.remote.FCMResponse
 import com.alltimes.cartoontime.data.remote.NaverAuthRequest
 import com.alltimes.cartoontime.data.remote.NavertAuthResponse
 import com.alltimes.cartoontime.data.remote.PayRequest
@@ -35,6 +37,10 @@ class UserRepository(private val apiService: ApiService) {
 
     suspend fun signIn(phoneNumber: String): SignResponse {
         return apiService.signIn(SignInRequest(phoneNumber))
+    }
+
+    suspend fun saveFcmToken(request: FCMRequest): FCMResponse {
+        return apiService.saveFcmToken(request)
     }
 
     suspend fun getUserInfo(userId: Long): UserResponse {

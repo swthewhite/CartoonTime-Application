@@ -92,7 +92,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                     onClick = { viewModel.onClickedHome() }
                 ),
 
-        ){
+            ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_home),
                 contentDescription = "Home",
@@ -181,7 +181,11 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                             color = if (category == value) Color(0xFFF9B912) else Color.Transparent,
                             shape = RoundedCornerShape(0.dp)
                         )
-                        .border(1.dp, if (category == value) Color(0xFFF9B912) else Color(0xFFA5A5A5), RoundedCornerShape(0.dp))
+                        .border(
+                            1.dp,
+                            if (category == value) Color(0xFFF9B912) else Color(0xFFA5A5A5),
+                            RoundedCornerShape(0.dp)
+                        )
                 ) {
                     Text(
                         text = label,

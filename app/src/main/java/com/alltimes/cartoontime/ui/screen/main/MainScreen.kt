@@ -66,7 +66,7 @@ fun MainScreen(viewModel: MainViewModel) {
     val balance by viewModel.balance.collectAsState()
     val state by viewModel.state.collectAsState()
     val enteredTime by viewModel.enteredTime.collectAsState()
-    
+
     // 입실 중
     val uiState by viewModel.uiState.collectAsState()
     val active = remember { mutableStateOf(false) }
@@ -128,9 +128,10 @@ fun MainScreen(viewModel: MainViewModel) {
         Row(
             modifier = Modifier
                 .constrainAs(line1) {
-                top.linkTo(logo.bottom, margin = 10.dp)
+                    top.linkTo(logo.bottom, margin = 10.dp)
                     start.linkTo(parent.start, margin = 30.dp)
-                    end.linkTo(parent.end, margin = 30.dp) },
+                    end.linkTo(parent.end, margin = 30.dp)
+                },
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
@@ -222,8 +223,9 @@ fun MainScreen(viewModel: MainViewModel) {
                         Text(text = "송금하기", color = Color.Black)
                     }
                     Button(
-                        onClick = { viewModel.goActivity(ActivityType.RECEIVE)
-                                  },
+                        onClick = {
+                            viewModel.goActivity(ActivityType.RECEIVE)
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE5A911)),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.padding(start = 8.dp)
@@ -335,10 +337,14 @@ fun MainScreen(viewModel: MainViewModel) {
             fontSize = 20.sp,
             modifier = Modifier
                 .constrainAs(stateText) {
-                top.linkTo(animationBox.bottom, margin = 10.dp)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-            }
+                    top.linkTo(animationBox.bottom, margin = 10.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
+                .clickable {
+                    // 특정 함수 호출
+                    viewModel.testSendToggleMessage()
+                }
         )
 
         if (state == "입실 전") {

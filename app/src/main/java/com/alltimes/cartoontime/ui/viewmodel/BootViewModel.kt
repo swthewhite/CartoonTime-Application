@@ -115,7 +115,8 @@ class BootViewModel(private val context: Context) : ViewModel(), NumpadAction {
         Toast.makeText(context, "비밀번호가 다릅니다", Toast.LENGTH_SHORT).show()
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         if (vibrator.hasVibrator()) {
-            val vibrationEffect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            val vibrationEffect =
+                VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
             vibrator.vibrate(vibrationEffect)
         }
     }

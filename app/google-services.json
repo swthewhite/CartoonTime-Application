@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "248594654107",
+    "project_id": "cartoontime-18b7a",
+    "storage_bucket": "cartoontime-18b7a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:248594654107:android:95625725b771966102f73e",
+        "android_client_info": {
+          "package_name": "com.alltimes.cartoontime"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNtnuFERsy8IFFFlAM7OFXNSaTyhHHPEc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
