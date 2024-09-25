@@ -157,6 +157,10 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             val toUserId = 1L
             val transferRequest = TransferRequest(fromUserId, toUserId, point.value.toLong())
 
+
+            // 상대 정보 받아오기
+            val toUser = repository.getUserInfo(toUserId)
+            // 송금
             val response = repository.transfer(transferRequest)
 
             withContext(Dispatchers.Main) {
@@ -170,12 +174,11 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
                     _balance.value = newBalance
 
-                    val fcmToken = sharedPreferences.getString("fcmToken", null)
+                    val myFcmToken = sharedPreferences.getString("fcmToken", null)
+                    val toFcmToken = toUser.data?.fcmToken
                     val name = sharedPreferences.getString("name", null)
 
-                    if (fcmToken != null) {
-                        sendMessage(fcmToken, "cJbsHcknSKKVXYxJpT5SM_:APA91bFeJbUbuU8JZEYARjw7HptbOFnZK49cIfVF7HM1GxrWdDjgIAHUTh1MTTFlwg7scrq8oUT21ptVp_Pw8reVYbqtaJHL46zzOiJ5kWAexo7dgONTMR8An8I0f3qFtBo-iRY8K90T","${name}님 지갑에서\n${point.value} 포인트를\n받았습니다.")
-                    }
+                    sendMessage(myFcmToken!!, toFcmToken!!,"${name}님 지갑에서\n${point.value} 포인트를\n받았습니다.")
 
                     goScreen(ScreenType.SENDCONFIRM)
                 } else {

@@ -3,6 +3,7 @@ package com.alltimes.cartoontime.ui.viewmodel
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -14,6 +15,7 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.remote.FCMRequest
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.repository.FCMRepository
 import com.alltimes.cartoontime.data.repository.UserRepository
@@ -23,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -75,7 +78,16 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
     init {
         val fcmRepository = FCMRepository(this)
         val fcmToken = sharedPreferences.getString("fcmToken", "") ?: ""
+        val userId = sharedPreferences.getLong("userId", 0L)
         fcmRepository.listenForMessages(fcmToken)
+        
+        // 서버 api 호출
+        // 인증 코드 요청
+        CoroutineScope(Dispatchers.IO).launch {
+            val fcmRequest = FCMRequest(userId, fcmToken)
+
+            val response = repository.saveFcmToken(fcmRequest)
+        }
     }
 
     override fun onMessageReceived(message: FcmMessage) {
@@ -90,17 +102,23 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
     private val fcmMessageRepository = FCMRepository()
 
     fun sendMessage(senderId: String, receiverId: String, content: String) {
-        println("메시지 전송을 시작합니다.")
         fcmMessageRepository.saveMessage(senderId, receiverId, content)
-        // SaveMessage 메서드에서 Firestore에 데이터를 비동기로 저장하고 결과를 처리해야 합니다.
     }
 
     fun testSendToggleMessage() {
-        val fcmToken = sharedPreferences.getString("fcmToken", null)
 
-        if (fcmToken != null) {
-            sendMessage(fcmToken, "cJbsHcknSKKVXYxJpT5SM_:APA91bFeJbUbuU8JZEYARjw7HptbOFnZK49cIfVF7HM1GxrWdDjgIAHUTh1MTTFlwg7scrq8oUT21ptVp_Pw8reVYbqtaJHL46zzOiJ5kWAexo7dgONTMR8An8I0f3qFtBo-iRY8K90T","입퇴실완료")
+        CoroutineScope(Dispatchers.IO).launch {
+            val fromUserId = sharedPreferences.getLong("userId", -1L)
+            val toUserId = 1L
+            // 상대 정보 받아오기
+            val toUser = repository.getUserInfo(toUserId)
+
+            val myFcmToken = sharedPreferences.getString("fcmToken", null)
+            val toFcmToken = toUser.data?.fcmToken
+
+            sendMessage(myFcmToken!!, toFcmToken!!, "입퇴실완료")
         }
+
     }
 
     /////////////////////////// Main ///////////////////////////
@@ -166,53 +184,6 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
             goScreen(ScreenType.CONFIRM)
         }
     }
-
-    // 퇴실 완료 API 호출
-    private suspend fun completeExit(userId: Long) {
-
-        if (_charge.value != -1L) {
-            goScreen(ScreenType.CONFIRM)
-        } else {
-            val response = repository.exit(userId)
-
-            if (response.success) {
-                // 퇴실 완료 처리
-                _state.value = "입실 전"
-                editor.putString("state", "입실 전")
-                editor.apply()
-
-                // 요금 처리 및 화면 전환 등 추가 로직
-                val fee = response.data.lastOrNull()?.fee
-                _charge.value = fee!!
-                goScreen(ScreenType.CONFIRM)
-            } else {
-                // 오류 처리
-                Log.e("Kiosk", "퇴실 처리 실패: ${response.message}")
-            }
-        }
-    }
-
-    // 입실 완료 API 호출
-    private suspend fun completeEntry(userId: Long) {
-        val response = repository.entry(userId)
-
-        if (response.success) {
-            // 입실 완료 처리
-            _state.value = "입실 완료"
-            editor.putString("state", "입실 완료")
-            editor.apply()
-
-            // 현재 시각을 기록
-            val currentTime = getCurrentTime()  // 현재 시각을 가져오는 함수
-            _enteredTime.value = currentTime
-            editor.putString("enteredTime", currentTime)
-            editor.apply()
-        } else {
-            // 오류 처리
-            Log.e("Kiosk", "입실 처리 실패: ${response.message}")
-        }
-    }
-
 
     /////////////////////////// BookRecommend ///////////////////////////
 
