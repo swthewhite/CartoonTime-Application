@@ -14,6 +14,7 @@ import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.repository.UserRepository
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,6 +71,11 @@ class MainViewModel(private val context: Context) : ViewModel() {
 
     /////////////////////////// Main ///////////////////////////
 
+    // fcm 토큰 체크 및 저장
+    fun checkAndSaveFCMToken() {
+
+    }
+
     // 현재 시각을 가져오는 함수
     private fun getCurrentTime(): String {
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
@@ -114,36 +120,53 @@ class MainViewModel(private val context: Context) : ViewModel() {
         println("state: ${_state.value}")
         println("get state : ${sharedPreferences.getString("state", "입실 전")}")
 
-        // 서버에서 입퇴실 로그 조회
-        CoroutineScope(Dispatchers.IO).launch {
-            val userId = sharedPreferences.getLong("userId", -1L)
-            val response = repository.getEntryLog(userId)
+        if (_state.value == "입실 중") {
+            _state.value = "입실 완료"
+            editor.putString("state", "입실 완료")
+            editor.apply()
 
-            if (response.success) {
-                val logs = response.data
-                val lastLog = logs.lastOrNull() // 최신 입퇴실 로그 가져오기
-
-                if (lastLog != null) {
-                    if (lastLog.exitDate == null) {
-                        // 퇴실 기록이 없는 경우 퇴실 진행
-                        completeExit(userId)
-                    } else {
-                        // 퇴실 기록이 있는 경우 입실 진행
-                        // 단, charge가 -1이 아니라면 잔액 부족으로 다시 퇴실하려는 상황이므로 예외처리
-                        if (_charge.value != -1L) {
-                            // 잔액 부족으로 퇴실 진행
-                            completeExit(userId)
-                        } else {
-                            completeEntry(userId)
-                        }
-                    }
-                }
-            } else {
-                // 오류 처리
-                Log.e("Kiosk", "입퇴실 로그 조회 실패: ${response.message}")
-            }
+            // 현재 시각을 기록
+            val currentTime = getCurrentTime()  // 현재 시각을 가져오는 함수
+            _enteredTime.value = currentTime
+            editor.putString("enteredTime", currentTime)
+            editor.apply()
+        } else if (_state.value == "퇴실 중") {
+            _state.value = "입실 전"
+            editor.putString("state", "입실 전")
+            editor.apply()
+            goScreen(ScreenType.CONFIRM)
         }
     }
+
+        // 서버에서 입퇴실 로그 조회
+//        CoroutineScope(Dispatchers.IO).launch {
+//            val userId = sharedPreferences.getLong("userId", -1L)
+//            val response = repository.getEntryLog(userId)
+//
+//            if (response.success) {
+//                val logs = response.data
+//                val lastLog = logs.lastOrNull() // 최신 입퇴실 로그 가져오기
+//
+//                if (lastLog != null) {
+//                    if (lastLog.exitDate == null) {
+//                        // 퇴실 기록이 없는 경우 퇴실 진행
+//                        completeExit(userId)
+//                    } else {
+//                        // 퇴실 기록이 있는 경우 입실 진행
+//                        // 단, charge가 -1이 아니라면 잔액 부족으로 다시 퇴실하려는 상황이므로 예외처리
+//                        if (_charge.value != -1L) {
+//                            // 잔액 부족으로 퇴실 진행
+//                            completeExit(userId)
+//                        } else {
+//                            completeEntry(userId)
+//                        }
+//                    }
+//                }
+//            } else {
+//                // 오류 처리
+//                Log.e("Kiosk", "입퇴실 로그 조회 실패: ${response.message}")
+//            }
+//        }
 
     // 퇴실 완료 API 호출
     private suspend fun completeExit(userId: Long) {
