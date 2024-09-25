@@ -9,7 +9,7 @@ import com.google.firebase.messaging.RemoteMessage
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 class MyFirebaseMessageService : FirebaseMessagingService() {
 
-    private val fcmRepository = FCMRepository()
+   // private val fcmRepository = FCMRepository()
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         // FCM 메시지 수신 시 처리 로직

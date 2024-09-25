@@ -341,6 +341,10 @@ fun MainScreen(viewModel: MainViewModel) {
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 }
+                .clickable {
+                    // 특정 함수 호출
+                    viewModel.testSendToggleMessage()
+                }
         )
 
         if (state == "입실 전") {

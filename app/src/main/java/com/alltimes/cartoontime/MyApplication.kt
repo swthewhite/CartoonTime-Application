@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import com.alltimes.cartoontime.data.repository.FCMRepository
+import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
 import com.google.firebase.FirebaseApp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
@@ -11,7 +12,6 @@ import com.google.firebase.messaging.FirebaseMessaging
 class MyApplication : Application() {
 
     private lateinit var firestore: FirebaseFirestore
-    private lateinit var fcmRepository: FCMRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -19,9 +19,6 @@ class MyApplication : Application() {
         // Firebase 초기화
         FirebaseApp.initializeApp(this)
         firestore = FirebaseFirestore.getInstance()
-
-        // FCMRepository 초기화
-        fcmRepository = FCMRepository()
 
         // FCM 토큰 가져오기
         FirebaseMessaging.getInstance().token
@@ -39,7 +36,7 @@ class MyApplication : Application() {
                 saveFcmToken(token)
 
                 // FCM 메시지 수신 시작
-                listenForMessages(token) // FCM 토큰을 사용하여 메시지 수신
+                //listenForMessages(token) // FCM 토큰을 사용하여 메시지 수신
             }
 
         println("초기화 완료")
@@ -53,10 +50,6 @@ class MyApplication : Application() {
         editor.apply()
 
         println("FCM 토큰 저장 완료: $token")
-    }
-
-    private fun listenForMessages(receiverId: String) {
-        fcmRepository.listenForMessages(receiverId) // FCM 토큰을 수신자로 사용
     }
 
     fun getFirestore(): FirebaseFirestore {

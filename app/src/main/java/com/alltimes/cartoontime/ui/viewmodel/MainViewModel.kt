@@ -6,13 +6,16 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.alltimes.cartoontime.common.MessageListener
 import com.alltimes.cartoontime.data.model.Cartoon
+import com.alltimes.cartoontime.data.model.FcmMessage
 import com.alltimes.cartoontime.data.model.UIStateModel
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.remote.RetrofitClient
+import com.alltimes.cartoontime.data.repository.FCMRepository
 import com.alltimes.cartoontime.data.repository.UserRepository
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
@@ -24,7 +27,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class MainViewModel(private val context: Context) : ViewModel() {
+class MainViewModel(private val context: Context) : ViewModel(), MessageListener {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -69,12 +72,38 @@ class MainViewModel(private val context: Context) : ViewModel() {
     // 서버 통신 관련 변수
     private val repository = UserRepository(RetrofitClient.apiService)
 
-    /////////////////////////// Main ///////////////////////////
-
-    // fcm 토큰 체크 및 저장
-    fun checkAndSaveFCMToken() {
-
+    init {
+        val fcmRepository = FCMRepository(this)
+        val fcmToken = sharedPreferences.getString("fcmToken", "") ?: ""
+        fcmRepository.listenForMessages(fcmToken)
     }
+
+    override fun onMessageReceived(message: FcmMessage) {
+        println("메시지 수신 완료: $message")
+        if (message.content.contains("입퇴실")) {
+            // 특정 동작 수행
+            println("입퇴실 메시지 수신: $message")
+            onKioskLoadingCompleted()
+        }
+    }
+
+    private val fcmMessageRepository = FCMRepository()
+
+    fun sendMessage(senderId: String, receiverId: String, content: String) {
+        println("메시지 전송을 시작합니다.")
+        fcmMessageRepository.saveMessage(senderId, receiverId, content)
+        // SaveMessage 메서드에서 Firestore에 데이터를 비동기로 저장하고 결과를 처리해야 합니다.
+    }
+
+    fun testSendToggleMessage() {
+        val fcmToken = sharedPreferences.getString("fcmToken", null)
+
+        if (fcmToken != null) {
+            sendMessage(fcmToken, "cJbsHcknSKKVXYxJpT5SM_:APA91bFeJbUbuU8JZEYARjw7HptbOFnZK49cIfVF7HM1GxrWdDjgIAHUTh1MTTFlwg7scrq8oUT21ptVp_Pw8reVYbqtaJHL46zzOiJ5kWAexo7dgONTMR8An8I0f3qFtBo-iRY8K90T","입퇴실완료")
+        }
+    }
+
+    /////////////////////////// Main ///////////////////////////
 
     // 현재 시각을 가져오는 함수
     private fun getCurrentTime(): String {
@@ -137,36 +166,6 @@ class MainViewModel(private val context: Context) : ViewModel() {
             goScreen(ScreenType.CONFIRM)
         }
     }
-
-        // 서버에서 입퇴실 로그 조회
-//        CoroutineScope(Dispatchers.IO).launch {
-//            val userId = sharedPreferences.getLong("userId", -1L)
-//            val response = repository.getEntryLog(userId)
-//
-//            if (response.success) {
-//                val logs = response.data
-//                val lastLog = logs.lastOrNull() // 최신 입퇴실 로그 가져오기
-//
-//                if (lastLog != null) {
-//                    if (lastLog.exitDate == null) {
-//                        // 퇴실 기록이 없는 경우 퇴실 진행
-//                        completeExit(userId)
-//                    } else {
-//                        // 퇴실 기록이 있는 경우 입실 진행
-//                        // 단, charge가 -1이 아니라면 잔액 부족으로 다시 퇴실하려는 상황이므로 예외처리
-//                        if (_charge.value != -1L) {
-//                            // 잔액 부족으로 퇴실 진행
-//                            completeExit(userId)
-//                        } else {
-//                            completeEntry(userId)
-//                        }
-//                    }
-//                }
-//            } else {
-//                // 오류 처리
-//                Log.e("Kiosk", "입퇴실 로그 조회 실패: ${response.message}")
-//            }
-//        }
 
     // 퇴실 완료 API 호출
     private suspend fun completeExit(userId: Long) {
