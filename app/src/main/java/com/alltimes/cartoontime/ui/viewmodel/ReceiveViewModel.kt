@@ -92,7 +92,7 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
     val uiState = _uiState.asStateFlow()
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
-    fun onButtonClick() {
+    fun transactionBleServerStart() {
         println("서버 시작 ~~~~~")
         // mode setting
         bleServerViewModel.setMode(true)

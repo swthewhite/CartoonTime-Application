@@ -27,6 +27,7 @@ class ReceiveActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         viewModel = ReceiveViewModel(this)
+        viewModel.transactionBleServerStart()
 
         setContent {
             navController = rememberNavController() // 전역 변수에 저장

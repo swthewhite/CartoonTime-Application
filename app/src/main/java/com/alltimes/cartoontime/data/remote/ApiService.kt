@@ -22,7 +22,7 @@ interface ApiService {
     suspend fun signIn(@Body request: SignInRequest): SignResponse
 
     @POST("ct/auth/fcm-token")
-    suspend fun saveFcmToken(@Query("fcmToken") request: FCMRequest): FCMResponse
+    suspend fun saveFcmToken(@Body request: FCMRequest): FCMResponse
 
     @GET("ct/user/{user_id}")
     suspend fun getUserInfo(@Path("user_id") userId: Long): UserResponse
@@ -122,7 +122,7 @@ data class JwtToken(
 // FCM 토큰 저장 /ct/auth/fcm-token
 data class FCMRequest(
     val userId: Long,
-    val fcmToken: String
+    val fcmtoken: String,
 )
 
 data class FCMResponse(
@@ -145,7 +145,7 @@ data class UserData(
     val name: String,
     val currentMoney: Long,
     val roles: List<String>,
-    val fcmToken: String,
+    val fcmtoken: String,
     //val mainAccount: MainAccount
 )
 

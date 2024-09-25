@@ -77,16 +77,34 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
 
     init {
         val fcmRepository = FCMRepository(this)
-        val fcmToken = sharedPreferences.getString("fcmToken", "") ?: ""
+
+        val fcmToken = sharedPreferences.getString("fcmToken", "")
         val userId = sharedPreferences.getLong("userId", 0L)
-        fcmRepository.listenForMessages(fcmToken)
+
+        println("bbbbbbbbbbbb userId: $userId, fcmToken: $fcmToken")
+
+        fcmRepository.listenForMessages(fcmToken!!)
         
         // 서버 api 호출
         // 인증 코드 요청
         CoroutineScope(Dispatchers.IO).launch {
             val fcmRequest = FCMRequest(userId, fcmToken)
 
-            val response = repository.saveFcmToken(fcmRequest)
+            println("qqqqqqqqqqqqqqq userId: $userId, fcmToken: $fcmToken")
+
+            val response = try{
+                repository.saveFcmToken(fcmRequest)
+            } catch (e: Exception) {
+                null
+            }
+
+            println("response: $response")
+
+            if (response?.success == true) {
+                println("fcmToken 저장 성공")
+            } else {
+                println("fcmToken 저장 실패")
+            }
         }
     }
 
@@ -114,7 +132,7 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
             val toUser = repository.getUserInfo(toUserId)
 
             val myFcmToken = sharedPreferences.getString("fcmToken", null)
-            val toFcmToken = toUser.data?.fcmToken
+            val toFcmToken = toUser.data?.fcmtoken
 
             sendMessage(myFcmToken!!, toFcmToken!!, "입퇴실완료")
         }

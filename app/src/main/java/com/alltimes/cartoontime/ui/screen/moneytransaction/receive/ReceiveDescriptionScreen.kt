@@ -80,7 +80,6 @@ fun ReceiveDescriptionScreen(viewModel: ReceiveViewModel) {
 
         Button(
             onClick = {
-                viewModel.onButtonClick()
                 viewModel.goScreen(ScreenType.RECEIVELOADING)
             },
             modifier = Modifier

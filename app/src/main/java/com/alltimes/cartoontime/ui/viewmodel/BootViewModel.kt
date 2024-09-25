@@ -79,7 +79,7 @@ class BootViewModel(private val context: Context) : ViewModel(), NumpadAction {
             }
 
             // 응답 처리
-            if (response!!.success) {
+            if (response?.success == true) {
 
                 editor?.putLong("balance", response.data?.currentMoney!!)
                 editor?.putLong("userId", response.data?.id!!)

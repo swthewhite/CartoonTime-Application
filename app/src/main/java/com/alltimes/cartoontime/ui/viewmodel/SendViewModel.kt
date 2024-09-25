@@ -134,6 +134,24 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         }
     }
 
+    /////////////////////////// PartnerCheck ///////////////////////////
+
+    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
+
+    private val _uiState = MutableStateFlow(SendUiState())
+    val uiState = _uiState.asStateFlow()
+
+    // 버튼 클릭 시 호출되는 함수
+    fun onSendButtonClick() {
+        _uiState.value = _uiState.value.copy(isSending = !_uiState.value.isSending)
+
+        if (_uiState.value.isSending) {
+            bleScannerViewModel.setMode(true)
+            bleScannerViewModel.startScanningAndConnect()
+        } else {
+            bleScannerViewModel.disconnectDevice()
+        }
+    }
 
     /////////////////////////// Description ///////////////////////////
 
@@ -186,7 +204,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                     _balance.value = newBalance
 
                     val myFcmToken = sharedPreferences.getString("fcmToken", null)
-                    val toFcmToken = toUser.data?.fcmToken
+                    val toFcmToken = toUser.data?.fcmtoken
                     val name = sharedPreferences.getString("name", null)
 
                     sendMessage(myFcmToken!!, toFcmToken!!,"${name}님 지갑에서\n${point.value} 포인트를\n받았습니다.")
@@ -200,21 +218,4 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     }
 
     /////////////////////////// Confirm ///////////////////////////
-
-    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
-
-    private val _uiState = MutableStateFlow(SendUiState())
-    val uiState = _uiState.asStateFlow()
-
-    // 버튼 클릭 시 호출되는 함수
-    fun onSendButtonClick() {
-        _uiState.value = _uiState.value.copy(isSending = !_uiState.value.isSending)
-
-        if (_uiState.value.isSending) {
-            bleScannerViewModel.setMode(true)
-            bleScannerViewModel.startScanningAndConnect()
-        } else {
-            bleScannerViewModel.disconnectDevice()
-        }
-    }
 }
