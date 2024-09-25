@@ -2,18 +2,23 @@ package com.alltimes.cartoontime.data.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.alltimes.cartoontime.common.MessageListener
 import com.alltimes.cartoontime.data.model.FcmMessage
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
-class FCMRepository {
+class FCMRepository(private val listener: MessageListener? = null) {
+
     private val firestore: FirebaseFirestore = Firebase.firestore
+    private var listenerRegistration: ListenerRegistration? = null
+
 
     fun listenForMessages(fcmToken: String) {
         println("메시지 수신 중 ... : $fcmToken")
-        firestore.collection("messages")
+        listenerRegistration = firestore.collection("messages")
             .whereEqualTo("receiverId", fcmToken) // FCM 토큰을 사용하여 필터링
             .addSnapshotListener { snapshots, e ->
                 if (e != null) {
@@ -28,10 +33,9 @@ class FCMRepository {
 
                 snapshots.documents.forEach { document ->
                     val message = document.toObject(FcmMessage::class.java)
-                    // 메시지 처리 로직 (예: UI 업데이트 등)
                     println("새 메시지 수신: $message")
 
-                    // 메시지를 읽은 후 Firestore에서 삭제
+                    message?.let { listener?.onMessageReceived(it) }
                     deleteMessage(document.id)
                 }
             }
@@ -62,5 +66,12 @@ class FCMRepository {
             .addOnFailureListener { e ->
                 println("메시지 저장 실패: ${e.message}")
             }
+    }
+
+    // 리스너 제거 메서드
+    fun removeMessageListener() {
+        listenerRegistration?.remove() // 리스너 제거
+        listenerRegistration = null
+        println("메시지 리스너가 제거되었습니다.")
     }
 }

@@ -38,7 +38,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         viewModel = MainViewModel(this) // ViewModel 생성
-        viewModel.checkAndSaveFCMToken() // FCM 토큰 확인 및 저장
 
         // 권한 요청 부분을 PermissionsHelper로 처리
         if (!PermissionsHelper.hasAllPermissions(this)) {
