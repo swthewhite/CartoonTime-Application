@@ -26,6 +26,7 @@ import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 fun SendConfirmScreen(viewModel: SendViewModel) {
 
     val point by viewModel.point.collectAsState()
+    val toUserName by viewModel.toUserName.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -62,7 +63,7 @@ fun SendConfirmScreen(viewModel: SendViewModel) {
         )
 
         Text(
-            text = "백승우님 지갑으로",
+            text = "${toUserName}님 지갑으로",
             fontSize = 20.sp,
             modifier = Modifier
                 .constrainAs(description0) {

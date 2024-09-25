@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 
 class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction {
 
@@ -140,7 +141,6 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
         }
     }
 
-    // 인증하기 버튼 클릭
     fun onVerify() {
         context?.let {
             // 인증번호는 6자리
@@ -151,74 +151,74 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
                 // 인증 확인 요청
                 CoroutineScope(Dispatchers.IO).launch {
-                    val response = repository.verifyAuthCode(verifyAuthRequest)
 
-                    // 키패드 숨기기
-                    val inputMethodManager =
-                        context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                    val view = (context as Activity).currentFocus
-                    view?.let {
-                        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
-                    }
-
-                    println("?????????????????????response: $response")
-
-                    if (response.success) {
-                        _isVerificationCodeCorret.value = true
-
-                        // 유저 정보 받아오기
-                        val userId = response.data?.userId
-
-                        // 응답 정보를 보고 회원가입인지 로그인인지 구분
-                        // -1이면 회원가입, esle 로그인
-
-                        if (userId == -1L || userId == null) {
-                            isSignUp = true
-                        } else {
-                            isSignUp = false
+                        val response = try {
+                            repository.verifyAuthCode(verifyAuthRequest)
+                        } catch (e: HttpException) {
+                            // HTTP 예외를 잡아 UI에 표시하거나 적절히 처리
+                            withContext(Dispatchers.Main) {
+                                triggerVibration(it)
+                                _verificationCode.value = TextFieldValue()
+                                Toast.makeText(it, "인증번호가 틀립니다", Toast.LENGTH_SHORT).show()
+                            }
+                            return@launch // 예외 발생 시 함수 종료
+                        } catch (e: Exception) {
+                            // 다른 일반 예외 처리
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(it, "알 수 없는 오류 발생: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                            return@launch
                         }
 
-                        // userID가 있을 때 유저 정보를 받아와서 저장
-                        if (userId != null && userId != -1L) {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                val response = repository.getUserInfo(userId)
-                                // 응답 데이터의 필수 필드를 확인하여 유효성 검증
+                        // 키패드 숨기기
+                        val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                        val view = (context as Activity).currentFocus
+                        view?.let {
+                            inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+                        }
 
-                                if (response.success) {
+                        if (response.success) {
+                            _isVerificationCodeCorret.value = true
 
-                                    // if (response.id != null && response.currentMoney != null) {
+                            // 유저 정보 받아오기
+                            val userId = response.data?.userId
 
-                                    editor?.putLong("balance", response.data?.currentMoney!!)
-                                    editor?.putLong("userId", response.data?.id!!)
-                                    editor?.putString("userName", response.data?.username!!)
-                                    editor?.putString("name", response.data?.name!!)
+                            // 응답 정보를 보고 회원가입인지 로그인인지 구분
+                            isSignUp = userId == -1L || userId == null
 
-                                    println("name: ${response.data?.name!!}")
-
-                                    // 이 경우 이름 입력 필드 사용 불가
-                                    withContext(Dispatchers.Main) {
-                                        // 이름이 있을 때
-                                        Toast.makeText(
-                                            it,
-                                            "${response.data?.name}님 환영합니다.",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                            // userID가 있을 때 유저 정보를 받아와서 저장
+                            if (userId != null && userId != -1L) {
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    val userInfoResponse = try {
+                                        repository.getUserInfo(userId)
+                                    } catch (e: Exception) {
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(it, "예상치 못한 오류: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                        return@launch
                                     }
-                                    _name.value = TextFieldValue(response.data?.name!!)
-                                    _isNameCorrect.value = true
-                                    _isNameEnable.value = false
-                                    checkSubmitButtonState()
+
+                                    if (userInfoResponse.success) {
+
+                                        editor?.putLong("balance", userInfoResponse.data?.currentMoney!!)
+                                        editor?.putLong("userId", userInfoResponse.data?.id!!)
+                                        editor?.putString("userName", userInfoResponse.data?.username!!)
+                                        editor?.putString("name", userInfoResponse.data?.name!!)
+
+                                        println("name: ${userInfoResponse.data?.name!!}")
+
+                                        // 이름 입력 필드 사용 불가
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(it, "${userInfoResponse.data?.name}님 환영합니다.", Toast.LENGTH_SHORT).show()
+                                        }
+                                        _name.value = TextFieldValue(userInfoResponse.data?.name!!)
+                                        _isNameCorrect.value = true
+                                        _isNameEnable.value = false
+                                        checkSubmitButtonState()
+                                    }
                                 }
                             }
                         }
-
-                    } else {
-                        withContext(Dispatchers.Main) {
-                            _isVerificationCodeCorret.value = false
-                            Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
-                            triggerVibration(it)
-                        }
-                    }
                 }
             } else {
                 Toast.makeText(it, "인증번호는 6자리 입니다.", Toast.LENGTH_SHORT).show()
@@ -228,6 +228,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             }
         }
     }
+
 
     // 휴대폰 진동
     private fun triggerVibration(context: Context) {
@@ -244,22 +245,25 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
         if (isSignUp) {
             // sign-up api 호출
             CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val response = repository.signUp(phoneNumber.value.text, name.value.text)
-                    handleResponse(response)
+                val response = try {
+                    repository.signUp(phoneNumber.value.text, name.value.text)
                 } catch (e: Exception) {
                     // 오류 처리
+                    return@launch
                 }
+
+                handleResponse(response)
             }
         } else {
             // sign-in api 호출
             CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    val response = repository.signIn(phoneNumber.value.text)
-                    handleResponse(response)
+                val response = try {
+                    repository.signIn(phoneNumber.value.text)
                 } catch (e: Exception) {
                     // 오류 처리
+                    return@launch
                 }
+                handleResponse(response)
             }
         }
     }
@@ -420,13 +424,13 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             // 인증 코드 요청
             CoroutineScope(Dispatchers.IO).launch {
                 val userId = sharedPreferences?.getLong("userId", -1L).toString()
-                val response = repository.naverAuth(
-                    NaverAuthRequest(
-                        userId,
-                        _naverID.value.text,
-                        _naverPassword.value.text
-                    )
-                )
+
+                val response = try {
+                    repository.naverAuth(NaverAuthRequest(userId, _naverID.value.text, _naverPassword.value.text))
+                } catch (e: Exception) {
+                    // 오류 처리
+                    return@launch
+                }
 
                 withContext(Dispatchers.Main) {
                     if (response.success) {

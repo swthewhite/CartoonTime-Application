@@ -19,8 +19,10 @@ class PointPadClickHandler(
         if (type == -1) {
             if (_point.value.isNotEmpty()) _point.value = _point.value.dropLast(1)
         } else if (type == -2) {
-            _point.value += "00"
+            if (_point.value.isNotEmpty()) _point.value += "00"
         } else {
+            // 비어있을 때 0입력은 무시 해야함
+            if (_point.value.isEmpty() && type == 0) return
             _point.value += type.toString()
         }
 

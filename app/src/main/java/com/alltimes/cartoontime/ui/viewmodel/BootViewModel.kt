@@ -65,20 +65,21 @@ class BootViewModel(private val context: Context) : ViewModel(), NumpadAction {
     fun authenticationSuccess() {
         _activityNavigationTo.value = ActivityNavigationTo(ActivityType.MAIN)
 
-        println("인증 성공입니다 `~~~")
-
         // 로그인하면서 서버로부터 유저 정보 받아와서 다시 저장.
         CoroutineScope(Dispatchers.IO).launch {
             // userId와 amount를 ChargeRequest 객체에 담아서 전달
             val userId = sharedPreferences.getLong("userId", -1L)
 
             // API 호출
-            val response = repository.getUserInfo(userId)
-
-            println("response: $response")
+            val response = try {
+                repository.getUserInfo(userId)
+            } catch (e: Exception) {
+                // 에러처리
+                null
+            }
 
             // 응답 처리
-            if (response.success) {
+            if (response!!.success) {
 
                 editor?.putLong("balance", response.data?.currentMoney!!)
                 editor?.putLong("userId", response.data?.id!!)
