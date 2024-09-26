@@ -41,7 +41,6 @@ import retrofit2.Response
 import kotlin.properties.Delegates
 
 class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction {
-//class SendViewModel(private val application: Application) : AndroidViewModel(application) {
 
     /////////////////////////// 공용 ///////////////////////////
 

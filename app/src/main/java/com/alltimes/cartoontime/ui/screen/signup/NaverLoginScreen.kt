@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,12 +27,16 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.alltimes.cartoontime.R
@@ -46,6 +51,8 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
     val naverID by viewModel.naverID.collectAsState()
     val naverPassword by viewModel.naverPassword.collectAsState()
     val loginEnable by viewModel.naverLoginEnable.collectAsState()
+
+    var passwordVisible by remember { mutableStateOf(false) }
 
     ConstraintLayout(
         modifier = Modifier
@@ -147,6 +154,7 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
         TextField(
             value = naverPassword,
             onValueChange = { viewModel.onNaverPasswordChanged(it) },
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             colors = TextFieldDefaults.textFieldColors(
                 containerColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
@@ -168,7 +176,23 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
                 },
             label = {
                 Text(text = "비밀번호", color = Color.Black)
+            },
+            trailingIcon = {
+
+                Text(
+                    text = if (passwordVisible) "숨기기" else "보기",
+                    color = Color.Black,
+                    modifier = Modifier
+                        .clickable(
+                            indication = null, // Ripple 효과 제거
+                            interactionSource = remember { MutableInteractionSource() } // 클릭 상태 관리
+                        ) {
+                            passwordVisible = !passwordVisible
+                        }
+                )
+
             }
+
         )
 
         if (loginEnable) {

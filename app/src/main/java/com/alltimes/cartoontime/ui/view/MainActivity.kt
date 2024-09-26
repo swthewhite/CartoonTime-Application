@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         viewModel = MainViewModel(this) // ViewModel 생성
+        viewModel.accelerometerStart(lifecycleOwner = this)
         viewModel.UpdateUserInfo()
 
         // 권한 요청 부분을 PermissionsHelper로 처리
