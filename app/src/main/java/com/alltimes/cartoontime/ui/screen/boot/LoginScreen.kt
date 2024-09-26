@@ -1,47 +1,41 @@
 package com.alltimes.cartoontime.ui.screen.boot
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
-import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alltimes.cartoontime.ui.screen.composable.Numpad
+import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 
 @Composable
 fun LoginScreen(viewModel: BootViewModel) {
 
+    // viewmodel variable
     val password by viewModel.password.collectAsState()
 
+    // screen variable
     val imgSize = 40.dp
     val imgSpace = 10.dp
-    val btnSpace = 80.dp
 
     ConstraintLayout(
         modifier = Modifier
@@ -49,8 +43,7 @@ fun LoginScreen(viewModel: BootViewModel) {
             .background(color = Color(0xFFF4F2EE))
     ) {
         val (title, passwordRow, numberPad) = createRefs()
-
-        // 간편 비밀번호 설정 타이틀
+        
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -75,7 +68,7 @@ fun LoginScreen(viewModel: BootViewModel) {
             )
         }
 
-        // 비밀번호 6자리 표시
+        // 비밀번호 6자리 표시 안보이게 표시
         Row(
             modifier = Modifier
                 .fillMaxWidth()

@@ -1,8 +1,6 @@
 package com.alltimes.cartoontime.data.model
 
 import java.nio.charset.StandardCharsets
-import java.util.*
-
 import java.util.UUID
 
 object BLEConstants {

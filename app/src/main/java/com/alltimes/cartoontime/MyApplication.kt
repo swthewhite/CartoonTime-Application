@@ -35,8 +35,6 @@ class MyApplication : Application() {
                 // FCM 토큰 저장 (SharedPreferences나 서버 API 사용)
                 saveFcmToken(token)
 
-                // FCM 메시지 수신 시작
-                //listenForMessages(token) // FCM 토큰을 사용하여 메시지 수신
             }
 
         println("초기화 완료")

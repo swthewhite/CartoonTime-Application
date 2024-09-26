@@ -5,13 +5,13 @@ import android.content.SharedPreferences
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.alltimes.cartoontime.common.MessageListener
+import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.common.NumpadAction
 import com.alltimes.cartoontime.common.PointpadAction
-import com.alltimes.cartoontime.data.model.FcmMessage
 import com.alltimes.cartoontime.data.model.SendUiState
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
@@ -23,19 +23,18 @@ import com.alltimes.cartoontime.data.repository.FCMRepository
 import com.alltimes.cartoontime.data.repository.UserRepository
 import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
 import com.alltimes.cartoontime.ui.handler.PointPadClickHandler
+import com.alltimes.cartoontime.utils.AccelerometerManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlin.properties.Delegates
 
 class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction {
-//class SendViewModel(private val application: Application) : AndroidViewModel(application) {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -50,10 +49,11 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     val editor = sharedPreferences.edit()
 
-    var inputEnable: Boolean = true
-
     private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
+
+    private val _toUserId = MutableStateFlow(-1L)
+    val toUserId: StateFlow<Long> = _toUserId
 
     private val _toUserName = MutableStateFlow("")
     val toUserName: StateFlow<String> = _toUserName
@@ -66,6 +66,40 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     fun goScreen(screen: ScreenType) {
         _screenNavigationTo.value = ScreenNavigationTo(screen)
+    }
+
+    // 각속도 측정
+    private lateinit var accelerometerManager: AccelerometerManager
+    private var accelerometerCount by Delegates.notNull<Int>()
+
+    fun accelerometerStart(lifecycleOwner: LifecycleOwner) {
+        println("각속도 측정 시작")
+        accelerometerManager = AccelerometerManager(context)
+        accelerometerCount = 0
+        accelerometerManager.start()
+
+        accelerometerManager.accelerometerData.observe(lifecycleOwner) { data ->
+            // 데이터 업데이트
+            println("x: ${data.x}, y: ${data.y}, z: ${data.z}")
+            if (data.z <= -9.0) {
+                // 아래를 보는 중
+                accelerometerCount++
+                if (accelerometerCount >= 10) {
+                    // 승인
+                    transferPoint()
+                    accelerometerCount = 0
+                    accelerometerStop()
+                }
+            } else if (data.z >= 0) {
+                // 위를 보는 중
+                accelerometerCount = 0
+            }
+        }
+    }
+
+    fun accelerometerStop() {
+        println("각속도 측정 중지")
+        accelerometerManager.stop()
     }
 
     /////////////////////////// PointInput ///////////////////////////
@@ -114,8 +148,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             onPasswordComplete = { password: String ->
                 val userPassword = sharedPreferences.getString("password", null)
                 if (userPassword == password) {
-                    transferPoint()
-                    //goScreen(ScreenType.SENDPARTNERCHECK)
+                    goScreen(ScreenType.SENDPARTNERCHECK)
                 } else {
                     numPadClickHandler.clearPassword()
                     showPasswordError()
@@ -134,6 +167,35 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         }
     }
 
+    /////////////////////////// PartnerCheck ///////////////////////////
+
+    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
+
+    private val _uiState = MutableStateFlow(SendUiState())
+    val uiState = _uiState.asStateFlow()
+
+    fun startTransaction() {
+        // UWB 세션 생성 및 연결
+        goScreen(ScreenType.SENDDESCRIPTION)
+    }
+
+    fun setUiState(value: Boolean) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDeviceConnected = value) }
+        }
+    }
+
+    // 버튼 클릭 시 호출되는 함수
+    fun onSendButtonClick() {
+        _uiState.value = _uiState.value.copy(isSending = !_uiState.value.isSending)
+
+        if (_uiState.value.isSending) {
+            bleScannerViewModel.setMode(true)
+            bleScannerViewModel.startScanningAndConnect()
+        } else {
+            bleScannerViewModel.disconnectDevice()
+        }
+    }
 
     /////////////////////////// Description ///////////////////////////
 
@@ -151,18 +213,15 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     fun sendMessage(senderId: String, receiverId: String, content: String) {
         println("메시지 전송을 시작합니다.")
         fcmMessageRepository.saveMessage(senderId, receiverId, content)
-        // SaveMessage 메서드에서 Firestore에 데이터를 비동기로 저장하고 결과를 처리해야 합니다.
     }
 
     fun transferPoint() {
-
         CoroutineScope(Dispatchers.IO).launch {
-
             val fromUserId = sharedPreferences.getLong("userId", -1L)
-            val toUserId = 1L
-            val transferRequest = TransferRequest(fromUserId, toUserId, point.value.toLong())
+            _toUserId.value = 1L
+            val transferRequest = TransferRequest(fromUserId, _toUserId.value, point.value.toLong())
 
-            val userResponse = repository.getUserInfo(toUserId)
+            val userResponse = repository.getUserInfo(_toUserId.value)
 
             if (userResponse.success)
             {
@@ -170,7 +229,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             }
 
             // 상대 정보 받아오기
-            val toUser = repository.getUserInfo(toUserId)
+            val toUser = repository.getUserInfo(_toUserId.value)
             // 송금
             val response = repository.transfer(transferRequest)
 
@@ -186,7 +245,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                     _balance.value = newBalance
 
                     val myFcmToken = sharedPreferences.getString("fcmToken", null)
-                    val toFcmToken = toUser.data?.fcmToken
+                    val toFcmToken = toUser.data?.fcmtoken
                     val name = sharedPreferences.getString("name", null)
 
                     sendMessage(myFcmToken!!, toFcmToken!!,"${name}님 지갑에서\n${point.value} 포인트를\n받았습니다.")
@@ -200,21 +259,4 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     }
 
     /////////////////////////// Confirm ///////////////////////////
-
-    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
-
-    private val _uiState = MutableStateFlow(SendUiState())
-    val uiState = _uiState.asStateFlow()
-
-    // 버튼 클릭 시 호출되는 함수
-    fun onSendButtonClick() {
-        _uiState.value = _uiState.value.copy(isSending = !_uiState.value.isSending)
-
-        if (_uiState.value.isSending) {
-            bleScannerViewModel.setMode(true)
-            bleScannerViewModel.startScanningAndConnect()
-        } else {
-            bleScannerViewModel.disconnectDevice()
-        }
-    }
 }

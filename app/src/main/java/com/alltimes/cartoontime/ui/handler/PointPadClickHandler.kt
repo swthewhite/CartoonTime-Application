@@ -11,11 +11,7 @@ class PointPadClickHandler(
     private val _point = MutableStateFlow("")
     val point: StateFlow<String> = _point
 
-    var inputEnable: Boolean = true
-
     fun onClickedButton(type: Int, balance: Long) {
-        if (!inputEnable) return
-
         if (type == -1) {
             if (_point.value.isNotEmpty()) _point.value = _point.value.dropLast(1)
         } else if (type == -2) {

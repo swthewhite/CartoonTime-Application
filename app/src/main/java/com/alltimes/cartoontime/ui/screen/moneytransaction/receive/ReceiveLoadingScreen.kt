@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -31,14 +30,14 @@ fun ReceiveLoadingScreen(viewModel: ReceiveViewModel) {
 
     var dots by remember { mutableStateOf("") }
 
-    // 점의 개수를 0.1초마다 업데이트
+    // 점의 개수를 0.5초마다 업데이트
     LaunchedEffect(Unit) {
         while (true) {
             dots = when (dots.length) {
                 5 -> ""
                 else -> dots + "."
             }
-            delay(500) // 0.1초마다 실행
+            delay(500) // 0.5초마다 실행
         }
     }
 
@@ -48,7 +47,7 @@ fun ReceiveLoadingScreen(viewModel: ReceiveViewModel) {
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (title, nextbtn, animationBox, description0, description1) = createRefs()
+        val (title, nextbtn, animationBox, description) = createRefs()
 
         // 상단 타이틀
         Text(
@@ -76,12 +75,11 @@ fun ReceiveLoadingScreen(viewModel: ReceiveViewModel) {
             Text("다음")
         }
 
-        // 점이 변화하는 텍스트
         Text(
             text = "포인트 받는 중 $dots",
             fontSize = 24.sp,
             modifier = Modifier
-                .constrainAs(description0) {
+                .constrainAs(description) {
                     bottom.linkTo(parent.bottom, margin = 200.dp)
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
@@ -95,9 +93,8 @@ fun ReceiveLoadingScreen(viewModel: ReceiveViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(500.dp)
-                //.background(Color.Black)
                 .constrainAs(animationBox) {
-                    top.linkTo(description0.bottom, margin = 10.dp)
+                    top.linkTo(description.bottom, margin = 10.dp)
                     end.linkTo(parent.end)
                     start.linkTo(parent.start)
                     bottom.linkTo(parent.bottom)

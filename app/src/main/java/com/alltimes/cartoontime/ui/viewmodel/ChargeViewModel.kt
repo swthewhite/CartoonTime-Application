@@ -58,8 +58,6 @@ class ChargeViewModel(private val context: Context) : ViewModel(), NumpadAction,
         _screenNavigationTo.value = ScreenNavigationTo(screen)
     }
 
-    // 서버 통신 관련 변수
-
     /////////////////////////// PointInput ///////////////////////////
 
     override fun onPointClickedButton(type: Int) {
@@ -103,44 +101,47 @@ class ChargeViewModel(private val context: Context) : ViewModel(), NumpadAction,
 
     val password: StateFlow<String> get() = numPadClickHandler.password
 
+    fun pointCharge() {
+        // 충전 api 호출
+        CoroutineScope(Dispatchers.IO).launch {
+            // userId와 amount를 ChargeRequest 객체에 담아서 전달
+            val userId = sharedPreferences.getLong("userId", -1L)
+            val chargeRequest =
+                ChargeRequest(userId = userId, amount = point.value.toLong())
+
+            // API 호출
+            val response = try {
+                repository.charge(chargeRequest)
+            } catch (e: Exception) {
+                // 에러처리
+                null
+            }
+
+            // 응답 처리
+            if (response!!.success) {
+                // 메인 스레드에서 값 변경 및 UI 업데이트
+                withContext(Dispatchers.Main) {
+                    val currentBalance = sharedPreferences.getLong("balance", 0)
+                    val newBalance = currentBalance + point.value.toLong()
+
+                    editor.putLong("balance", newBalance)
+                    editor.apply()
+
+                    _balance.value = newBalance
+
+                    goScreen(ScreenType.CHARGECONFIRM)
+                }
+            }
+        }
+    }
+
     private val numPadClickHandler: NumPadClickHandler by lazy {
         NumPadClickHandler(
             context = context,
             onPasswordComplete = { password: String ->
                 val userPassword = sharedPreferences.getString("password", null)
                 if (userPassword == password) {
-
-                    // 충전 api 호출
-                    CoroutineScope(Dispatchers.IO).launch {
-                        // userId와 amount를 ChargeRequest 객체에 담아서 전달
-                        val userId = sharedPreferences.getLong("userId", -1L)
-                        val chargeRequest =
-                            ChargeRequest(userId = userId, amount = point.value.toLong())
-
-                        // API 호출
-                        val response = try {
-                            repository.charge(chargeRequest)
-                        } catch (e: Exception) {
-                            // 에러처리
-                            null
-                        }
-
-                        // 응답 처리
-                        if (response!!.success) {
-                            // 메인 스레드에서 값 변경 및 UI 업데이트
-                            withContext(Dispatchers.Main) {
-                                val currentBalance = sharedPreferences.getLong("balance", 0)
-                                val newBalance = currentBalance + point.value.toLong()
-
-                                editor.putLong("balance", newBalance)
-                                editor.apply()
-
-                                _balance.value = newBalance
-
-                                goScreen(ScreenType.CHARGECONFIRM)
-                            }
-                        }
-                    }
+                    pointCharge()
                 } else {
                     numPadClickHandler.clearPassword()
                     showPasswordError()

@@ -2,30 +2,32 @@ package com.alltimes.cartoontime.ui.screen.boot
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
+import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 
 @Composable
 fun BootScreen(viewModel: BootViewModel) {
+
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFFF9B912))
             .padding(16.dp)
     ) {
-        // Create references for the UI elements
         val (logo, loginButton) = createRefs()
 
         // 로고 이미지
@@ -43,7 +45,7 @@ fun BootScreen(viewModel: BootViewModel) {
 
         // 로그인 버튼
         Button(
-            onClick = { viewModel.onLoginClick() },
+            onClick = { viewModel.goActivity(ActivityType.SIGNUP) },
             colors = ButtonDefaults.buttonColors(Color(0xFF3C2C10)),
             shape = RoundedCornerShape(15),
             modifier = Modifier

@@ -25,8 +25,8 @@ import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
 @Composable
 fun ChargeConfirmScreen(viewModel: ChargeViewModel) {
 
+    // viewmodel variable
     val name = viewModel.userName
-
     val point by viewModel.point.collectAsState()
 
     ConstraintLayout(

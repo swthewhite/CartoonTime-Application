@@ -1,7 +1,5 @@
 package com.alltimes.cartoontime.data.repository
 
-import android.content.Context
-import android.content.SharedPreferences
 import com.alltimes.cartoontime.common.MessageListener
 import com.alltimes.cartoontime.data.model.FcmMessage
 import com.google.firebase.Timestamp
@@ -33,7 +31,6 @@ class FCMRepository(private val listener: MessageListener? = null) {
 
                 snapshots.documents.forEach { document ->
                     val message = document.toObject(FcmMessage::class.java)
-                    println("새 메시지 수신: $message")
 
                     message?.let { listener?.onMessageReceived(it) }
                     deleteMessage(document.id)
@@ -54,7 +51,6 @@ class FCMRepository(private val listener: MessageListener? = null) {
 
     //              myFCMToken        otherFCMToken
     fun saveMessage(senderId: String, receiverId: String, content: String) {
-        // 현재 시간을 Timestamp로 변환
         val timestamp = Timestamp.now()
         val message = FcmMessage(senderId, receiverId, content, timestamp)
 

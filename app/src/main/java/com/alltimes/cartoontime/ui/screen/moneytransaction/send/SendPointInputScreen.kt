@@ -15,16 +15,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.alltimes.cartoontime.R
-
-import androidx.compose.runtime.*
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.composable.Pointpad
@@ -33,11 +32,7 @@ import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 @Composable
 fun SendPointInputScreen(viewModel: SendViewModel) {
 
-    val imgSize = 40.dp
-    val imgSpace = 10.dp
-    val btnSpace = 80.dp
-
-
+    // viewmodel variable
     val point by viewModel.point.collectAsState()
     val balance by viewModel.balance.collectAsState()
 

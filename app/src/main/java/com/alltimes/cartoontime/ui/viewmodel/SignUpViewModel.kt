@@ -47,6 +47,8 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     // 회원가입, 로그인 구분
     var isSignUp = false
+    // 네이버 아이디, 비밀번호 유무
+    var isNaverInfo = false
 
     // 서버 통신 관련 변수
     private val repository = UserRepository(RetrofitClient.apiService)
@@ -200,12 +202,13 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
                                     if (userInfoResponse.success) {
 
+                                        // 네이버 정보 받아오기
+                                        // 없으면 네이버 정보 받는 쪽으로 넘겨야 함. ( 없으면 추천이 불가하니까 )
+
                                         editor?.putLong("balance", userInfoResponse.data?.currentMoney!!)
                                         editor?.putLong("userId", userInfoResponse.data?.id!!)
                                         editor?.putString("userName", userInfoResponse.data?.username!!)
                                         editor?.putString("name", userInfoResponse.data?.name!!)
-
-                                        println("name: ${userInfoResponse.data?.name!!}")
 
                                         // 이름 입력 필드 사용 불가
                                         withContext(Dispatchers.Main) {
@@ -228,7 +231,6 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             }
         }
     }
-
 
     // 휴대폰 진동
     private fun triggerVibration(context: Context) {
@@ -270,11 +272,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     // 회원 가입, 로그인 처리 로직
     private fun handleResponse(response: SignResponse?) {
-        println("response: $response")
         if (response?.success == true) {
-
-            println("성공")
-
             // 유저 정보 저장
             editor?.putLong("userId", response.data?.user?.id ?: -1)
             editor?.putString("username", response.data?.user?.username ?: "")
@@ -293,7 +291,6 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             }
         } else {
             // 실패 처리
-            println("실패")
         }
     }
 
@@ -362,8 +359,10 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
     private fun checkPassword() {
         context?.let {
             if (password.value == PassWord) {
-                // 회원가입이라면 naverlogin으로 전환
-                // 로그인이라면 signupscreen으로 전환
+                // 회원가입이거나 로그인이라도 네이버 정보가 없으면 naverlogin으로 전환
+                // 로그인이거나 네이버 정보가 있으면 signupscreen으로 전환
+                
+                // isSignUp => 네이버 정보가 있는지 없는지로 구분해도 될듯
                 if (isSignUp) goScreen(ScreenType.NAVERLOGIN)
                 else goScreen(ScreenType.SIGNUPCOMPLETE)
 
@@ -421,7 +420,6 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
     fun onNaverLogin() {
         context?.let {
             // 네이버 로그인 api 호출
-            // 인증 코드 요청
             CoroutineScope(Dispatchers.IO).launch {
                 val userId = sharedPreferences?.getLong("userId", -1L).toString()
 
@@ -447,6 +445,5 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
     }
 
     /////////////////////////// SignUpComplete ///////////////////////////
-
 
 }

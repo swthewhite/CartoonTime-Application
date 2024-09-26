@@ -48,7 +48,7 @@ fun ConfirmScreen(viewModel: MainViewModel) {
         val (description, button) = createRefs()
 
         Text(
-            text = if (balance < charge) "결제 금액이 ${charge - balance} 부족합니다.\n포인트를 충전해주세요." else "정상적으로 퇴실이 완료되었습니다.",
+            text = if (balance < charge) "결제 금액 ${charge - balance}원 부족합니다.\n포인트를 충전해주세요." else "정상적으로 퇴실이 완료되었습니다.",
             fontSize = 26.sp,
             color = Color.Black,
             textAlign = TextAlign.Center,
@@ -63,10 +63,7 @@ fun ConfirmScreen(viewModel: MainViewModel) {
         )
 
         Button(
-            onClick = {
-                if (balance < charge) viewModel.goActivity(ActivityType.CHARGE)
-                else viewModel.onConfirmButtonClick()
-            },
+            onClick = { viewModel.handleChargeConfirm() },
             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
             modifier = Modifier
                 .width(350.dp)

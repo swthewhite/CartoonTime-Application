@@ -5,7 +5,6 @@ import com.alltimes.cartoontime.data.remote.AuthRequest
 import com.alltimes.cartoontime.data.remote.AuthResponse
 import com.alltimes.cartoontime.data.remote.ChargeRequest
 import com.alltimes.cartoontime.data.remote.ChargeResponse
-import com.alltimes.cartoontime.data.remote.EntryLog
 import com.alltimes.cartoontime.data.remote.EntryLogResponse
 import com.alltimes.cartoontime.data.remote.FCMRequest
 import com.alltimes.cartoontime.data.remote.FCMResponse

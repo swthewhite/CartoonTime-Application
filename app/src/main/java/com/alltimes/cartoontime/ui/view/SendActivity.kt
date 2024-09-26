@@ -67,6 +67,15 @@ class SendActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+
+    }
+
+    override fun onPause() {
+        super.onPause()
+    }
+
     // 스크린 전환을 처리하는 함수로 분리하여 처리
     private fun navigateToScreen(screenType: ScreenType) {
         val currentRoute = navController.currentBackStackEntry?.destination?.route
@@ -88,6 +97,10 @@ class SendActivity : ComponentActivity() {
                 popUpTo(route) { inclusive = true }
                 launchSingleTop = true
             }
+        }
+
+        if (screenType == ScreenType.SENDDESCRIPTION) {
+            viewModel.accelerometerStart(lifecycleOwner = this)
         }
     }
 }
