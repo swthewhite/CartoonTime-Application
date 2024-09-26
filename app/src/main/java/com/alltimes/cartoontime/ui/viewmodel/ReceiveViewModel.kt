@@ -16,6 +16,7 @@ import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.repository.FCMRepository
+import com.alltimes.cartoontime.data.repository.UserInfoUpdater
 import com.alltimes.cartoontime.data.repository.UserRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,8 +28,6 @@ import kotlinx.coroutines.launch
 
 class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListener {
 
-//class ReceiverViewModel(application: Application) : AndroidViewModel(application) {
-
     /////////////////////////// 공용 ///////////////////////////
 
     private val _activityNavigationTo = MutableLiveData<ActivityNavigationTo>()
@@ -37,17 +36,18 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
     private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
     val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
 
-    // SharedPreferences 객체를 가져옵니다.
     private val sharedPreferences: SharedPreferences
         get() = context.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
 
-    // Editor 객체를 가져옵니다.
     val editor = sharedPreferences.edit()
-
-    var inputEnable: Boolean = true
 
     private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
+
+    private val userInfoUpdater: UserInfoUpdater = UserInfoUpdater(
+        UserRepository(RetrofitClient.apiService),
+        sharedPreferences
+    )
 
     fun goActivity(activity: ActivityType) {
         _activityNavigationTo.value = ActivityNavigationTo(activity)
@@ -57,25 +57,36 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
         _screenNavigationTo.value = ScreenNavigationTo(screen)
     }
 
-    private val repository = UserRepository(RetrofitClient.apiService)
-
     val fcmRepository = FCMRepository(this)
+
+    var isFCMActive = false
 
     init {
         val fcmToekn = sharedPreferences.getString("fcmToken", "") ?: ""
         println("receiveViewModel FCM Token: $fcmToekn")
         fcmRepository.listenForMessages(fcmToekn)
+        isFCMActive = true
+    }
+
+    fun onPuaseAll() {
+        isFCMActive = false
+    }
+
+    fun onResumeAll() {
+        UpdateUserInfo()
+
+        isFCMActive = true
     }
 
     private val _content = MutableStateFlow("")
     val content = _content.asStateFlow()
 
     override fun onMessageReceived(message: FcmMessage) {
-        println("메시지 수신 완료: $message")
+        if (!isFCMActive) return
+        println("RECEIVE 메시지 수신 완료: $message")
         if (message.content.contains("포인트")) {
             // 특정 동작 수행
             _content.value = message.content
-            println("포인트 입금 메시지 수신: $message")
 
             UpdateUserInfo()
 
@@ -84,33 +95,10 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
                 goScreen(ScreenType.RECEIVECONFIRM)
             }
         }
-
     }
 
     fun UpdateUserInfo() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val userId = sharedPreferences.getLong("userId", -1L)
-
-            // API 호출
-            val response = try {
-                repository.getUserInfo(userId)
-            } catch (e: Exception) {
-                // 에러처리
-                null
-            }
-
-            // 응답 처리
-            if (response?.success == true) {
-
-                editor.putLong("balance", response.data?.currentMoney!!)
-                editor.putLong("userId", response.data?.id!!)
-                editor.putString("userName", response.data?.username!!)
-                editor.putString("name", response.data?.name!!)
-
-                editor.apply()
-
-            }
-        }
+        userInfoUpdater.updateUserInfo(sharedPreferences.getLong("userId", -1L))
     }
 
     /////////////////////////// Description ///////////////////////////

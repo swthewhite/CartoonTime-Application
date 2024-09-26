@@ -36,14 +36,13 @@ fun SendLoadingScreen(viewModel: SendViewModel) {
 
     var dots by remember { mutableStateOf("") }
 
-    // 점의 개수를 0.1초마다 업데이트
     LaunchedEffect(Unit) {
         while (true) {
             dots = when (dots.length) {
                 5 -> ""
                 else -> dots + "."
             }
-            delay(500) // 0.1초마다 실행
+            delay(500)
         }
     }
 
@@ -53,7 +52,7 @@ fun SendLoadingScreen(viewModel: SendViewModel) {
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, nextbtn, animationBox, description0, description1) = createRefs()
+        val (backButton, title, nextbtn, animationBox, description) = createRefs()
 
         // 뒤로가기 버튼
         Box(
@@ -114,7 +113,7 @@ fun SendLoadingScreen(viewModel: SendViewModel) {
             text = "포인트 보내는 중 $dots",
             fontSize = 24.sp,
             modifier = Modifier
-                .constrainAs(description0) {
+                .constrainAs(description) {
                     bottom.linkTo(parent.bottom, margin = 200.dp)
                     top.linkTo(parent.top)
                     start.linkTo(parent.start)
@@ -128,9 +127,8 @@ fun SendLoadingScreen(viewModel: SendViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(500.dp)
-                //.background(Color.Black)
                 .constrainAs(animationBox) {
-                    top.linkTo(description0.bottom, margin = 10.dp)
+                    top.linkTo(description.bottom, margin = 10.dp)
                     end.linkTo(parent.end)
                     start.linkTo(parent.start)
                     bottom.linkTo(parent.bottom)

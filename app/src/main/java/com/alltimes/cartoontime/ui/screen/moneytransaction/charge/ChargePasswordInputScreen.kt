@@ -33,14 +33,12 @@ import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
 @Composable
 fun ChargePasswordInputScreen(viewModel: ChargeViewModel) {
 
+    // viewmodel variable
+    val password by viewModel.password.collectAsState()
+
+    // screen variable
     val imgSize = 40.dp
     val imgSpace = 10.dp
-    val btnSpace = 80.dp
-
-
-    val point by viewModel.point.collectAsState()
-    val balance by viewModel.balance.collectAsState()
-    val password by viewModel.password.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -82,9 +80,9 @@ fun ChargePasswordInputScreen(viewModel: ChargeViewModel) {
             fontSize = 30.sp,
             color = Color.Black,
             modifier = Modifier.constrainAs(title) {
-                top.linkTo(backButton.top)   // 이미지의 상단에 맞추고
-                bottom.linkTo(backButton.bottom)  // 이미지의 하단에 맞춤 (세로 중앙 정렬)
-                start.linkTo(parent.start, margin = 10.dp)  // 홈버튼 오른쪽에 위치
+                top.linkTo(backButton.top)
+                bottom.linkTo(backButton.bottom)
+                start.linkTo(parent.start, margin = 10.dp)
                 end.linkTo(parent.end, margin = 10.dp)
                 width = Dimension.wrapContent
             }

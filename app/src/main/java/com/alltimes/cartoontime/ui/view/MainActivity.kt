@@ -1,6 +1,5 @@
 package com.alltimes.cartoontime.ui.view
 
-// # Added Imports
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,14 +15,8 @@ import com.alltimes.cartoontime.ui.screen.main.BookRecommendScreen
 import com.alltimes.cartoontime.ui.screen.main.ConfirmScreen
 import com.alltimes.cartoontime.ui.screen.main.MainScreen
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
-import com.alltimes.cartoontime.utils.AccelerometerManager
 import com.alltimes.cartoontime.utils.NavigationHelper
 import com.alltimes.cartoontime.utils.PermissionsHelper
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.properties.Delegates
 
 class MainActivity : ComponentActivity() {
 
@@ -33,7 +26,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel = MainViewModel(this) // ViewModel 생성
+        viewModel = MainViewModel(this)
         viewModel.accelerometerStart(lifecycleOwner = this)
         viewModel.UpdateUserInfo()
 
@@ -48,12 +41,13 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
 
-        viewModel.UpdateUserInfo()
+        viewModel.onResumeAll()
     }
 
     override fun onPause() {
         super.onPause()
-        viewModel.accelerometerStop() // 메인 스크린 외의 화면에서 센서 멈춤
+
+        viewModel.onPuaseAll()
     }
 
     override fun onRequestPermissionsResult(
@@ -77,7 +71,7 @@ class MainActivity : ComponentActivity() {
         viewModel.accelerometerStart(lifecycleOwner = this)
 
         setContent {
-            navController = rememberNavController() // 전역 변수에 저장
+            navController = rememberNavController()
 
             NavHost(navController as NavHostController, startDestination = "mainscreen") {
                 composable("mainscreen") { MainScreen(viewModel = viewModel) }

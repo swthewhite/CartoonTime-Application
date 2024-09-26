@@ -45,7 +45,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun SendPartnerCheckScreen(viewModel: SendViewModel) {
 
-    // UI 상태 관찰
+    // viewmodel variable
     val uiState = viewModel.uiState.collectAsState()
 
     ConstraintLayout(

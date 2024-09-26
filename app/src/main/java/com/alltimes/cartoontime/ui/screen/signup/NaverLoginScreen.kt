@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,7 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -47,12 +51,15 @@ import androidx.constraintlayout.compose.ConstraintLayout
 @Composable
 fun NaverLoginScreen(viewModel: SignUpViewModel) {
 
+    // viewmodel variable
     val name by viewModel.name.collectAsState()
     val naverID by viewModel.naverID.collectAsState()
     val naverPassword by viewModel.naverPassword.collectAsState()
     val loginEnable by viewModel.naverLoginEnable.collectAsState()
 
+    // screen variable
     var passwordVisible by remember { mutableStateOf(false) }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     ConstraintLayout(
         modifier = Modifier
@@ -82,7 +89,7 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
                 .constrainAs(logoCartoonTime) {
                     start.linkTo(logoNaver.end, margin = 20.dp)
                     end.linkTo(parent.end, margin = 20.dp)
-                    centerVerticallyTo(logoNaver) // Center vertically to the first logo
+                    centerVerticallyTo(logoNaver)
                 },
             contentScale = ContentScale.Fit
         )
@@ -148,7 +155,15 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
                 },
             label = {
                 Text(text = "아이디", color = Color.Black)
-            }
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next // 다음 필드로 이동
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = {
+                    keyboardController?.hide() // 키패드 숨기기
+                }
+            )
         )
 
         TextField(
@@ -178,7 +193,6 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
                 Text(text = "비밀번호", color = Color.Black)
             },
             trailingIcon = {
-
                 Text(
                     text = if (passwordVisible) "숨기기" else "보기",
                     color = Color.Black,
@@ -190,8 +204,15 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
                             passwordVisible = !passwordVisible
                         }
                 )
-
-            }
+            },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next // 다음 필드로 이동
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = {
+                    keyboardController?.hide() // 키패드 숨기기
+                }
+            )
 
         )
 

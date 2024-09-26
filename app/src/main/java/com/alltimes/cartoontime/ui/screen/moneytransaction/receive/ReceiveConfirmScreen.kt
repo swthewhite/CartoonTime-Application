@@ -32,7 +32,7 @@ fun ReceiveConfirmScreen(viewModel: ReceiveViewModel) {
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (title, checkImage, description0, description1, description2, btnConfirm) = createRefs()
+        val (title, checkImage, description, btnConfirm) = createRefs()
 
 
         // 상단 타이틀
@@ -67,7 +67,7 @@ fun ReceiveConfirmScreen(viewModel: ReceiveViewModel) {
             fontSize = 20.sp,
             lineHeight = 30.sp,
             modifier = Modifier
-                .constrainAs(description0) {
+                .constrainAs(description) {
                     top.linkTo(checkImage.bottom, margin = 50.dp)
                     start.linkTo(parent.start, margin = 10.dp)
                     end.linkTo(parent.end, margin = 10.dp)

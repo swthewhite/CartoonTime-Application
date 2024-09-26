@@ -34,7 +34,7 @@ fun ReceivePartnerReadyScreen(viewModel: ReceiveViewModel) {
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, nextbtn, animationBox, description0, description1) = createRefs()
+        val (backButton, title, animationBox) = createRefs()
 
         // 뒤로가기 버튼
         Box(

@@ -47,17 +47,17 @@ class BootViewModel(private val context: Context) : ViewModel(), NumpadAction {
     // 서버 통신 관련 변수
     private val repository = UserRepository(RetrofitClient.apiService)
 
-    /////////////////////////// Boot ///////////////////////////
-
-    fun onLoginClick() {
-        // 로그인 처리 로직
-        _activityNavigationTo.value = ActivityNavigationTo(ActivityType.SIGNUP)
+    fun goActivity(activity: ActivityType) {
+        _activityNavigationTo.value = ActivityNavigationTo(activity)
     }
 
-    /////////////////////////// Login ///////////////////////////
+    fun goScreen(screen: ScreenType) {
+        _screenNavigationTo.value = ScreenNavigationTo(screen)
+    }
 
-    private lateinit var biometricPrompt: BiometricPrompt
-    private lateinit var promptInfo: BiometricPrompt.PromptInfo
+    /////////////////////////// Boot ///////////////////////////
+
+    /////////////////////////// Login ////////////////////
 
     // ViewModel에서 상태를 직접 접근할 수 있도록
     val password: StateFlow<String> get() = numPadClickHandler.password
@@ -67,7 +67,7 @@ class BootViewModel(private val context: Context) : ViewModel(), NumpadAction {
 
         // 로그인하면서 서버로부터 유저 정보 받아와서 다시 저장.
         CoroutineScope(Dispatchers.IO).launch {
-            // userId와 amount를 ChargeRequest 객체에 담아서 전달
+
             val userId = sharedPreferences.getLong("userId", -1L)
 
             // API 호출
@@ -80,14 +80,12 @@ class BootViewModel(private val context: Context) : ViewModel(), NumpadAction {
 
             // 응답 처리
             if (response?.success == true) {
-
                 editor?.putLong("balance", response.data?.currentMoney!!)
                 editor?.putLong("userId", response.data?.id!!)
                 editor?.putString("userName", response.data?.username!!)
                 editor?.putString("name", response.data?.name!!)
 
                 editor.apply()
-
             }
         }
     }

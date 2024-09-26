@@ -18,10 +18,6 @@ enum class ScreenType(val navigateTo: (NavController) -> Unit) {
     BOOKDETAIL({ navController -> navController.navigate("bookDetailScreen") }),
     CONFIRM({ navController -> navController.navigate("confirmScreen") }),
 
-    // 기타
-    SEND({ navController -> navController.navigate("sendScreen") }),
-    RECEIVE({ navController -> navController.navigate("receiveScreen") }),
-
     // 송금
     SENDPOINTINPUT({ navController -> navController.navigate("sendPointInputScreen") }),
     SENDPASSWORDINPUT({ navController -> navController.navigate("sendPasswordInputScreen") }),

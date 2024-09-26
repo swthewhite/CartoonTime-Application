@@ -7,8 +7,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
-    // ct/auth-test 는 문자 비용 x
-    // ct/auth 는 문자 비용 o
     @POST("ct/auth-test")
     suspend fun requestAuthCode(@Body request: AuthRequest): AuthResponse
 
@@ -63,7 +61,7 @@ data class AuthRequest(
 data class AuthResponse(
     val success: Boolean,
     val message: String,
-    val data: Any? // response data is null in this case
+    val data: Any?
 )
 
 // 인증 번호 확인 /ct/verify-auth
@@ -146,14 +144,6 @@ data class UserData(
     val currentMoney: Long,
     val roles: List<String>,
     val fcmtoken: String,
-    //val mainAccount: MainAccount
-)
-
-data class MainAccount(
-    val id: Long,
-    val accountNumber: String,
-    val bankName: String,
-    val userId: Long
 )
 
 // 네이버 아이디 비밀번호 받기 /ct/auth/naver
