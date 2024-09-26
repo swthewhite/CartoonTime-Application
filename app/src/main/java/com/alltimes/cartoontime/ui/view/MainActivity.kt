@@ -30,10 +30,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var navController: NavController
     private lateinit var viewModel: MainViewModel
 
-    private lateinit var accelerometerManager: AccelerometerManager
-    private var accelerometerCount by Delegates.notNull<Int>()
-    private var isCounting = true // 1분 동안 카운팅 방지용 플래그
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -64,8 +60,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun initializeApp() {
-        accelerometerManager = AccelerometerManager(this)
-        accelerometerCount = 0
 
         setContent {
             navController = rememberNavController() // 전역 변수에 저장
@@ -92,29 +86,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        accelerometerManager.accelerometerData.observe(this) { data ->
-            // 데이터 업데이트
-            if (data.z <= -9.0 && isCounting) {
-                // 아래를 보는 중
-                accelerometerCount++
-                if (accelerometerCount >= 10) {
-                    viewModel.onLoginOut()
-                    accelerometerCount = 0
-                    disableCounting() // 카운팅 방지
-                }
-            } else if (data.z >= 0) {
-                // 위를 보는 중
-                accelerometerCount = 0
-            }
-        }
-    }
-
-    private fun disableCounting() {
-        isCounting = false // 카운팅 방지
-        CoroutineScope(Dispatchers.Main).launch {
-            delay(10000) // 대기
-            isCounting = true // 다시 카운팅 활성화
-        }
     }
 
     // 스크린 전환을 처리하는 함수로 분리하여 처리

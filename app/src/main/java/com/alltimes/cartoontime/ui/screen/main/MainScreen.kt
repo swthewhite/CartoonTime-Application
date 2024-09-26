@@ -68,7 +68,7 @@ fun MainScreen(viewModel: MainViewModel) {
     val enteredTime by viewModel.enteredTime.collectAsState()
 
     // 입실 중
-    val uiState by viewModel.uiState.collectAsState()
+    //val uiState by viewModel.uiState.collectAsState()
     val active = remember { mutableStateOf(false) }
 
     // 입실 완료
@@ -402,10 +402,10 @@ fun MainScreen(viewModel: MainViewModel) {
     }
 
     // 입퇴실
-    if (!active.value && uiState.isLogin) {
-        viewModel.onKioskLoadingCompleted()
-        active.value = true
-    }
+//    if (!active.value && uiState.isLogin) {
+//        viewModel.onKioskLoadingCompleted()
+//        active.value = true
+//    }
 }
 
 @Composable

@@ -1,5 +1,6 @@
 package com.alltimes.cartoontime.data.network.ble
 
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
@@ -7,68 +8,46 @@ import android.bluetooth.BluetoothGattService
 import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
-import com.alltimes.cartoontime.data.model.Permissions
 import com.alltimes.cartoontime.data.model.BLEConstants
-import com.alltimes.cartoontime.data.model.uwb.RangingCallback
-import com.alltimes.cartoontime.data.network.uwb.UwbControleeCommunicator
-import com.alltimes.cartoontime.ui.viewmodel.BLEScannerViewModel
+import com.alltimes.cartoontime.data.model.Permissions
+import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.util.UUID
 import kotlin.coroutines.resume
 
-
-@Suppress("DEPRECATION")
-class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
-    // Context와 BluetoothDevice를 받아서 초기화
+class BLEClient @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
     private val context: Context,
-    private val bluetoothDevice: DeviceInfo,
-    private val viewModel: BLEScannerViewModel
+    private val bluetoothDevice: BluetoothDevice,
+    private val myUWBData: String,
+    private val myIdData: String,
+    private val mode: String,
+    private val viewModel: SendViewModel
 ) {
-    // 연결 상태를 저장하는 MutableStateFlow
     val isConnected = MutableStateFlow(false)
 
-    // 읽은 데이터를 저장하는 MutableStateFlow
-    val uwbData = MutableStateFlow<String?>(null)
-    val idData = MutableStateFlow<String?>(null)
+    val partnerUWBData = MutableStateFlow<String?>(null)
+    val partnerIdData = MutableStateFlow<String?>(null)
 
-    // 성공적으로 데이터를 쓴 횟수를 저장하는 MutableStateFlow
-    val successfulDataWrites = MutableStateFlow(0)
+    private val services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
 
-    // GATT 서비스 목록을 저장하는 MutableStateFlow
-    val services = MutableStateFlow<List<BluetoothGattService>>(emptyList())
-
-    // mode: true - login
-    // mode: false - money transaction
-    private val _mode = MutableStateFlow(false)
-    val mode = _mode.asStateFlow()
-
-    // BluetoothGatt 객체를 저장하는 변수
     private var gatt: BluetoothGatt? = null
-    private val uwbCommunicator =
-        UwbControleeCommunicator(
-            context
-        )
 
-    // 서비스 발견 완료 여부를 저장하는 MutableStateFlow
     val serviceDiscoveryCompleted = MutableStateFlow(false)
-    val controleeReadCompleted = MutableStateFlow(false)
+
+    val controllerReadCompleted = MutableStateFlow(false)
     val receiverIdReadCompleted = MutableStateFlow(false)
-    val controllerWrittenCompleted = MutableStateFlow(false)
-    val senderIdWrittenCompleted = MutableStateFlow(false)
+    val controleeWriteCompleted = MutableStateFlow(false)
+    val senderIdWriteCompleted = MutableStateFlow(false)
 
-    fun setMode(value: Boolean) {
-        _mode.update { value }
-    }
-
-    // BluetoothGattCallback을 상속받은 callback 객체
+    /**
+     * BluetoothGattCallback을 사용하여 BluetoothGatt 객체의 콜백을 정의
+     */
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     private val callback = object : BluetoothGattCallback() {
         // 연결 상태 변경 처리 함수
@@ -96,10 +75,14 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             }
         }
 
-        // 읽은 데이터를 처리하는 함수
+        /**
+         * 특성 읽기 처리 함수
+         * @param gatt: BluetoothGatt 객체
+         * @param characteristic: BluetoothGattCharacteristic 객체
+         * @param status: 읽기 상태
+         */
         @Deprecated("Deprecated in Java")
         @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
-        // BluetoothGattCallback 내부에서 두 번째 읽기 작업 완료 후 쓰기 작업 실행
         override fun onCharacteristicRead(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
@@ -107,14 +90,14 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         ) {
             super.onCharacteristicRead(gatt, characteristic, status)
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (characteristic.uuid == BLEConstants.CONTROLEE_CHARACTERISTIC_UUID) {
-                    uwbData.value = String(characteristic.value)
-                    controleeReadCompleted.value = true
-                    Log.d("BLE", "Controlee read successful: ${uwbData.value}")
+                if (characteristic.uuid == BLEConstants.CONTROLLER_CHARACTERISTIC_UUID) {
+                    partnerUWBData.value = String(characteristic.value)
+                    controllerReadCompleted.value = true
+                    Log.i("BLEClient", "Controller Data read successful: ${partnerUWBData.value}")
                 } else if (characteristic.uuid == BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID) {
-                    idData.value = String(characteristic.value)
+                    partnerIdData.value = String(characteristic.value)
                     receiverIdReadCompleted.value = true
-                    Log.d("BLE", "Receiver id read successful: ${idData.value}")
+                    Log.d("BLE", "Receiver Id read successful: ${partnerIdData.value}")
                 }
             } else {
                 Log.e(
@@ -125,6 +108,12 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             }
         }
 
+        /**
+         * 특성 쓰기 처리 함수
+         * @param gatt: BluetoothGatt 객체
+         * @param characteristic: BluetoothGattCharacteristic 객체
+         * @param status: 쓰기 상태
+         */
         override fun onCharacteristicWrite(
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic,
@@ -132,11 +121,11 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         ) {
             super.onCharacteristicWrite(gatt, characteristic, status)
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                if (characteristic.uuid == BLEConstants.CONTROLLER_CHARACTERISTIC_UUID) {
-                    controllerWrittenCompleted.value = true
+                if (characteristic.uuid == BLEConstants.CONTROLEE_CHARACTERISTIC_UUID) {
+                    controleeWriteCompleted.value = true
                     Log.d("BLE", "Characteristic write successful: ${characteristic.uuid}")
                 } else if (characteristic.uuid == BLEConstants.SENDER_ID_CHARACTERISTIC_UUID) {
-                    senderIdWrittenCompleted.value = true
+                    senderIdWriteCompleted.value = true
                     Log.d("BLE", "Sender ID write successful: ${characteristic.uuid}")
                 }
             } else {
@@ -144,15 +133,14 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
                     "BLE",
                     "Characteristic write failed for UUID: ${characteristic.uuid}, status: $status"
                 )
-                if (characteristic.uuid == BLEConstants.CONTROLLER_CHARACTERISTIC_UUID) {
-                    controllerWrittenCompleted.value = false
+                if (characteristic.uuid == BLEConstants.CONTROLEE_CHARACTERISTIC_UUID) {
+                    controleeWriteCompleted.value = false
                 } else if (characteristic.uuid == BLEConstants.SENDER_ID_CHARACTERISTIC_UUID) {
-                    senderIdWrittenCompleted.value = false
+                    senderIdWriteCompleted.value = false
                 }
             }
         }
     }
-
     // 연결 상태 변경 처리 함수
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     private fun handleConnectionStateChange(gatt: BluetoothGatt, newState: Int) {
@@ -166,7 +154,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
     // GATT 연결을 위한 함수에 코루틴 추가
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     suspend fun connect(): Boolean = suspendCancellableCoroutine { continuation ->
-        gatt = bluetoothDevice.device.connectGatt(context, false, callback)
+        gatt = bluetoothDevice.connectGatt(context, false, callback)
 
         // 연결 상태가 업데이트되면 콜백에서 resume
         val job: Job = isConnected.onEach { connected ->
@@ -197,13 +185,21 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         gatt?.discoverServices()
     }
 
-    // 특성 읽기 함수 (첫 번째, 두 번째 모두 사용)
+    /**
+     * 특정 UUID를 가진 GATT 서비스를 반환하는 함수
+     * @param uuid: UUID
+     * @return BluetoothGattService
+     */
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     suspend fun readCharacteristic(
         characteristicUUID: UUID,
         readCompletedFlag: MutableStateFlow<Boolean>
     ): Boolean = suspendCancellableCoroutine { continuation ->
-        val service = gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
+        val service = when (mode) {
+            "WITCH" -> gatt?.getService(BLEConstants.UWB_WITCH_SERVICE_UUID)
+            "KIOSK" -> gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
+            else -> null
+        }
         val characteristic = service?.getCharacteristic(characteristicUUID)
 
         if (characteristic != null) {
@@ -223,18 +219,25 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         }
     }
 
+    /**
+     * Sender ID 특성에 데이터를 쓰는 함수
+     */
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
     suspend fun writeSenderIdCharacteristic(): Boolean =
         suspendCancellableCoroutine { continuation ->
-            val service = gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
+            val service = when (mode) {
+                "WITCH" -> gatt?.getService(BLEConstants.UWB_WITCH_SERVICE_UUID)
+                "KIOSK" -> gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
+                else -> null
+            }
             val characteristic =
                 service?.getCharacteristic(BLEConstants.SENDER_ID_CHARACTERISTIC_UUID)
 
             if (characteristic != null) {
-                val senderId = "ct9876"
+                val senderId = myIdData
                 characteristic.value = senderId.toByteArray()
 
-                senderIdWrittenCompleted.value = false // 플래그 초기화
+                senderIdWriteCompleted.value = false // 플래그 초기화
 
                 if (gatt?.writeCharacteristic(characteristic) == true) {
                     Log.v(
@@ -242,7 +245,7 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
                         "Write started for UUID: ${BLEConstants.SENDER_ID_CHARACTERISTIC_UUID}"
                     )
 
-                    val job = senderIdWrittenCompleted.onEach { completed ->
+                    val job = senderIdWriteCompleted.onEach { completed ->
                         if (completed) {
                             continuation.resume(true)
                         }
@@ -262,27 +265,35 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
             }
         }
 
-    // writeControllerCharacteristic 함수 수정
+    /**
+     * Controller 특성에 데이터를 쓰는 함수
+     */
+    @Deprecated("Deprecated in Java")
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
-    suspend fun writeControllerCharacteristic(): Boolean =
+    suspend fun writeControleeCharacteristic(): Boolean =
         suspendCancellableCoroutine { continuation ->
-            val service = gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
+            Log.d("bluetooth", "Are you here")
+            val service = when (mode) {
+                "WITCH" -> gatt?.getService(BLEConstants.UWB_WITCH_SERVICE_UUID)
+                "KIOSK" -> gatt?.getService(BLEConstants.UWB_KIOSK_SERVICE_UUID)
+                else -> null
+            }
             val characteristic =
-                service?.getCharacteristic(BLEConstants.CONTROLLER_CHARACTERISTIC_UUID)
+                service?.getCharacteristic(BLEConstants.CONTROLEE_CHARACTERISTIC_UUID)
 
             if (characteristic != null) {
-                val uwbAddress = uwbCommunicator.getUwbAddress()
+                val uwbAddress = myUWBData
                 characteristic.value = uwbAddress.toByteArray()
 
-                controllerWrittenCompleted.value = false // 플래그 초기화
+                controleeWriteCompleted.value = false // 플래그 초기화
 
                 if (gatt?.writeCharacteristic(characteristic) == true) {
                     Log.v(
                         "bluetooth",
-                        "Write started for UUID: ${BLEConstants.CONTROLLER_CHARACTERISTIC_UUID}"
+                        "Write started for UUID: ${BLEConstants.CONTROLEE_CHARACTERISTIC_UUID}"
                     )
 
-                    val job = controllerWrittenCompleted.onEach { completed ->
+                    val job = controleeWriteCompleted.onEach { completed ->
                         if (completed) {
                             continuation.resume(true)
                         }
@@ -292,27 +303,30 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
                 } else {
                     Log.e(
                         "bluetooth",
-                        "Failed to initiate write for UUID: ${BLEConstants.CONTROLLER_CHARACTERISTIC_UUID}"
+                        "Failed to initiate write for UUID: ${BLEConstants.CONTROLEE_CHARACTERISTIC_UUID}"
                     )
                     continuation.resume(false)
                 }
             } else {
-                Log.e("bluetooth", "CONTROLLER_CHARACTERISTIC_UUID not found")
+                Log.e("bluetooth", "CONTROLEE_CHARACTERISTIC_UUID not found")
                 continuation.resume(false)
             }
         }
 
-    // 모든 작업을 순차적으로 완료하는 함수 (특성 읽기 및 쓰기)
+
+    /**
+     * 필요 데이터 통신 함수
+     */
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
-    suspend fun performCharacteristicOperationsSequentially(): Boolean {
+    suspend fun communicate(): Boolean {
         // 플래그 초기화
-        controleeReadCompleted.value = false
+        controleeWriteCompleted.value = false
         receiverIdReadCompleted.value = false
 
         // 첫 번째 특성 읽기
         val firstSuccess = readCharacteristic(
-            BLEConstants.CONTROLEE_CHARACTERISTIC_UUID,
-            controleeReadCompleted
+            BLEConstants.CONTROLLER_CHARACTERISTIC_UUID,
+            controllerReadCompleted
         )
         if (!firstSuccess) {
             Log.e("bluetooth", "Failed to read first characteristic")
@@ -339,42 +353,25 @@ class BLEDeviceConnection @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") co
         }
         Log.d("bluetooth", "Sender ID characteristic written successfully")
 
-        // **Controller 쓰기**
-        val writeControllerSuccess = writeControllerCharacteristic()
-        if (!writeControllerSuccess) {
-            Log.e("bluetooth", "Failed to write Controller characteristic")
+        // **Controlee 쓰기**
+        val writeControleeSuccess = writeControleeCharacteristic()
+        Log.d("bluetooth", "Are you here")
+        if (!writeControleeSuccess) {
+            Log.e("bluetooth", "Failed to write Controlee characteristic")
             return false
         }
-        Log.d("bluetooth", "Controller characteristic written successfully")
-
-        // UWB 통신 시작
-        startUwbCommunication()
+        Log.d("bluetooth", "Controlee characteristic written successfully")
 
         return true
     }
 
-    private fun startUwbCommunication() {
-        if (uwbData.value != null) {
-            val id = idData.value ?: ""
-            Log.v("bluetooth", "idData: $id")
-
-            val data = uwbData.value?.split("/") ?: listOf("", "")
-            val address = data.getOrNull(0) ?: ""
-            val channel = data.getOrNull(1) ?: ""
-
-            val callback = object : RangingCallback {
-                override fun onDistanceMeasured(distance: Float) {
-                    viewModel.onDistanceMeasured(distance)
-                }
-            }
-
-            viewModel.setSession(true)
-            uwbCommunicator.startCommunication(address, channel, callback)
-            Log.v("uwb", "communication started, Address: $address, Channel: $channel")
-        }
+    /**
+     * UWB 시작 함수
+     */
+    private suspend fun uwbStart(){
+        // UWB_START_CHARACTERISTIC_UUID 특성을 찾아서 쓰기 작업을 수행
     }
-
-    fun disconnectUWB() {
-        uwbCommunicator.stopCommunication()
+    private suspend fun terminate() {
+        // 연결 해제
     }
 }

@@ -51,6 +51,8 @@ import com.alltimes.cartoontime.ui.screen.composable.cartoon
 import kotlinx.coroutines.delay
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.alltimes.cartoontime.data.model.ui.ActivityType
+import com.alltimes.cartoontime.data.model.ui.ScreenType
 
 @Composable
 fun BookRecommendScreen(viewModel: MainViewModel) {
@@ -89,7 +91,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = { viewModel.onClickedHome() }
+                    onClick = { viewModel.goActivity(ActivityType.MAIN) }
                 ),
 
             ) {
@@ -240,7 +242,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { viewModel.onClickedCartoonDetail() }
+                        onClick = { viewModel.goScreen(ScreenType.BOOKDETAIL) }
                     )
                     .constrainAs(detailButton) {
                         bottom.linkTo(parent.bottom, margin = 10.dp)

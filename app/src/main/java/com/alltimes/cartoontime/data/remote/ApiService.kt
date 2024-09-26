@@ -7,8 +7,6 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
-    // ct/auth-test 는 문자 비용 x
-    // ct/auth 는 문자 비용 o
     @POST("ct/auth-test")
     suspend fun requestAuthCode(@Body request: AuthRequest): AuthResponse
 
@@ -22,7 +20,7 @@ interface ApiService {
     suspend fun signIn(@Body request: SignInRequest): SignResponse
 
     @POST("ct/auth/fcm-token")
-    suspend fun saveFcmToken(@Query("fcmToken") request: FCMRequest): FCMResponse
+    suspend fun saveFcmToken(@Body request: FCMRequest): FCMResponse
 
     @GET("ct/user/{user_id}")
     suspend fun getUserInfo(@Path("user_id") userId: Long): UserResponse
@@ -63,7 +61,7 @@ data class AuthRequest(
 data class AuthResponse(
     val success: Boolean,
     val message: String,
-    val data: Any? // response data is null in this case
+    val data: Any?
 )
 
 // 인증 번호 확인 /ct/verify-auth
@@ -122,7 +120,7 @@ data class JwtToken(
 // FCM 토큰 저장 /ct/auth/fcm-token
 data class FCMRequest(
     val userId: Long,
-    val fcmToken: String
+    val fcmtoken: String,
 )
 
 data class FCMResponse(
@@ -145,15 +143,7 @@ data class UserData(
     val name: String,
     val currentMoney: Long,
     val roles: List<String>,
-    val fcmToken: String,
-    //val mainAccount: MainAccount
-)
-
-data class MainAccount(
-    val id: Long,
-    val accountNumber: String,
-    val bankName: String,
-    val userId: Long
+    val fcmtoken: String,
 )
 
 // 네이버 아이디 비밀번호 받기 /ct/auth/naver

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -18,10 +19,13 @@ import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.remote.FCMRequest
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.repository.FCMRepository
+import com.alltimes.cartoontime.data.repository.UserInfoUpdater
 import com.alltimes.cartoontime.data.repository.UserRepository
+import com.alltimes.cartoontime.utils.AccelerometerManager
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -29,6 +33,7 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.properties.Delegates
 
 class MainViewModel(private val context: Context) : ViewModel(), MessageListener {
 
@@ -46,6 +51,13 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
     val editor = sharedPreferences.edit()
 
     val name = sharedPreferences.getString("name", "")
+    val fcmToken = sharedPreferences.getString("fcmToken", "")
+    val userId = sharedPreferences.getLong("userId", 0L)
+
+    private val userInfoUpdater: UserInfoUpdater = UserInfoUpdater(
+        UserRepository(RetrofitClient.apiService),
+        sharedPreferences
+    )
 
     // 요금
     private val _charge = MutableStateFlow(-1L)
@@ -75,38 +87,120 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
     // 서버 통신 관련 변수
     private val repository = UserRepository(RetrofitClient.apiService)
 
+    private val fcmRepository = FCMRepository(this)
+
+    var isFCMActive = false
+
     init {
-        val fcmRepository = FCMRepository(this)
-        val fcmToken = sharedPreferences.getString("fcmToken", "") ?: ""
-        val userId = sharedPreferences.getLong("userId", 0L)
-        fcmRepository.listenForMessages(fcmToken)
-        
+        fcmRepository.listenForMessages(fcmToken!!)
+        isFCMActive = true
+
         // 서버 api 호출
-        // 인증 코드 요청
         CoroutineScope(Dispatchers.IO).launch {
             val fcmRequest = FCMRequest(userId, fcmToken)
 
-            val response = repository.saveFcmToken(fcmRequest)
+            val response = try{
+                repository.saveFcmToken(fcmRequest)
+            } catch (e: Exception) {
+                null
+            }
+
+            if (response?.success == true) {
+                println("fcmToken 저장 성공")
+            } else {
+                println("fcmToken 저장 실패")
+            }
         }
     }
 
-    override fun onMessageReceived(message: FcmMessage) {
-        println("메시지 수신 완료: $message")
-        if (message.content.contains("입퇴실")) {
-            // 특정 동작 수행
-            println("입퇴실 메시지 수신: $message")
-            onKioskLoadingCompleted()
-        }
+    fun UpdateUserInfo() {
+        userInfoUpdater.updateUserInfo(sharedPreferences.getLong("userId", -1L))
     }
+
+    fun onPuaseAll() {
+        accelerometerStop()
+
+        isFCMActive = false
+    }
+
+    fun onResumeAll() {
+        UpdateUserInfo()
+
+        isFCMActive = true
+    }
+
+    /////////////////////////// Main ///////////////////////////
+
+    // 각속도 측정
+    private lateinit var accelerometerManager: AccelerometerManager
+    private var accelerometerCount by Delegates.notNull<Int>()
+    private var accelerometerIsCounting = true // 1분 동안 카운팅 방지용 플래그
 
     private val fcmMessageRepository = FCMRepository()
+
+    // FCM 메시지 수신
+    override fun onMessageReceived(message: FcmMessage) {
+        if (!isFCMActive) return
+        println("MAIN 메시지 수신 완료: $message")
+        if (message.content.contains("입퇴실")) {
+            // 특정 동작 수행
+            onKioskLoadingCompleted()
+        }
+        else if (message.content.contains("원")) {
+            // 퇴실 과정 중 실패
+            // 메시지에서 charge 값을 추출
+            val chargePattern = Regex("(\\d+)원")
+            val matchResult = chargePattern.find(message.content)
+
+            // charge 값을 할당
+            _charge.value = matchResult!!.groupValues[1].toLong()
+            _state.value = "입실 완료"
+            goScreen(ScreenType.CONFIRM)
+        }
+    }
+
+    fun accelerometerStart(lifecycleOwner: LifecycleOwner) {
+        println("각속도 측정 시작")
+        accelerometerManager = AccelerometerManager(context)
+        accelerometerCount = 0
+        accelerometerManager.start()
+
+        accelerometerManager.accelerometerData.observe(lifecycleOwner) { data ->
+            // 데이터 업데이트
+            if (data.z <= -9.0 && accelerometerIsCounting) {
+                // 아래를 보는 중
+                accelerometerCount++
+                if (accelerometerCount >= 10) {
+                    onLoginOut()
+                    accelerometerCount = 0
+                    disableCounting() // 카운팅 방지
+                }
+            } else if (data.z >= 0) {
+                // 위를 보는 중
+                accelerometerCount = 0
+            }
+
+        }
+    }
+
+    fun accelerometerStop() {
+        println("각속도 측정 중지")
+        accelerometerManager.stop()
+    }
+
+    private fun disableCounting() {
+        accelerometerIsCounting = false // 카운팅 방지
+        CoroutineScope(Dispatchers.Main).launch {
+            delay(10000) // 대기
+            accelerometerIsCounting = true // 다시 카운팅 활성화
+        }
+    }
 
     fun sendMessage(senderId: String, receiverId: String, content: String) {
         fcmMessageRepository.saveMessage(senderId, receiverId, content)
     }
 
     fun testSendToggleMessage() {
-
         CoroutineScope(Dispatchers.IO).launch {
             val fromUserId = sharedPreferences.getLong("userId", -1L)
             val toUserId = 1L
@@ -114,14 +208,12 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
             val toUser = repository.getUserInfo(toUserId)
 
             val myFcmToken = sharedPreferences.getString("fcmToken", null)
-            val toFcmToken = toUser.data?.fcmToken
+            val toFcmToken = toUser.data?.fcmtoken
 
             sendMessage(myFcmToken!!, toFcmToken!!, "입퇴실완료")
         }
 
     }
-
-    /////////////////////////// Main ///////////////////////////
 
     // 현재 시각을 가져오는 함수
     private fun getCurrentTime(): String {
@@ -129,34 +221,17 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
         return sdf.format(Date())
     }
 
-    // 입실 시간과 현재 시간의 차이를 분 단위로 계산하는 함수
-    private fun calculateUsedTime(enteredTime: String?, currentTime: String): Long {
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
-        val enteredDate = sdf.parse(enteredTime)
-        val currentDate = sdf.parse(currentTime)
-
-        // 시간 차이를 분 단위로 계산
-        return (currentDate.time - enteredDate.time) / (1000 * 60)
-    }
-
-    // 요금을 계산하는 함수 (예: 분당 100원)
-    // 서버에서 해결해줘야하는 부분 ?
-    private fun calculateCharge(usedTimeMinutes: Long): Int {
-        val chargePerMinute = 100  // 분당 요금
-        return (usedTimeMinutes * chargePerMinute).toInt()
-    }
-
     // BleScanner 변수
-    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
-    val uiState: StateFlow<UIStateModel> = bleScannerViewModel.uiState
+    //private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
+    //val uiState: StateFlow<UIStateModel> = bleScannerViewModel.uiState
 
     // 각속도 측정 후 입퇴실 진행
     fun onLoginOut() {
         if (_state.value == "입실 전") _state.value = "입실 중"
         else _state.value = "퇴실 중"
 
-        bleScannerViewModel.setMode(false)
-        bleScannerViewModel.startScanningAndConnect()
+        //bleScannerViewModel.setMode(false)
+        //bleScannerViewModel.startScanningAndConnect()
     }
 
     // 입실 중 -> 입실 완료
@@ -212,14 +287,6 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
         }
     }
 
-    fun onClickedHome() {
-        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.MAIN)
-    }
-
-    fun onClickedCartoonDetail() {
-        _screenNavigationTo.value = ScreenNavigationTo(ScreenType.BOOKDETAIL)
-    }
-
     fun fetchCartoons(category: String) {
         // 서버 통신 필요
 
@@ -229,14 +296,20 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
                 Cartoon("만화 2", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
                 Cartoon("만화 3", "작가 3", "무협", "https://example.com/cover3.jpg", "B"),
                 Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+
                 // 추가 데이터...
             )
         } else if (category == "베스트 셀러 만화") {
             _cartoons.value = listOf(
                 Cartoon("만화 4", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
                 Cartoon("만화 3", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
-                Cartoon("만화 2", "작가 3", "무협", "https://example.com/cover3.jpg", "B"),
-                Cartoon("만화 1", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
                 // 추가 데이터...
             )
         } else if (category == "오늘의 추천 만화") {
@@ -244,7 +317,6 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
                 Cartoon("만화 2", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
                 Cartoon("만화 4", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
                 Cartoon("만화 1", "작가 3", "무협", "https://example.com/cover3.jpg", "B"),
-                Cartoon("만화 3", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
                 // 추가 데이터...
             )
         }
@@ -252,21 +324,11 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
 
     /////////////////////////// Confirm ///////////////////////////
 
-    // 결제 완료
-    fun onConfirmButtonClick() {
-        // 입실 전 상태로 변경
-        _state.value = "입실 전"
-        editor.putString("state", "입실 전")
-        editor.apply()
-
-        // 요금 정산
-        _balance.value -= _charge.value
-        editor.putLong("balance", _balance.value)
-        editor.apply()
-
-        _charge.value = -1L
-
-        goScreen(ScreenType.MAIN)
+    fun handleChargeConfirm() {
+        if (_balance.value < _charge.value) goActivity(ActivityType.CHARGE)
+        else {
+            UpdateUserInfo()
+            goScreen(ScreenType.MAIN)
+        }
     }
-
 }

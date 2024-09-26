@@ -1,22 +1,30 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.alltimes.cartoontime.common.MessageListener
+import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.common.NumpadAction
 import com.alltimes.cartoontime.common.PointpadAction
-import com.alltimes.cartoontime.data.model.FcmMessage
 import com.alltimes.cartoontime.data.model.SendUiState
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.model.uwb.RangingCallback
+import com.alltimes.cartoontime.data.network.ble.BLEClient
+import com.alltimes.cartoontime.data.network.ble.BLEScanner
+import com.alltimes.cartoontime.data.network.uwb.UWBControlee
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.remote.TransferRequest
 import com.alltimes.cartoontime.data.repository.FCMRepository
@@ -28,16 +36,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
-class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction {
+@SuppressLint("MissingPermission")
+class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction{
 //class SendViewModel(private val application: Application) : AndroidViewModel(application) {
+    private val _activeConnection = MutableStateFlow<BLEClient?>(null)
 
-    /////////////////////////// 공용 ///////////////////////////
+    /////////////////////////// *공용* ///////////////////////////
 
     private val _activityNavigationTo = MutableLiveData<ActivityNavigationTo>()
     val activityNavigationTo: LiveData<ActivityNavigationTo> get() = _activityNavigationTo
@@ -49,6 +59,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         get() = context.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
 
     val editor = sharedPreferences.edit()
+
+    val SenderId = sharedPreferences.getLong("userId", -1L)
 
     var inputEnable: Boolean = true
 
@@ -68,7 +80,18 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         _screenNavigationTo.value = ScreenNavigationTo(screen)
     }
 
-    /////////////////////////// PointInput ///////////////////////////
+    /////////////////////////// *UWB* ///////////////////////////
+    private val uwbCommunicator = UWBControlee(context)
+    val uwbAddress = uwbCommunicator.getUWBAddress()
+
+    /////////////////////////// *BLEScanner* ///////////////////////////
+    private val bleScanner = BLEScanner(context)
+
+    /////////////////////////// BLEClient ///////////////////////////
+    private val checkingDevices = mutableSetOf<BLEClient>()
+
+
+    /////////////////////////// 2. PointInput ///////////////////////////
 
     override fun onPointClickedButton(type: Int) {
         pointPadClickHandler.onClickedButton(type, balance.value)
@@ -100,7 +123,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     }
 
 
-    /////////////////////////// PasswordInput ///////////////////////////
+    /////////////////////////// 3. PasswordInput ///////////////////////////
 
     override fun onClickedButton(type: Int) {
         numPadClickHandler.onClickedButton(type)
@@ -114,8 +137,9 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             onPasswordComplete = { password: String ->
                 val userPassword = sharedPreferences.getString("password", null)
                 if (userPassword == password) {
-                    transferPoint()
-                    //goScreen(ScreenType.SENDPARTNERCHECK)
+                    //transferPoint()
+                    findingPartner()
+                    goScreen(ScreenType.SENDPARTNERCHECK)
                 } else {
                     numPadClickHandler.clearPassword()
                     showPasswordError()
@@ -123,7 +147,9 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             }
         )
     }
-
+    /**
+     * 비밀번호가 다를 때 에러 메시지 출력
+     */
     private fun showPasswordError() {
         Toast.makeText(context, "비밀번호가 다릅니다", Toast.LENGTH_SHORT).show()
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -134,15 +160,212 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         }
     }
 
+    /////////////////////////// 4. PartnerCheck ///////////////////////////
+    private val triedDevices = mutableSetOf<String>()
 
-    /////////////////////////// Description ///////////////////////////
+    // 4. BLE 스캔
+    private val _uiState = MutableStateFlow(SendUiState())
+    val uiState = _uiState.asStateFlow()
 
-    // BLE 연결
+    /**
+     * BLE 스캔 시작
+     */
+    @SuppressLint("MissingPermission")
+    fun findingPartner() {
+        _uiState.value = _uiState.value.copy(isSending = !_uiState.value.isSending)
+
+        if (_uiState.value.isSending) {
+            startScanningAndConnect()
+        } else {
+            disconnectDevice()
+        }
+    }
+
+    /**
+     * BLEClient를 이용하여 BLEDeviceConnection을 초기화
+     */
+    @SuppressLint("MissingPermission")
+    fun startScanningAndConnect() {
+        viewModelScope.launch {
+            Log.d("SendViewModel", "Scanning started")
+            _uiState.update { it.copy(isScanning = true) }
+
+            CoroutineScope(Dispatchers.Main).launch {
+                bleScanner.start("KIOSK")
+
+                bleScanner.foundDevices.collectLatest { devices ->
+                    for (device in devices) {
+                        if (!triedDevices.contains(device.address)) {
+                            communicateBLEClient(device)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun communicateBLEClient(device: BluetoothDevice) {
+
+        triedDevices.add(device.address)
+
+        _activeConnection.value =
+            BLEClient(context, device, uwbAddress, SenderId.toString(), "KIOSK", this)
+        val activeConnection: BLEClient? = _activeConnection.value
+
+        withContext(Dispatchers.Main) {
+            activeConnection?.connect()
+
+            // 기기가 연결될 때까지 대기
+            activeConnection?.isConnected?.collectLatest { isConnected ->
+                if (isConnected) {
+                    Log.d("BLEConnection", "기기 연결 성공: ${device.name}")
+
+                    // 서비스 검색 완료 대기
+                    CoroutineScope(Dispatchers.Main).launch {
+                        activeConnection?.discoverServices()
+                        activeConnection?.serviceDiscoveryCompleted?.collectLatest { servicesDiscovered ->
+                            if (servicesDiscovered) {
+                                Log.d("BLEConnection", "서비스 검색 완료.")
+
+                                // 특성 작업을 순차적으로 실행
+                                val characteristicSuccess =
+                                    activeConnection?.communicate()
+
+                                if (characteristicSuccess == true) {
+                                    Log.d("BLEConnection", "특성 읽기 및 쓰기 작업 완료.")
+                                    _uiState.update {
+                                        it.copy(
+                                            isDeviceConnected = true,
+                                            activeDevice = device
+                                        )
+                                    }
+                                } else {
+                                    Log.e("BLEConnection", "특성 작업 중 실패.")
+                                }
+                            } else {
+                                Log.e("BLEConnection", "서비스 검색 실패.")
+                            }
+                        }
+                    }
+                } else {
+                    Log.e("BLEConnection", "기기 연결 실패: ${device.name}")
+                }
+            }
+        }
+    }
+
+    /**
+     * Partner 수락
+     */
+    fun startTransaction() {
+        CoroutineScope(Dispatchers.Main).launch {
+            readyUWB()
+            goScreen(ScreenType.SENDDESCRIPTION)
+        }
+    }
+
+    /**
+     * Partner 거절
+     */
+    fun setUiState(value: Boolean) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDeviceConnected = value) }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun disconnectDevice() {
+        Log.d("SendViewModel", "Disconnecting device")
+        _activeConnection.value?.disconnect()
+        _uiState.update { it.copy(isDeviceConnected = false, activeDevice = null) }
+
+        triedDevices.clear()
+
+
+        // Ensure scanning is stopped if needed
+        if (_uiState.value.isScanning) {
+            bleScanner.stop()
+            Log.d("SendViewModel", "Scanning stopped after disconnecting")
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    override fun onCleared() {
+        super.onCleared()
+
+        if (bleScanner.isScanning.value) {
+            Log.d("SendViewModel", "Stopping scanning on ViewModel cleared")
+            bleScanner.stop()
+        }
+    }
+
+
+
+    /////////////////////////// 9. Description ///////////////////////////
+    private var isAcceptOpen = false
+    private var measurementCount = 0
+    private val timeoutHandler = Handler(Looper.getMainLooper())
+
+    // 각속도 센서 데이터 감지
+    suspend fun readyUWB(){
+        // 각속도 센서 데이터 감지
+        withContext(Dispatchers.Main) {
+            if (isAcceptOpen){
+                isAcceptOpen = false
+                // 감지 시 uwbStart 특성 값 쓰기
+                // 감지 시 uwbStart 특성 값 쓰기
+                val uwbData = _activeConnection.value?.partnerUWBData
+                val splitUwbData = uwbData?.value?.split("/") ?: listOf("", "")
+                val address = splitUwbData.getOrNull(0) ?: ""
+                val channel = splitUwbData.getOrNull(1) ?: ""
+
+                val callback = object : RangingCallback {
+                    override fun onDistanceMeasured(distance: Float) {
+                        DistanceMeasured(distance)
+                    }
+                }
+                // uwb Ranging 시작
+                measurementCount = 0
+                uwbCommunicator.createRanging(address, channel, callback)
+            }
+        }
+    }
+
+    fun DistanceMeasured(distance: Float) {
+        println("거리 측정 : ${distance}")
+
+        // 거리 측정 로직 처리
+        if (distance < 5) {
+            measurementCount++
+        } else {
+            measurementCount = 0  // 거리 벗어나면 카운트 초기화
+        }
+
+        if (measurementCount >= 30) {
+            uwbCommunicator.destroyRanging()
+            completeLogin()
+        }
+
+        // 10cm 이상 거리에서 타임아웃 처리
+        timeoutHandler.postDelayed({
+            if (distance > 10) {
+                uwbCommunicator.destroyRanging()
+                completeLogin()
+            }
+        }, 3000)
+    }
+
+    private fun completeLogin() {
+        transferPoint()
+        goScreen(ScreenType.SENDLOADING)
+        println("입실 완료 처리")
+    }
+
 
     /////////////////////////// Loading ///////////////////////////
 
-    // UWB 연결
-    // 포인트 송금 함수
+    // 서버에 전송
 
     // 테스트용 코드
 
@@ -158,9 +381,9 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
         CoroutineScope(Dispatchers.IO).launch {
 
-            val fromUserId = sharedPreferences.getLong("userId", -1L)
+
             val toUserId = 1L
-            val transferRequest = TransferRequest(fromUserId, toUserId, point.value.toLong())
+            val transferRequest = TransferRequest(SenderId, toUserId, point.value.toLong())
 
             val userResponse = repository.getUserInfo(toUserId)
 
@@ -186,7 +409,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                     _balance.value = newBalance
 
                     val myFcmToken = sharedPreferences.getString("fcmToken", null)
-                    val toFcmToken = toUser.data?.fcmToken
+                    val toFcmToken = toUser.data?.fcmtoken
                     val name = sharedPreferences.getString("name", null)
 
                     sendMessage(myFcmToken!!, toFcmToken!!,"${name}님 지갑에서\n${point.value} 포인트를\n받았습니다.")
@@ -201,20 +424,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     /////////////////////////// Confirm ///////////////////////////
 
-    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
 
-    private val _uiState = MutableStateFlow(SendUiState())
-    val uiState = _uiState.asStateFlow()
 
-    // 버튼 클릭 시 호출되는 함수
-    fun onSendButtonClick() {
-        _uiState.value = _uiState.value.copy(isSending = !_uiState.value.isSending)
 
-        if (_uiState.value.isSending) {
-            bleScannerViewModel.setMode(true)
-            bleScannerViewModel.startScanningAndConnect()
-        } else {
-            bleScannerViewModel.disconnectDevice()
-        }
-    }
 }

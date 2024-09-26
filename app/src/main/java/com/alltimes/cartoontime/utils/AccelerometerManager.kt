@@ -19,9 +19,14 @@ class AccelerometerManager(context: Context) : SensorEventListener {
     private val _accelerometerData = MutableLiveData<AccelerometerDataModel>()
     val accelerometerData: LiveData<AccelerometerDataModel> = _accelerometerData
 
-    init {
-        // Register sensor listener when AccelerometerManager is created
+    // 센서 시작 메소드
+    fun start() {
         sensorManager.registerListener(this, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL)
+    }
+
+    // 센서 중지 메소드
+    fun stop() {
+        sensorManager.unregisterListener(this)
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -37,9 +42,5 @@ class AccelerometerManager(context: Context) : SensorEventListener {
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
         // No implementation needed for this example
-    }
-
-    fun unregister() {
-        sensorManager.unregisterListener(this)
     }
 }

@@ -9,15 +9,17 @@ object BLEConstants {
     val UWB_KIOSK_SERVICE_UUID: UUID = UUID.fromString(stringToUUIDFormat("KIOSKCARTOONTIME"))
     val UWB_WITCH_SERVICE_UUID: UUID = UUID.fromString(stringToUUIDFormat("WITCHCARTOONTIME"))
 
-    val CONTROLEE_CHARACTERISTIC_UUID: UUID =
-        UUID.fromString(stringToUUIDFormat("__CONTROLEE_CHAR"))
+    val CONTROLLER_CHARACTERISTIC_UUID: UUID =
+        UUID.fromString(stringToUUIDFormat("CONTROLLER_CHAR"))
     val RECEIVER_ID_CHARACTERISTIC_UUID: UUID =
         UUID.fromString(stringToUUIDFormat("RECEIVER_ID_CHAR"))
 
-    val CONTROLLER_CHARACTERISTIC_UUID: UUID =
-        UUID.fromString(stringToUUIDFormat("CONTROLLER_CHAR"))
+    val CONTROLEE_CHARACTERISTIC_UUID: UUID =
+        UUID.fromString(stringToUUIDFormat("__CONTROLEE_CHAR"))
     val SENDER_ID_CHARACTERISTIC_UUID: UUID =
         UUID.fromString(stringToUUIDFormat("__SENDER_ID_CHAR"))
+    val UWB_START_CHARACTERISTIC_UUID: UUID =
+        UUID.fromString(stringToUUIDFormat("__UWB_START_CHAR"))
 
 }
 
