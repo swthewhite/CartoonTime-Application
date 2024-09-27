@@ -72,6 +72,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     private lateinit var accelerometerManager: AccelerometerManager
     private var accelerometerCount by Delegates.notNull<Int>()
 
+    private var isAcceptOpen = false
+
     fun accelerometerStart(lifecycleOwner: LifecycleOwner) {
         println("각속도 측정 시작")
         accelerometerManager = AccelerometerManager(context)
@@ -87,6 +89,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                 if (accelerometerCount >= 10) {
                     // 승인
                     transferPoint()
+                    isAcceptOpen = true
                     accelerometerCount = 0
                     accelerometerStop()
                 }

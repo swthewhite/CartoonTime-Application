@@ -16,6 +16,7 @@ enum class ScreenType(val navigateTo: (NavController) -> Unit) {
     MAIN({ navController -> navController.navigate("mainScreen") }),
     BOOKRECOMMEND({ navController -> navController.navigate("bookRecommendScreen") }),
     BOOKDETAIL({ navController -> navController.navigate("bookDetailScreen") }),
+    BOOKNAV({ navController -> navController.navigate("bookNavScreen") }),
     CONFIRM({ navController -> navController.navigate("confirmScreen") }),
 
     // 송금
