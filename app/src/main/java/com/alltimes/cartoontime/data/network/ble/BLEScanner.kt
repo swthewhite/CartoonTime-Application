@@ -3,11 +3,7 @@ package com.alltimes.cartoontime.data.network.ble
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
-import android.bluetooth.le.BluetoothLeScanner
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
-import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
+import android.bluetooth.le.*
 import android.content.Context
 import android.os.ParcelUuid
 import android.util.Log
@@ -23,15 +19,35 @@ import com.alltimes.cartoontime.data.model.Permissions
  */
 class BLEScanner(context: Context) {
 
+    // BLE 스캐너 초기화
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE)
             as? BluetoothManager
-        ?: throw Exception("이 디바이스는 Bluetooth 지원하지 않습니다")
+        ?: throw Exception("이 디바이스는 Bluetooth를 지원하지 않습니다")
     private val bluetoothAdapter = bluetoothManager.adapter
     private val scanner: BluetoothLeScanner
         get() = bluetoothAdapter.bluetoothLeScanner
 
+    // 스캔 중인지 여부를 저장하는 MutableStateFlow 추가
     val isScanning = MutableStateFlow(false)
+    // 찾은 기기들의 목록을 저장하는 MutableStateFlow 추가
     val foundDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
+
+    // 이미 연결된 기기들의 주소를 저장하는 Set 추가
+    private val connectedDevices = mutableSetOf<String>()
+
+    /**
+     * 외부에서 이미 연결된 기기를 추가하는 함수
+     */
+    fun addConnectedDevice(address: String) {
+        connectedDevices.add(address)
+    }
+
+    /**
+     * 외부에서 연결 해제된 기기를 제거하는 함수
+     */
+    fun removeConnectedDevice(address: String) {
+        connectedDevices.remove(address)
+    }
 
     /**
      * Process a single scan result
@@ -41,11 +57,11 @@ class BLEScanner(context: Context) {
     private fun processScanResult(result: ScanResult?): BluetoothDevice? {
         result ?: return null
 
-        val deviceName = result.device.name ?: return null
-
-        if (deviceName.isEmpty()) return null
-
-        Log.i("BLEScanner", "Device found: $deviceName")
+        // 이미 연결된 기기인지 확인
+        if (connectedDevices.contains(result.device.address)) {
+            Log.i("BLEScanner", "Device ${result.device.address} is already connected, skipping.")
+            return null
+        }
 
         return result.device
     }
@@ -75,10 +91,10 @@ class BLEScanner(context: Context) {
             results ?: return
 
             val newDevices = results.mapNotNull { processScanResult(it) }
-                .filterNot{foundDevices.value.any{info->info.address == it.address}}
+                .filterNot { foundDevices.value.any { info -> info.address == it.address } }
 
             if (newDevices.isNotEmpty()) {
-                foundDevices.update{it+newDevices}
+                foundDevices.update { it + newDevices }
             }
         }
 
@@ -125,14 +141,23 @@ class BLEScanner(context: Context) {
                 )
             }
         }
+        val scanFilters: MutableList<ScanFilter> = ArrayList()
+        val scanFilter = ScanFilter.Builder()
+            .setServiceUuid(ParcelUuid(UWB_KIOSK_SERVICE_UUID))
+            .build()
+        scanFilters.add(scanFilter)
 
         // Set ScanSettings
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
             .build()
 
-        //scanner.startScan(filters, settings, scanCallback)
-        scanner.startScan(scanCallback)
+        Log.d("BLEScanner", "Start scanning with mode: $mode")
+        Log.d("BLEScanner", "Filters: $scanFilters")
+        Log.d("BLEScanner", "Settings: $settings")
+
+        scanner.startScan(filters, settings, scanCallback)
+        //scanner.startScan(scanCallback)
         isScanning.value = true
     }
 

@@ -11,6 +11,7 @@ import androidx.annotation.RequiresPermission
 import com.alltimes.cartoontime.data.model.BLEConstants
 import com.alltimes.cartoontime.data.model.Permissions
 import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -44,6 +45,10 @@ class BLEClient @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
     val receiverIdReadCompleted = MutableStateFlow(false)
     val controleeWriteCompleted = MutableStateFlow(false)
     val senderIdWriteCompleted = MutableStateFlow(false)
+
+    // CompletableDeferred 객체 선언
+    private var controleeWriteDeferred: CompletableDeferred<Boolean>? = null
+    private var senderIdWriteDeferred: CompletableDeferred<Boolean>? = null
 
     /**
      * BluetoothGattCallback을 사용하여 BluetoothGatt 객체의 콜백을 정의
@@ -120,12 +125,15 @@ class BLEClient @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
             status: Int
         ) {
             super.onCharacteristicWrite(gatt, characteristic, status)
+
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (characteristic.uuid == BLEConstants.CONTROLEE_CHARACTERISTIC_UUID) {
                     controleeWriteCompleted.value = true
+                    controleeWriteDeferred?.complete(true)
                     Log.d("BLE", "Characteristic write successful: ${characteristic.uuid}")
                 } else if (characteristic.uuid == BLEConstants.SENDER_ID_CHARACTERISTIC_UUID) {
                     senderIdWriteCompleted.value = true
+                    senderIdWriteDeferred?.complete(true)
                     Log.d("BLE", "Sender ID write successful: ${characteristic.uuid}")
                 }
             } else {
@@ -242,7 +250,7 @@ class BLEClient @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
                 if (gatt?.writeCharacteristic(characteristic) == true) {
                     Log.v(
                         "bluetooth",
-                        "Write started for UUID: ${BLEConstants.SENDER_ID_CHARACTERISTIC_UUID}"
+                        "Write started for UUID: BLEConstants.SENDER_ID_CHARACTERISTIC_UUID"
                     )
 
                     val job = senderIdWriteCompleted.onEach { completed ->
@@ -255,7 +263,7 @@ class BLEClient @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
                 } else {
                     Log.e(
                         "bluetooth",
-                        "Failed to initiate write for UUID: ${BLEConstants.SENDER_ID_CHARACTERISTIC_UUID}"
+                        "Failed to initiate write for UUID: SENDER_ID_CHARACTERISTIC_UUID"
                     )
                     continuation.resume(false)
                 }
@@ -283,6 +291,7 @@ class BLEClient @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
 
             if (characteristic != null) {
                 val uwbAddress = myUWBData
+                Log.d("UWB", "UWB Address: $uwbAddress")
                 characteristic.value = uwbAddress.toByteArray()
 
                 controleeWriteCompleted.value = false // 플래그 초기화
@@ -345,6 +354,17 @@ class BLEClient @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
         }
         Log.d("bluetooth", "Second characteristic read successfully")
 
+
+        // **Controlee 쓰기**
+        val writeControleeSuccess = writeControleeCharacteristic()
+        if (!writeControleeSuccess) {
+            Log.e("bluetooth", "Failed to write Controlee characteristic")
+            return false
+        }
+        Log.d("bluetooth", "Controlee characteristic written successfully")
+
+
+
         // **Sender ID 쓰기**
         val writeSenderIdSuccess = writeSenderIdCharacteristic()
         if (!writeSenderIdSuccess) {
@@ -353,14 +373,7 @@ class BLEClient @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
         }
         Log.d("bluetooth", "Sender ID characteristic written successfully")
 
-        // **Controlee 쓰기**
-        val writeControleeSuccess = writeControleeCharacteristic()
-        Log.d("bluetooth", "Are you here")
-        if (!writeControleeSuccess) {
-            Log.e("bluetooth", "Failed to write Controlee characteristic")
-            return false
-        }
-        Log.d("bluetooth", "Controlee characteristic written successfully")
+
 
         return true
     }

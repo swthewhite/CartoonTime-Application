@@ -46,6 +46,7 @@ import kotlinx.coroutines.withContext
 class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction{
 //class SendViewModel(private val application: Application) : AndroidViewModel(application) {
     private val _activeConnection = MutableStateFlow<BLEClient?>(null)
+    val activeConnection: MutableStateFlow<BLEClient?> get() = _activeConnection
 
     /////////////////////////// *공용* ///////////////////////////
 
@@ -82,7 +83,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     /////////////////////////// *UWB* ///////////////////////////
     private val uwbCommunicator = UWBControlee(context)
-    val uwbAddress = uwbCommunicator.getUWBAddress()
+
 
     /////////////////////////// *BLEScanner* ///////////////////////////
     private val bleScanner = BLEScanner(context)
@@ -206,11 +207,10 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     @SuppressLint("MissingPermission")
     private suspend fun communicateBLEClient(device: BluetoothDevice) {
-
-        triedDevices.add(device.address)
+        bleScanner.addConnectedDevice(device.address)
 
         _activeConnection.value =
-            BLEClient(context, device, uwbAddress, SenderId.toString(), "KIOSK", this)
+            BLEClient(context, device, uwbCommunicator.getUWBAddress(), SenderId.toString(), "KIOSK", this)
         val activeConnection: BLEClient? = _activeConnection.value
 
         withContext(Dispatchers.Main) {
@@ -220,6 +220,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             activeConnection?.isConnected?.collectLatest { isConnected ->
                 if (isConnected) {
                     Log.d("BLEConnection", "기기 연결 성공: ${device.name}")
+
 
                     // 서비스 검색 완료 대기
                     CoroutineScope(Dispatchers.Main).launch {
@@ -234,6 +235,19 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
                                 if (characteristicSuccess == true) {
                                     Log.d("BLEConnection", "특성 읽기 및 쓰기 작업 완료.")
+                                    val uwbData = _activeConnection.value?.partnerUWBData
+                                    val splitUwbData = uwbData?.value?.split("/") ?: listOf("", "")
+                                    val address = splitUwbData.getOrNull(0) ?: ""
+                                    val channel = splitUwbData.getOrNull(1) ?: ""
+
+                                    val callback = object : RangingCallback {
+                                        override fun onDistanceMeasured(distance: Float) {
+                                            DistanceMeasured(distance)
+                                        }
+                                    }
+                                    // uwb Ranging 시작
+                                    measurementCount = 0
+                                    uwbCommunicator.createRanging(address, channel, callback)
                                     _uiState.update {
                                         it.copy(
                                             isDeviceConnected = true,
@@ -258,9 +272,9 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     /**
      * Partner 수락
      */
-    fun startTransaction() {
+    fun startTransaction(bleClient: BLEClient) {
         CoroutineScope(Dispatchers.Main).launch {
-            readyUWB()
+            readyUWB(bleClient)
             goScreen(ScreenType.SENDDESCRIPTION)
         }
     }
@@ -308,7 +322,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     private val timeoutHandler = Handler(Looper.getMainLooper())
 
     // 각속도 센서 데이터 감지
-    suspend fun readyUWB(){
+    suspend fun readyUWB(bleClient: BLEClient){
         // 각속도 센서 데이터 감지
         withContext(Dispatchers.Main) {
             if (isAcceptOpen){

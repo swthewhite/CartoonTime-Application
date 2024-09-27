@@ -1,5 +1,6 @@
 package com.alltimes.cartoontime.ui.screen.moneytransaction.send
 
+import android.accessibilityservice.AccessibilityService.ScreenshotResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,6 +47,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
 
     // UI 상태 관찰
     val uiState = viewModel.uiState.collectAsState()
+    val bleClient = viewModel.activeConnection.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -130,7 +132,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                         // 수락 버튼
                         Button(
                             onClick = {
-                                // 수락 버튼 클릭 시 로직 추가
+                                bleClient.value?.let { viewModel.startTransaction(it) }
                             },
                             shape = RoundedCornerShape(15),
                             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
@@ -144,7 +146,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                         // 거절 버튼
                         Button(
                             onClick = {
-                                // 거절 버튼 클릭 시 로직 추가
+                                viewModel.setUiState(!uiState.value.isDeviceConnected)
                             },
                             shape = RoundedCornerShape(15),
                             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
