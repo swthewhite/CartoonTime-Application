@@ -14,7 +14,7 @@ import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveConfirmScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveDescriptionScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveLoadingScreen
-import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceivePartnerCheckScreen
+import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceivePartnerReadyScreen
 import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
@@ -27,18 +27,19 @@ class ReceiveActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         viewModel = ReceiveViewModel(this)
+        viewModel.transactionBleServerStart()
 
         setContent {
             navController = rememberNavController() // 전역 변수에 저장
 
             NavHost(
                 navController as NavHostController,
-                startDestination = "receivePartnerCheckScreen"
+                startDestination = "receivePartnerReadyScreen"
             ) {
                 composable("receiveDescriptionScreen") { ReceiveDescriptionScreen(viewModel = viewModel) }
                 composable("receiveLoadingScreen") { ReceiveLoadingScreen(viewModel = viewModel) }
                 composable("receiveConfirmScreen") { ReceiveConfirmScreen(viewModel = viewModel) }
-                composable("receivePartnerCheckScreen") { ReceivePartnerCheckScreen(viewModel = viewModel) }
+                composable("receivePartnerReadyScreen") { ReceivePartnerReadyScreen(viewModel = viewModel) }
             }
         }
 
@@ -66,6 +67,18 @@ class ReceiveActivity : ComponentActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+
+        viewModel.onPuaseAll()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        viewModel.onResumeAll()
+    }
+
     // 스크린 전환을 처리하는 함수로 분리하여 처리
     private fun navigateToScreen(screenType: ScreenType) {
         val currentRoute = navController.currentBackStackEntry?.destination?.route
@@ -74,7 +87,7 @@ class ReceiveActivity : ComponentActivity() {
             ScreenType.RECEIVEDESCRIPTION -> "receiveDescriptionScreen"
             ScreenType.RECEIVELOADING -> "receiveLoadingScreen"
             ScreenType.RECEIVECONFIRM -> "receiveConfirmScreen"
-            ScreenType.RECEIVEPARTNERCHECK -> "receivePartnerCheckScreen"
+            ScreenType.RECEIVEPARTNERREADY -> "receivePartnerReadyScreen"
             else -> return
         }
 

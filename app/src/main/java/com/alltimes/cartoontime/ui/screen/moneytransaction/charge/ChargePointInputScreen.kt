@@ -32,9 +32,7 @@ import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
 @Composable
 fun ChargePointInputScreen(viewModel: ChargeViewModel) {
 
-    val btnSpace = 80.dp
-
-
+    // viewmodel variable
     val point by viewModel.point.collectAsState()
     val balance by viewModel.balance.collectAsState()
 

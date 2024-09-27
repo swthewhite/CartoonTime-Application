@@ -36,12 +36,13 @@ import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 @Composable
 fun PasswordSettingScreen(viewModel: SignUpViewModel) {
 
+    // viewmodel variable
     val passwordCheck by viewModel.passwordCheck.collectAsState()
     val password by viewModel.password.collectAsState()
 
+    // screen variable
     val imgSize = 40.dp
     val imgSpace = 10.dp
-    val btnSpace = 80.dp
 
     ConstraintLayout(
         modifier = Modifier

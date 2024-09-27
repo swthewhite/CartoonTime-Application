@@ -32,6 +32,8 @@ import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(viewModel: SignUpViewModel) {
+
+    // viewmodel variable
     val phoneNumber by viewModel.phoneNumber.collectAsState()
     val verificationCode by viewModel.verificationCode.collectAsState()
     val name by viewModel.name.collectAsState()
@@ -41,6 +43,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
     val isPhoneNumberEnable by viewModel.isPhoneNumberEnable.collectAsState()
     val isverificationCodeCorrect by viewModel.isVerificationCodeCorrect.collectAsState()
 
+    // screen variable
     val keyboardController = LocalSoftwareKeyboardController.current
 
     ConstraintLayout(
@@ -49,10 +52,8 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             .background(color = Color(0xFFF4F2EE))
             .padding(16.dp)
     ) {
-        // References for the components
         val (exitButton, titleText, instructionText, phoneText, phoneField, verifyCodeField, requestButton, verficationButton, nameText, nameField, submitButton) = createRefs()
 
-        // Exit button
         IconButton(
             onClick = { viewModel.goActivity(ActivityType.FINISH) },
             modifier = Modifier
@@ -70,7 +71,6 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             )
         }
 
-        // Title text
         Text(
             text = "휴대폰 본인인증",
             fontSize = 16.sp,
@@ -81,7 +81,6 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             }
         )
 
-        // Instruction text
         Text(
             text = "인증번호를 요청해주세요.",
             fontSize = 24.sp,
@@ -91,7 +90,6 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             }
         )
 
-        // Phone Number Label
         Text(
             text = "휴대폰 번호",
             fontSize = 16.sp,
@@ -101,7 +99,6 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             }
         )
 
-        // Phone Number TextField
         TextField(
             enabled = isPhoneNumberEnable,
             value = phoneNumber,

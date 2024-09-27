@@ -31,6 +31,7 @@ import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 @Composable
 fun SignUpCompleteScreen(viewModel: SignUpViewModel) {
 
+    // viewmodel variable
     val isSignup = viewModel.isSignUp
 
     ConstraintLayout(

@@ -45,7 +45,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun SendPartnerCheckScreen(viewModel: SendViewModel) {
 
-    // UI 상태 관찰
+    // viewmodel variable
     val uiState = viewModel.uiState.collectAsState()
     val bleClient = viewModel.activeConnection.collectAsState()
 
@@ -109,7 +109,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                 }
         ) {
             // 장치 연결 여부에 따른 UI 구현
-            if (uiState.value.isDeviceConnected) {
+            if (!uiState.value.isDeviceConnected) {
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally, // Column 안에서 수평 중앙 정렬
@@ -133,6 +133,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                         Button(
                             onClick = {
                                 bleClient.value?.let { viewModel.startTransaction(it) }
+
                             },
                             shape = RoundedCornerShape(15),
                             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),

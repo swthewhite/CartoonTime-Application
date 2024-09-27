@@ -1,6 +1,5 @@
 package com.alltimes.cartoontime.ui.view
 
-// # Added Imports
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,18 +11,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.main.BookDetailScreen
+import com.alltimes.cartoontime.ui.screen.main.BookNavScreen
 import com.alltimes.cartoontime.ui.screen.main.BookRecommendScreen
 import com.alltimes.cartoontime.ui.screen.main.ConfirmScreen
 import com.alltimes.cartoontime.ui.screen.main.MainScreen
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
-import com.alltimes.cartoontime.utils.AccelerometerManager
 import com.alltimes.cartoontime.utils.NavigationHelper
 import com.alltimes.cartoontime.utils.PermissionsHelper
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.properties.Delegates
 
 class MainActivity : ComponentActivity() {
 
@@ -33,7 +27,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel = MainViewModel(this) // ViewModel 생성
+        viewModel = MainViewModel(this)
+        viewModel.accelerometerStart(lifecycleOwner = this)
+        viewModel.UpdateUserInfo()
 
         // 권한 요청 부분을 PermissionsHelper로 처리
         if (!PermissionsHelper.hasAllPermissions(this)) {
@@ -41,6 +37,18 @@ class MainActivity : ComponentActivity() {
         } else {
             initializeApp() // 권한이 이미 있을 경우 초기화
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        viewModel.onResumeAll()
+    }
+
+    override fun onPause() {
+        super.onPause()
+
+        viewModel.onPuaseAll()
     }
 
     override fun onRequestPermissionsResult(
@@ -60,14 +68,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun initializeApp() {
+        viewModel.accelerometerStart(lifecycleOwner = this)
 
         setContent {
-            navController = rememberNavController() // 전역 변수에 저장
+            navController = rememberNavController()
 
             NavHost(navController as NavHostController, startDestination = "mainscreen") {
                 composable("mainscreen") { MainScreen(viewModel = viewModel) }
                 composable("bookRecommendScreen") { BookRecommendScreen(viewModel = viewModel) }
                 composable("bookDetailScreen") { BookDetailScreen(viewModel = viewModel) }
+                composable("bookNavScreen") { BookNavScreen(viewModel = viewModel) }
                 composable("confirmScreen") { ConfirmScreen(viewModel = viewModel) }
             }
         }
@@ -85,7 +95,6 @@ class MainActivity : ComponentActivity() {
                 navigateToScreen(screenType)
             }
         }
-
     }
 
     // 스크린 전환을 처리하는 함수로 분리하여 처리
@@ -96,6 +105,7 @@ class MainActivity : ComponentActivity() {
             ScreenType.MAIN -> "mainscreen"
             ScreenType.BOOKRECOMMEND -> "bookRecommendScreen"
             ScreenType.BOOKDETAIL -> "bookDetailScreen"
+            ScreenType.BOOKNAV -> "bookNavScreen"
             ScreenType.CONFIRM -> "confirmScreen"
             else -> return
         }
@@ -114,6 +124,14 @@ class MainActivity : ComponentActivity() {
                 }
                 // 동일 화면 중복 쌓임 방지
                 launchSingleTop = true
+            }
+
+            // 스크린 전환 시 각속도 측정 멈추기
+            viewModel.accelerometerStop()
+
+            // 메인 스크린으로 이동할 경우에만 각속도 측정 시작
+            if (screenType == ScreenType.MAIN) {
+                viewModel.accelerometerStart(lifecycleOwner = this)
             }
         }
     }

@@ -9,15 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -27,13 +22,11 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ActivityType
-import com.alltimes.cartoontime.data.model.ui.ScreenType
-import com.alltimes.cartoontime.ui.screen.composable.ReceiveAnimation
+import com.alltimes.cartoontime.ui.screen.composable.deviceFindingAnimation
 import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
-import kotlinx.coroutines.delay
 
 @Composable
-fun ReceivePartnerCheckScreen(viewModel: ReceiveViewModel) {
+fun ReceivePartnerReadyScreen(viewModel: ReceiveViewModel) {
 
 
     ConstraintLayout(
@@ -41,7 +34,7 @@ fun ReceivePartnerCheckScreen(viewModel: ReceiveViewModel) {
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, nextbtn, animationBox, description0, description1) = createRefs()
+        val (backButton, title, animationBox) = createRefs()
 
         // 뒤로가기 버튼
         Box(
@@ -84,18 +77,19 @@ fun ReceivePartnerCheckScreen(viewModel: ReceiveViewModel) {
             }
         )
 
-//        Button(
-//            onClick = { viewModel.goActivity(ActivityType.MAIN) },
-//            modifier = Modifier
-//                .wrapContentSize()
-//                .constrainAs(nextbtn){
-//                    top.linkTo(title.top)
-//                    bottom.linkTo(title.bottom)
-//                    start.linkTo(title.end, margin = 10.dp)
-//                }
-//        ) {
-//            Text("다음")
-//        }
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .constrainAs(animationBox) {
+                    top.linkTo(title.bottom, margin = 20.dp)
+                    bottom.linkTo(parent.bottom, margin = 20.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
+        ) {
+            deviceFindingAnimation()
+        }
 
 
     }

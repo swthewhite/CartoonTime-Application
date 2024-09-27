@@ -94,7 +94,7 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
     init {
         fcmRepository.listenForMessages(fcmToken!!)
         isFCMActive = true
-
+      
         // 서버 api 호출
         CoroutineScope(Dispatchers.IO).launch {
             val fcmRequest = FCMRequest(userId, fcmToken)

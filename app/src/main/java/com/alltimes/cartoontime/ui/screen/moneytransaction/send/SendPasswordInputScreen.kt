@@ -17,16 +17,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.alltimes.cartoontime.R
-
-import androidx.compose.runtime.*
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.composable.Numpad
 import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
@@ -35,21 +34,19 @@ import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 @Composable
 fun SendPasswordInputScreen(viewModel: SendViewModel) {
 
+    // veiwmodel variable
+    val password by viewModel.password.collectAsState()
+
+    // screen variable
     val imgSize = 40.dp
     val imgSpace = 10.dp
-    val btnSpace = 80.dp
-
-
-    val point by viewModel.point.collectAsState()
-    val balance by viewModel.balance.collectAsState()
-    val password by viewModel.password.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, description0, description1, passwordRow, description2, numPad) = createRefs()
+        val (backButton, title, description0, description1, passwordRow, numPad) = createRefs()
 
         // 뒤로가기 버튼
         Box(
@@ -141,23 +138,6 @@ fun SendPasswordInputScreen(viewModel: SendViewModel) {
                 )
             }
         }
-
-        // 비밀번호를 잊으셨나요 ?
-        Box(
-            modifier = Modifier
-                .constrainAs(description2) {
-                    bottom.linkTo(numPad.top, 10.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }
-        ) {
-            Text(
-                text = "비밀번호를 잊어버리셨나요?",
-                fontSize = 16.sp,
-                color = Color.Gray,
-            )
-        }
-
 
         // 숫자패드
         // 0 ~ 9, 삭제 버튼

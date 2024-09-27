@@ -11,10 +11,7 @@ class NumPadClickHandler(
     private val _password = MutableStateFlow("")
     val password: StateFlow<String> get() = _password
 
-    var inputEnable: Boolean = true
-
     fun onClickedButton(type: Int) {
-        if (!inputEnable) return
 
         if (type == -1) {
             if (_password.value.isNotEmpty()) _password.value = _password.value.dropLast(1)
