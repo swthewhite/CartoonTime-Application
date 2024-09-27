@@ -38,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -98,11 +99,10 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
 
     /////////////////////////// 2. PointInput ///////////////////////////
+
     // 각속도 측정
     private lateinit var accelerometerManager: AccelerometerManager
     private var accelerometerCount by Delegates.notNull<Int>()
-
-    private var isAcceptOpen = false
 
     fun accelerometerStart(lifecycleOwner: LifecycleOwner) {
         println("각속도 측정 시작")
@@ -439,7 +439,6 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             val transferRequest = TransferRequest(SenderId, toUserId, point.value.toLong())
             val fromUserId = sharedPreferences.getLong("userId", -1L)
             _toUserId.value = 1L
-            val transferRequest = TransferRequest(fromUserId, _toUserId.value, point.value.toLong())
 
             val userResponse = repository.getUserInfo(_toUserId.value)
 
