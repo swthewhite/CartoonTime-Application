@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.disposables.Disposable;
 
-public class UwbControleeCommunicator {
+public class UWBControlee {
 
     // init variables
     private final Context context;
@@ -30,7 +30,7 @@ public class UwbControleeCommunicator {
     private final AtomicReference<Disposable> rangingResultObservable = new AtomicReference<>(null);
     private final AtomicReference<UwbClientSessionScope> currentUwbSessionScope = new AtomicReference<>(null);
 
-    public UwbControleeCommunicator(Context context) {
+    public UWBControlee(Context context) {
         // init in Class
         this.context = context;
         this.uwbManager = UwbManager.createInstance(context);
@@ -43,7 +43,7 @@ public class UwbControleeCommunicator {
         new Thread(() -> currentUwbSessionScope.set(UwbManagerRx.controleeSessionScopeSingle(uwbManager).blockingGet())).start();
     }
 
-    public String getUwbAddress() {
+    public String getUWBAddress() {
         UwbControleeSessionScope controleeSessionScope = (UwbControleeSessionScope) currentUwbSessionScope.get();
         if (controleeSessionScope != null) {
             UwbAddress localAddress = controleeSessionScope.getLocalAddress();
@@ -53,7 +53,7 @@ public class UwbControleeCommunicator {
         }
     }
 
-    public void startCommunication(String controllerAddress, String controllerChannel, RangingCallback callback) {
+    public void createRanging(String controllerAddress, String controllerChannel, RangingCallback callback) {
         try {
             int otherSideLocalAddress = Integer.parseUnsignedInt(controllerAddress);
             UwbAddress partnerAddress = new UwbAddress(Shorts.toByteArray((short) otherSideLocalAddress));
@@ -98,7 +98,7 @@ public class UwbControleeCommunicator {
         }
     }
 
-    public void stopCommunication() {
+    public void destroyRanging() {
         if (rangingResultObservable.get() != null) {
             rangingResultObservable.get().dispose();
             rangingResultObservable.set(null);  // dispose 후에 null로 설정하여 재사용 가능하게 함

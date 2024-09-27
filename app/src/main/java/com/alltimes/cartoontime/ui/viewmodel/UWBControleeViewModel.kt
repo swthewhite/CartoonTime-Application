@@ -6,9 +6,7 @@ import android.os.Looper
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.data.model.UIStateModel
-import com.alltimes.cartoontime.data.model.UwbAddressModel // UwbAddressModel을 가져옵니다.
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
-import com.alltimes.cartoontime.data.network.uwb.UwbControleeCommunicator
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update

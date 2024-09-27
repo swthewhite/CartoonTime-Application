@@ -47,6 +47,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
 
     // viewmodel variable
     val uiState = viewModel.uiState.collectAsState()
+    val bleClient = viewModel.activeConnection.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -131,7 +132,8 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                         // 수락 버튼
                         Button(
                             onClick = {
-                                viewModel.startTransaction()
+                                bleClient.value?.let { viewModel.startTransaction(it) }
+
                             },
                             shape = RoundedCornerShape(15),
                             colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),

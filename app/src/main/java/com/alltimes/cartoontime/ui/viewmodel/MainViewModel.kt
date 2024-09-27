@@ -94,7 +94,7 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
     init {
         fcmRepository.listenForMessages(fcmToken!!)
         isFCMActive = true
-        
+      
         // 서버 api 호출
         CoroutineScope(Dispatchers.IO).launch {
             val fcmRequest = FCMRequest(userId, fcmToken)
@@ -222,16 +222,16 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
     }
 
     // BleScanner 변수
-    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
-    val uiState: StateFlow<UIStateModel> = bleScannerViewModel.uiState
+    //private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
+    //val uiState: StateFlow<UIStateModel> = bleScannerViewModel.uiState
 
     // 각속도 측정 후 입퇴실 진행
     fun onLoginOut() {
         if (_state.value == "입실 전") _state.value = "입실 중"
         else _state.value = "퇴실 중"
 
-        bleScannerViewModel.setMode(false)
-        bleScannerViewModel.startScanningAndConnect()
+        //bleScannerViewModel.setMode(false)
+        //bleScannerViewModel.startScanningAndConnect()
     }
 
     // 입실 중 -> 입실 완료

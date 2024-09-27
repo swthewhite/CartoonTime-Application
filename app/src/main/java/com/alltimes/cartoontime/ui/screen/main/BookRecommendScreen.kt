@@ -36,6 +36,7 @@ import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.composable.Map
 import com.alltimes.cartoontime.ui.screen.composable.cartoon
+
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 
 @Composable

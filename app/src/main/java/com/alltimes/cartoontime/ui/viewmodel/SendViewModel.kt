@@ -1,9 +1,14 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
@@ -17,6 +22,10 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.model.uwb.RangingCallback
+import com.alltimes.cartoontime.data.network.ble.BLEClient
+import com.alltimes.cartoontime.data.network.ble.BLEScanner
+import com.alltimes.cartoontime.data.network.uwb.UWBControlee
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.remote.TransferRequest
 import com.alltimes.cartoontime.data.repository.FCMRepository
@@ -29,14 +38,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.properties.Delegates
 
 class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction {
+    private val _activeConnection = MutableStateFlow<BLEClient?>(null)
+    val activeConnection: MutableStateFlow<BLEClient?> get() = _activeConnection
 
-    /////////////////////////// 공용 ///////////////////////////
+
+    /////////////////////////// *공용* ///////////////////////////
 
     private val _activityNavigationTo = MutableLiveData<ActivityNavigationTo>()
     val activityNavigationTo: LiveData<ActivityNavigationTo> get() = _activityNavigationTo
@@ -48,6 +61,10 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         get() = context.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
 
     val editor = sharedPreferences.edit()
+
+    val SenderId = sharedPreferences.getLong("userId", -1L)
+
+    var inputEnable: Boolean = true
 
     private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
@@ -68,6 +85,19 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         _screenNavigationTo.value = ScreenNavigationTo(screen)
     }
 
+
+    /////////////////////////// *UWB* ///////////////////////////
+    private val uwbCommunicator = UWBControlee(context)
+
+
+    /////////////////////////// *BLEScanner* ///////////////////////////
+    private val bleScanner = BLEScanner(context)
+
+    /////////////////////////// BLEClient ///////////////////////////
+    private val checkingDevices = mutableSetOf<BLEClient>()
+
+
+    /////////////////////////// 2. PointInput ///////////////////////////
     // 각속도 측정
     private lateinit var accelerometerManager: AccelerometerManager
     private var accelerometerCount by Delegates.notNull<Int>()
@@ -137,7 +167,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     }
 
 
-    /////////////////////////// PasswordInput ///////////////////////////
+    /////////////////////////// 3. PasswordInput ///////////////////////////
 
     override fun onClickedButton(type: Int) {
         numPadClickHandler.onClickedButton(type)
@@ -151,6 +181,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             onPasswordComplete = { password: String ->
                 val userPassword = sharedPreferences.getString("password", null)
                 if (userPassword == password) {
+                    findingPartner()
                     goScreen(ScreenType.SENDPARTNERCHECK)
                 } else {
                     numPadClickHandler.clearPassword()
@@ -159,7 +190,9 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             }
         )
     }
-
+    /**
+     * 비밀번호가 다를 때 에러 메시지 출력
+     */
     private fun showPasswordError() {
         Toast.makeText(context, "비밀번호가 다릅니다", Toast.LENGTH_SHORT).show()
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
@@ -170,44 +203,225 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         }
     }
 
-    /////////////////////////// PartnerCheck ///////////////////////////
+    /////////////////////////// 4. PartnerCheck ///////////////////////////
+    private val triedDevices = mutableSetOf<String>()
 
-    private val bleScannerViewModel: BLEScannerViewModel = BLEScannerViewModel(context)
-
+    // 4. BLE 스캔
     private val _uiState = MutableStateFlow(SendUiState())
     val uiState = _uiState.asStateFlow()
 
-    fun startTransaction() {
-        // UWB 세션 생성 및 연결
-        goScreen(ScreenType.SENDDESCRIPTION)
+    /**
+     * BLE 스캔 시작
+     */
+    @SuppressLint("MissingPermission")
+    fun findingPartner() {
+        _uiState.value = _uiState.value.copy(isSending = !_uiState.value.isSending)
+
+        if (_uiState.value.isSending) {
+            startScanningAndConnect()
+        } else {
+            disconnectDevice()
+        }
     }
 
+    /**
+     * BLEClient를 이용하여 BLEDeviceConnection을 초기화
+     */
+    @SuppressLint("MissingPermission")
+    fun startScanningAndConnect() {
+        viewModelScope.launch {
+            Log.d("SendViewModel", "Scanning started")
+            _uiState.update { it.copy(isScanning = true) }
+
+            CoroutineScope(Dispatchers.Main).launch {
+                bleScanner.start("KIOSK")
+
+                bleScanner.foundDevices.collectLatest { devices ->
+                    for (device in devices) {
+                        if (!triedDevices.contains(device.address)) {
+                            communicateBLEClient(device)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun communicateBLEClient(device: BluetoothDevice) {
+        bleScanner.addConnectedDevice(device.address)
+
+        _activeConnection.value =
+            BLEClient(context, device, uwbCommunicator.getUWBAddress(), SenderId.toString(), "KIOSK", this)
+        val activeConnection: BLEClient? = _activeConnection.value
+
+        withContext(Dispatchers.Main) {
+            activeConnection?.connect()
+
+            // 기기가 연결될 때까지 대기
+            activeConnection?.isConnected?.collectLatest { isConnected ->
+                if (isConnected) {
+                    Log.d("BLEConnection", "기기 연결 성공: ${device.name}")
+
+
+                    // 서비스 검색 완료 대기
+                    CoroutineScope(Dispatchers.Main).launch {
+                        activeConnection?.discoverServices()
+                        activeConnection?.serviceDiscoveryCompleted?.collectLatest { servicesDiscovered ->
+                            if (servicesDiscovered) {
+                                Log.d("BLEConnection", "서비스 검색 완료.")
+
+                                // 특성 작업을 순차적으로 실행
+                                val characteristicSuccess =
+                                    activeConnection?.communicate()
+
+                                if (characteristicSuccess == true) {
+                                    Log.d("BLEConnection", "특성 읽기 및 쓰기 작업 완료.")
+                                    val uwbData = _activeConnection.value?.partnerUWBData
+                                    val splitUwbData = uwbData?.value?.split("/") ?: listOf("", "")
+                                    val address = splitUwbData.getOrNull(0) ?: ""
+                                    val channel = splitUwbData.getOrNull(1) ?: ""
+
+                                    val callback = object : RangingCallback {
+                                        override fun onDistanceMeasured(distance: Float) {
+                                            DistanceMeasured(distance)
+                                        }
+                                    }
+                                    // uwb Ranging 시작
+                                    measurementCount = 0
+                                    uwbCommunicator.createRanging(address, channel, callback)
+                                    _uiState.update {
+                                        it.copy(
+                                            isDeviceConnected = true,
+                                            activeDevice = device
+                                        )
+                                    }
+                                } else {
+                                    Log.e("BLEConnection", "특성 작업 중 실패.")
+                                }
+                            } else {
+                                Log.e("BLEConnection", "서비스 검색 실패.")
+                            }
+                        }
+                    }
+                } else {
+                    Log.e("BLEConnection", "기기 연결 실패: ${device.name}")
+                }
+            }
+        }
+    }
+
+    /**
+     * Partner 수락
+     */
+    fun startTransaction(bleClient: BLEClient) {
+        CoroutineScope(Dispatchers.Main).launch {
+            readyUWB(bleClient)
+            goScreen(ScreenType.SENDDESCRIPTION)
+        }
+    }
+
+    /**
+     * Partner 거절
+     */
     fun setUiState(value: Boolean) {
         viewModelScope.launch {
             _uiState.update { it.copy(isDeviceConnected = value) }
         }
     }
 
-    // 버튼 클릭 시 호출되는 함수
-    fun onSendButtonClick() {
-        _uiState.value = _uiState.value.copy(isSending = !_uiState.value.isSending)
+    @SuppressLint("MissingPermission")
+    fun disconnectDevice() {
+        Log.d("SendViewModel", "Disconnecting device")
+        _activeConnection.value?.disconnect()
+        _uiState.update { it.copy(isDeviceConnected = false, activeDevice = null) }
 
-        if (_uiState.value.isSending) {
-            bleScannerViewModel.setMode(true)
-            bleScannerViewModel.startScanningAndConnect()
-        } else {
-            bleScannerViewModel.disconnectDevice()
+        triedDevices.clear()
+
+
+        // Ensure scanning is stopped if needed
+        if (_uiState.value.isScanning) {
+            bleScanner.stop()
+            Log.d("SendViewModel", "Scanning stopped after disconnecting")
         }
     }
 
-    /////////////////////////// Description ///////////////////////////
+    @SuppressLint("MissingPermission")
+    override fun onCleared() {
+        super.onCleared()
 
-    // BLE 연결
+        if (bleScanner.isScanning.value) {
+            Log.d("SendViewModel", "Stopping scanning on ViewModel cleared")
+            bleScanner.stop()
+        }
+    }
+
+
+
+    /////////////////////////// 9. Description ///////////////////////////
+    private var isAcceptOpen = false
+    private var measurementCount = 0
+    private val timeoutHandler = Handler(Looper.getMainLooper())
+
+    // 각속도 센서 데이터 감지
+    suspend fun readyUWB(bleClient: BLEClient){
+        // 각속도 센서 데이터 감지
+        withContext(Dispatchers.Main) {
+            if (isAcceptOpen){
+                isAcceptOpen = false
+                // 감지 시 uwbStart 특성 값 쓰기
+                // 감지 시 uwbStart 특성 값 쓰기
+                val uwbData = _activeConnection.value?.partnerUWBData
+                val splitUwbData = uwbData?.value?.split("/") ?: listOf("", "")
+                val address = splitUwbData.getOrNull(0) ?: ""
+                val channel = splitUwbData.getOrNull(1) ?: ""
+
+                val callback = object : RangingCallback {
+                    override fun onDistanceMeasured(distance: Float) {
+                        DistanceMeasured(distance)
+                    }
+                }
+                // uwb Ranging 시작
+                measurementCount = 0
+                uwbCommunicator.createRanging(address, channel, callback)
+            }
+        }
+    }
+
+    fun DistanceMeasured(distance: Float) {
+        println("거리 측정 : ${distance}")
+
+        // 거리 측정 로직 처리
+        if (distance < 5) {
+            measurementCount++
+        } else {
+            measurementCount = 0  // 거리 벗어나면 카운트 초기화
+        }
+
+        if (measurementCount >= 30) {
+            uwbCommunicator.destroyRanging()
+            completeLogin()
+        }
+
+        // 10cm 이상 거리에서 타임아웃 처리
+        timeoutHandler.postDelayed({
+            if (distance > 10) {
+                uwbCommunicator.destroyRanging()
+                completeLogin()
+            }
+        }, 3000)
+    }
+
+    private fun completeLogin() {
+        transferPoint()
+        goScreen(ScreenType.SENDLOADING)
+        println("입실 완료 처리")
+    }
+
 
     /////////////////////////// Loading ///////////////////////////
 
-    // UWB 연결
-    // 포인트 송금 함수
+    // 서버에 전송
 
     // 테스트용 코드
 
@@ -220,6 +434,9 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     fun transferPoint() {
         CoroutineScope(Dispatchers.IO).launch {
+
+            val toUserId = 1L
+            val transferRequest = TransferRequest(SenderId, toUserId, point.value.toLong())
             val fromUserId = sharedPreferences.getLong("userId", -1L)
             _toUserId.value = 1L
             val transferRequest = TransferRequest(fromUserId, _toUserId.value, point.value.toLong())

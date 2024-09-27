@@ -68,7 +68,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun initializeApp() {
-
         viewModel.accelerometerStart(lifecycleOwner = this)
 
         setContent {

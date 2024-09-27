@@ -3,6 +3,7 @@ package com.alltimes.cartoontime.data.network.ble
 import android.bluetooth.*
 import android.bluetooth.le.*
 import android.content.Context
+import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.alltimes.cartoontime.data.model.BLEConstants
@@ -84,8 +85,9 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
             .build()
 
         val data = AdvertiseData.Builder()
-            .setIncludeDeviceName(true)
+            .setIncludeDeviceName(false)
             .setIncludeTxPowerLevel(false)
+            .addServiceUuid(ParcelUuid(BLEConstants.UWB_KIOSK_SERVICE_UUID))
             .build()
 
         advertiseCallback = suspendCoroutine { continuation ->
