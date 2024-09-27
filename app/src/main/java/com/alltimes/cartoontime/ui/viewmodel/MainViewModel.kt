@@ -251,10 +251,9 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
 
         kioskLoginOut()
 
-        // 5초 타이머 시작
         kioskLoadingJob?.cancel()  // 이전 작업이 있으면 취소
         kioskLoadingJob = CoroutineScope(Dispatchers.Main).launch {
-            delay(5000)  // 5초 대기
+            delay(20000)
             onKioskLoadingTimeout()  // 타임아웃 시 실행할 함수 호출
         }
     }
@@ -264,6 +263,8 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
         // 타임아웃 처리 로직 추가
         _uiState.update { it.copy(isScanning = false) }
         bleScanner.stop()
+        if (_state.value == "입실 중") _state.value = "입실 전"
+        else _state.value = "입실 완료"
     }
 
     /**
