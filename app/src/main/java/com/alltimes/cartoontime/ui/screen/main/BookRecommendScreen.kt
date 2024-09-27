@@ -136,7 +136,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                     end.linkTo(parent.end)
                 }
         ) {
-            Map(viewModel)
+            Map(viewModel, Pair(0.dp, 0.dp))
         }
 
         // 카테고리
@@ -235,7 +235,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                     }
             ) {
                 Text(
-                    text = "해당 만화책 위치 경로 탐색",
+                    text = "해당 만화책 선택하기",
                     fontSize = 20.sp,
                     color = Color(0xFF606060),
                     textAlign = TextAlign.Center

@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.main.BookDetailScreen
+import com.alltimes.cartoontime.ui.screen.main.BookNavScreen
 import com.alltimes.cartoontime.ui.screen.main.BookRecommendScreen
 import com.alltimes.cartoontime.ui.screen.main.ConfirmScreen
 import com.alltimes.cartoontime.ui.screen.main.MainScreen
@@ -77,6 +78,7 @@ class MainActivity : ComponentActivity() {
                 composable("mainscreen") { MainScreen(viewModel = viewModel) }
                 composable("bookRecommendScreen") { BookRecommendScreen(viewModel = viewModel) }
                 composable("bookDetailScreen") { BookDetailScreen(viewModel = viewModel) }
+                composable("bookNavScreen") { BookNavScreen(viewModel = viewModel) }
                 composable("confirmScreen") { ConfirmScreen(viewModel = viewModel) }
             }
         }
@@ -104,6 +106,7 @@ class MainActivity : ComponentActivity() {
             ScreenType.MAIN -> "mainscreen"
             ScreenType.BOOKRECOMMEND -> "bookRecommendScreen"
             ScreenType.BOOKDETAIL -> "bookDetailScreen"
+            ScreenType.BOOKNAV -> "bookNavScreen"
             ScreenType.CONFIRM -> "confirmScreen"
             else -> return
         }

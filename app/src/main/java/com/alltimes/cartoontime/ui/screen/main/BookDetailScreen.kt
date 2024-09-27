@@ -16,11 +16,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -38,14 +40,19 @@ fun BookDetailScreen(viewModel: MainViewModel) {
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, bookImage, title, author, genre, locationText, map) = createRefs()
+        val (backButton, bookImage, title, author, genre, locationText, map, navButton) = createRefs()
 
         // 상단 바 메뉴
-        Box(
+        Image(
+            painter = painterResource(id = R.drawable.ic_back),
+            contentDescription = "Back Icon",
             modifier = Modifier
                 .width(50.dp)
                 .height(50.dp)
-                .background(Color.Transparent)
+                .constrainAs(backButton) {
+                    top.linkTo(parent.top, margin = 10.dp)
+                    start.linkTo(parent.start, margin = 10.dp)
+                }
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -53,19 +60,8 @@ fun BookDetailScreen(viewModel: MainViewModel) {
                         viewModel.goScreen(ScreenType.BOOKRECOMMEND)
                     }
                 )
-                .constrainAs(backButton) {
-                    top.linkTo(parent.top, margin = 10.dp)
-                    start.linkTo(parent.start, margin = 10.dp)
-                }
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_back),
-                contentDescription = "Back Icon",
-                modifier = Modifier
-                    .width(50.dp)
-                    .height(50.dp)
-            )
-        }
+        )
+
 
         Image(
             painter = painterResource(id = R.drawable.image_book),
@@ -75,7 +71,7 @@ fun BookDetailScreen(viewModel: MainViewModel) {
                 .height(300.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .constrainAs(bookImage) {
-                    top.linkTo(backButton.bottom, margin = 20.dp)
+                    top.linkTo(parent.top, margin = 20.dp)
                     start.linkTo(parent.start, margin = 10.dp)
                     end.linkTo(parent.end, margin = 10.dp)
                 },
@@ -125,17 +121,42 @@ fun BookDetailScreen(viewModel: MainViewModel) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(280.dp)
+                .height(250.dp)
                 .padding(10.dp)
                 .background(Color.Transparent)
                 .constrainAs(map) {
-                    top.linkTo(locationText.bottom, margin = 10.dp)
+                    top.linkTo(locationText.bottom, margin = 5.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
-                    bottom.linkTo(parent.bottom)
                 }
         ) {
-            Map(viewModel)
+            Map(viewModel, Pair(0.dp, 0.dp))
+        }
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .width(250.dp)
+                .height(40.dp)
+                .background(Color(0xFFF9B912), RoundedCornerShape(8.dp))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { viewModel.goScreen(ScreenType.BOOKNAV) }
+                )
+                .constrainAs(navButton) {
+                    top.linkTo(map.bottom, margin = 5.dp)
+                    bottom.linkTo(parent.bottom, margin = 5.dp)
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                }
+        ) {
+            Text(
+                text = "해당 만화책 위치 경로 탐색",
+                fontSize = 20.sp,
+                color = Color(0xFF606060),
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

@@ -6,13 +6,11 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.alltimes.cartoontime.data.model.BLEConstants
-import com.alltimes.cartoontime.data.model.UwbAddressModel
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.uwb.UwbControllerCommunicator
 import com.alltimes.cartoontime.ui.viewmodel.BLEServerViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import com.alltimes.cartoontime.ui.viewmodel.UWBControllerViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,7 +32,7 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
     private val isServerListening: MutableStateFlow<Boolean?> = MutableStateFlow(null)
     private val preparedWrites = HashMap<Int, ByteArray>()
     private val deviceNames = mutableMapOf<String, String>()
-    val controllerReceived = MutableStateFlow(emptyList<String>())
+    val controleeReceived = MutableStateFlow(emptyList<String>())
     val partnerID = MutableStateFlow<String?>(null) // 변경: partnerID를 MutableStateFlow로 변경
     private val uwbCommunicator = UwbControllerCommunicator(context)
 
@@ -138,8 +136,8 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
 
                 Log.d("BLE", "${characteristic?.uuid}")
                 val responseData: ByteArray = when (characteristic?.uuid) {
-                    BLEConstants.CONTROLEE_CHARACTERISTIC_UUID -> {
-                        Log.d("BLE", "Reading Controlee Characteristic")
+                    BLEConstants.CONTROLLER_CHARACTERISTIC_UUID -> {
+                        Log.d("BLE", "Reading Controller Characteristic")
                         "$uwbAddress/$uwbChannel".toByteArray()
                     }
 
@@ -181,10 +179,10 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
                 )
 
                 when (characteristic.uuid) {
-                    BLEConstants.CONTROLLER_CHARACTERISTIC_UUID -> {
-                        Log.d("UWB", "Writing to Controller Characteristic")
+                    BLEConstants.CONTROLEE_CHARACTERISTIC_UUID -> {
+                        Log.d("UWB", "Writing to Controlee Characteristic")
                         val receivedData = String(value)
-                        controllerReceived.update { it.plus(receivedData) }
+                        controleeReceived.update { it.plus(receivedData) }
                     }
 
                     BLEConstants.SENDER_ID_CHARACTERISTIC_UUID -> {
@@ -206,7 +204,7 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
                 } else {
                     Log.d("UWB", "Not prepared write")
                     val receivedData = String(value)
-                    controllerReceived.update { it.plus(receivedData) }
+                    controleeReceived.update { it.plus(receivedData) }
                     val deviceName = device.name ?: "Unknown Device"
                     deviceNames[device.address] = deviceName
                 }
@@ -230,7 +228,7 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
                 super.onExecuteWrite(device, requestId, execute)
                 val bytes = preparedWrites.remove(requestId)
                 if (execute && bytes != null) {
-                    controllerReceived.update { it.plus(String(bytes)) }
+                    controleeReceived.update { it.plus(String(bytes)) }
                 }
             }
         })
@@ -244,7 +242,7 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
         )
 
         val controleeCharacteristic = BluetoothGattCharacteristic(
-            BLEConstants.CONTROLEE_CHARACTERISTIC_UUID,
+            BLEConstants.CONTROLLER_CHARACTERISTIC_UUID,
             BluetoothGattCharacteristic.PROPERTY_READ,
             BluetoothGattCharacteristic.PERMISSION_READ
         )
@@ -256,7 +254,7 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
         )
 
         val controllerCharacteristic = BluetoothGattCharacteristic(
-            BLEConstants.CONTROLLER_CHARACTERISTIC_UUID,
+            BLEConstants.CONTROLEE_CHARACTERISTIC_UUID,
             BluetoothGattCharacteristic.PROPERTY_WRITE,
             BluetoothGattCharacteristic.PERMISSION_WRITE
         )
@@ -291,7 +289,7 @@ class BLEServerManager(private val context: Context, private val viewModel: BLES
     private suspend fun collectControllerReceived() {
         Log.d("UWB", "DATA IS COMING")
         // 변경: controllerReceived와 partnerID를 함께 수집
-        combine(controllerReceived, partnerID) { receivedDataList, partnerIDValue ->
+        combine(controleeReceived, partnerID) { receivedDataList, partnerIDValue ->
             Pair(receivedDataList, partnerIDValue)
         }.collect { (receivedDataList, partnerIDValue) ->
             if (receivedDataList.isNotEmpty() && partnerIDValue != null) {
