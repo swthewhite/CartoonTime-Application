@@ -7,10 +7,8 @@ import androidx.annotation.RequiresPermission
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.data.model.UIStateModel
-import com.alltimes.cartoontime.data.model.UwbAddressModel
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
-import com.alltimes.cartoontime.data.network.ble.BLEServerManager
-import com.alltimes.cartoontime.data.network.uwb.UwbControllerCommunicator
+import com.alltimes.cartoontime.data.network.ble.BLEServer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -26,17 +24,10 @@ class BLEServerViewModel(private val context: Context) : ViewModel(), RangingCal
     private val _mode = MutableStateFlow(false)
     val mode = _mode.asStateFlow()
 
-    private val server: BLEServerManager = BLEServerManager(context, this)
-
     init {
         viewModelScope.launch {
             _uiState.update { it.copy(isRunning = false) }
         }
-    }
-
-    fun setMode(value: Boolean) {
-        _mode.update { value }
-        server.setMode(value)
     }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
@@ -52,14 +43,12 @@ class BLEServerViewModel(private val context: Context) : ViewModel(), RangingCal
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     private fun startServer() {
         viewModelScope.launch {
-            server.startServer()
         }
     }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     private fun stopServer() {
         viewModelScope.launch {
-            server.stopServer()
         }
     }
 
@@ -96,7 +85,6 @@ class BLEServerViewModel(private val context: Context) : ViewModel(), RangingCal
         }
 
         if (measurementCount >= 30) {
-            server.disconnectUWB()
             sessionActive = false  // 세션 종료
             completeLogin()
         }
@@ -104,7 +92,6 @@ class BLEServerViewModel(private val context: Context) : ViewModel(), RangingCal
         // 10cm 이상 거리에서 타임아웃 처리
         timeoutHandler.postDelayed({
             if (distance > 10) {
-                server.disconnectUWB()
                 sessionActive = false  // 타임아웃 발생 시 세션 비활성화
                 // 추가 처리
             }

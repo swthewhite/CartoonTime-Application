@@ -252,7 +252,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         bleScanner.addConnectedDevice(device.address)
 
         _activeConnection.value =
-            BLEClient(context, device, uwbCommunicator.getUWBAddress(), SenderId.toString(), "KIOSK", this)
+            BLEClient(context, device, uwbCommunicator.getUWBAddress(), SenderId.toString(), "KIOSK")
         val activeConnection: BLEClient? = _activeConnection.value
 
         withContext(Dispatchers.Main) {

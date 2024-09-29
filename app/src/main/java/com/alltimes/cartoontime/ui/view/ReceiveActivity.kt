@@ -1,5 +1,6 @@
 package com.alltimes.cartoontime.ui.view
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,6 +24,7 @@ class ReceiveActivity : ComponentActivity() {
     private lateinit var navController: NavController
     private lateinit var viewModel: ReceiveViewModel
 
+    @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
