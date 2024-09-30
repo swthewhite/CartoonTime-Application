@@ -7,6 +7,7 @@ import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.alltimes.cartoontime.data.model.BLEConstants
+import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.uwb.UwbController
 import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
@@ -37,6 +38,7 @@ class BLEServerManager(
     // 변경: controleeReceived와 senderID를 MutableStateFlow로 관리
     var controleeReceived = MutableStateFlow<String?>(null)
     val senderID = MutableStateFlow<String?>(null)
+    val uwbStart = MutableStateFlow<String?>(null)
 
     private val uwbCommunicator = UwbController(context)
 
@@ -48,6 +50,7 @@ class BLEServerManager(
 
         startHandlingIncomingConnections()
         startAdvertising()
+        collectUwbStart()
         collectControllerReceived()
     }
 
@@ -207,15 +210,22 @@ class BLEServerManager(
                         val receivedData = String(value)
                         Log.d("BLE", "Received data: $receivedData")
                         senderID.value = receivedData
+
+                        GlobalScope.launch(Dispatchers.Main) {
+                            Log.d("BLE", "Going to RECEIVEDESCRIPTION screen")
+                            viewModel.goScreen(ScreenType.RECEIVEDESCRIPTION)
+                        }
                     }
 
                     BLEConstants.UWB_START_CHARACTERISTIC_UUID -> {
                         Log.d("BLE", "Writing to UWB Start Characteristic")
                         val receivedData = String(value)
+                        Log.d("BLE", "Received data: $receivedData")
                         if (receivedData == "start") {
-                            startUwbRanging()
+                            uwbStart.value = receivedData
                         }
                     }
+
 
                     else -> {
                         Log.d("BLE", "Unknown Characteristic UUID")
@@ -322,7 +332,7 @@ class BLEServerManager(
 
     private suspend fun collectControllerReceived() {
         Log.d("BLE", "Collecting data from clients")
-        combine(controleeReceived.filterNotNull(), senderID.filterNotNull()) { controleeData, senderId ->
+        combine(controleeReceived.filterNotNull(), senderID.filterNotNull(), ) { controleeData, senderId ->
             Pair(controleeData, senderId)
         }.collect { (controleeData, senderId) ->
             Log.d("BLE", "Received controleeData: $controleeData, senderId: $senderId")
@@ -337,7 +347,17 @@ class BLEServerManager(
                 }
 
                 viewModel.setSession(true)
-                uwbCommunicator.createRanging(address, callback)
+            }
+        }
+    }
+
+    private suspend fun collectUwbStart() {
+        Log.d("BLE", "Starting to collect UWB start data")
+        uwbStart.filterNotNull().collect { uwbStartData ->
+            Log.d("BLE", "Received uwbStartData: $uwbStartData")
+
+            if (uwbStartData.isNotEmpty()) {
+                startUwbRanging()
             }
         }
     }
@@ -351,6 +371,11 @@ class BLEServerManager(
         }
         viewModel.setSession(true)
         uwbCommunicator.createRanging(address, callback)
+
+        // UI 관련 작업은 Main 스레드에서 실행
+        GlobalScope.launch(Dispatchers.Main) {
+            viewModel.goScreen(ScreenType.RECEIVELOADING)
+        }
     }
 
     fun disconnectUWB() {
