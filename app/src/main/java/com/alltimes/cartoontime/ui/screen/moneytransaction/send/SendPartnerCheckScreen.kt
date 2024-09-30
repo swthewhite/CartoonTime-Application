@@ -48,6 +48,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
     // viewmodel variable
     val uiState = viewModel.uiState.collectAsState()
     val bleClient = viewModel.activeConnection.collectAsState()
+    val partnerUserName = viewModel.partnerUserName.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -117,7 +118,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                 ) {
                     // 현재 연결된 디바이스 정보 텍스트
                     Text(
-                        text = "NickName",
+                        text = partnerUserName.value,
                         fontSize = 40.sp,
                         color = Color.Black,
                         modifier = Modifier.align(Alignment.CenterHorizontally)
