@@ -15,7 +15,12 @@ import kotlinx.coroutines.flow.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class BLEServerManager(private val context: Context, private val viewModel: ReceiveViewModel) {
+class BLEServerManager(
+    private val context: Context,
+    private val myIdData: String,
+    private val mode: String,
+    private val viewModel: ReceiveViewModel,
+    ) {
 
     private val bluetooth = context.getSystemService(Context.BLUETOOTH_SERVICE)
             as? BluetoothManager ?: throw Exception("This device doesn't support Bluetooth")
@@ -34,15 +39,6 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
     val senderID = MutableStateFlow<String?>(null)
 
     private val uwbCommunicator = UwbController(context)
-
-    // mode: true - login
-    // mode: false - money transaction
-    private val _mode = MutableStateFlow(false)
-    val mode = _mode.asStateFlow()
-
-    fun setMode(value: Boolean) {
-        _mode.update { value }
-    }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     suspend fun startServer() = withContext(Dispatchers.IO) {
@@ -81,8 +77,8 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
             .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
             .build()
 
-        val data = when (mode.value) {
-            true -> {
+        val data = when (mode) {
+            "KIOSK" -> {
                 // 로그인 모드일 때
                 AdvertiseData.Builder()
                     .setIncludeDeviceName(false)
@@ -90,7 +86,7 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
                     .addServiceUuid(ParcelUuid(BLEConstants.UWB_KIOSK_SERVICE_UUID))
                     .build()
             }
-            false -> {
+            "WITCH" -> {
                 // 송금 모드일 때
                 AdvertiseData.Builder()
                     .setIncludeDeviceName(false)
@@ -98,6 +94,7 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
                     .addServiceUuid(ParcelUuid(BLEConstants.UWB_WITCH_SERVICE_UUID))
                     .build()
             }
+            else -> null
         }
 
         advertiseCallback = suspendCoroutine { continuation ->
@@ -159,7 +156,7 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
 
                     BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID -> {
                         Log.d("BLE", "Reading Receiver ID Characteristic")
-                        "ct1256".toByteArray()
+                        myIdData.toByteArray()
                     }
 
                     else -> "UnknownCharacteristic".encodeToByteArray()
@@ -201,12 +198,14 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
                     BLEConstants.CONTROLEE_CHARACTERISTIC_UUID -> {
                         Log.d("BLE", "Writing to Controlee Characteristic")
                         val receivedData = String(value)
+                        Log.d("BLE", "Received data: $receivedData")
                         controleeReceived.value = receivedData
                     }
 
                     BLEConstants.SENDER_ID_CHARACTERISTIC_UUID -> {
                         Log.d("BLE", "Writing to Sender ID Characteristic")
                         val receivedData = String(value)
+                        Log.d("BLE", "Received data: $receivedData")
                         senderID.value = receivedData
                     }
 
@@ -258,9 +257,10 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
             }
         })
 
-        val serviceUuid = when (mode.value) {
-            true -> BLEConstants.UWB_KIOSK_SERVICE_UUID // 로그인 모드
-            false -> BLEConstants.UWB_WITCH_SERVICE_UUID // 송금 모드
+        val serviceUuid = when (mode) {
+            "KIOSK" -> BLEConstants.UWB_KIOSK_SERVICE_UUID // 로그인 모드
+            "WITCH" -> BLEConstants.UWB_WITCH_SERVICE_UUID // 송금 모드
+            else -> null
         }
 
         val service = BluetoothGattService(

@@ -432,6 +432,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         fcmMessageRepository.saveMessage(senderId, receiverId, content)
     }
 
+    @SuppressLint("MissingPermission")
     fun transferPoint() {
         CoroutineScope(Dispatchers.IO).launch {
 
@@ -470,8 +471,8 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                     sendMessage(myFcmToken!!, toFcmToken!!,"${name}님 지갑에서\n${point.value} 포인트를\n받았습니다.")
 
                     goScreen(ScreenType.SENDCONFIRM)
+                    bleScanner.stop()
                 } else {
-
                 }
             }
         }

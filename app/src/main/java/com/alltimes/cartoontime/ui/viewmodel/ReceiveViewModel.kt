@@ -69,12 +69,9 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
     private val _uiState = MutableStateFlow(UIStateModel())
     val uiState = _uiState.asStateFlow()
 
-    // mode: true - login
-    // mode: false - money transaction
-    private val _mode = MutableStateFlow(false)
-    val mode = _mode.asStateFlow()
+    val ReceiverId = sharedPreferences.getLong("userId", -1L)
 
-    private val server: BLEServerManager = BLEServerManager(context, this)
+    private val server: BLEServerManager = BLEServerManager(context, ReceiverId.toString(), "KIOSK", this)
 
     private var measurementCount = 0
     private var sessionActive = false
@@ -125,15 +122,8 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     fun transactionBleServerStart() {
         println("서버 시작 ~~~~~")
-        // 모드 설정
-        setMode(true)
         // 서버 시작
         onButtonClick()
-    }
-
-    fun setMode(value: Boolean) {
-        _mode.update { value }
-        server.setMode(value)
     }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
