@@ -23,7 +23,8 @@ class BLEClient @RequiresPermission("android.permission.BLUETOOTH_CONNECT") cons
     private val bluetoothDevice: BluetoothDevice,
     private val myUWBData: String,
     private val myIdData: String,
-    private val mode: String
+    private val mode: String,
+
 ) {
     val isConnected = MutableStateFlow(false)
 

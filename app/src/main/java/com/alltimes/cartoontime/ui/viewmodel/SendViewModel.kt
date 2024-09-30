@@ -65,16 +65,16 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     val SenderId = sharedPreferences.getLong("userId", -1L)
 
+    var partnerUwbData: String? = null
+    var ReceiverId: String? = null
+
     var inputEnable: Boolean = true
 
     private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
 
-    private val _toUserId = MutableStateFlow(-1L)
-    val toUserId: StateFlow<Long> = _toUserId
-
-    private val _toUserName = MutableStateFlow("")
-    val toUserName: StateFlow<String> = _toUserName
+    private val _partnerUserName = MutableStateFlow("")
+    val partnerUserName: StateFlow<String> = _partnerUserName
 
     private val repository = UserRepository(RetrofitClient.apiService)
 
@@ -93,10 +93,6 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     /////////////////////////// *BLEScanner* ///////////////////////////
     private val bleScanner = BLEScanner(context)
-
-    /////////////////////////// BLEClient ///////////////////////////
-    private val checkingDevices = mutableSetOf<BLEClient>()
-
 
     /////////////////////////// 2. PointInput ///////////////////////////
 
@@ -204,6 +200,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     }
 
     /////////////////////////// 4. PartnerCheck ///////////////////////////
+
     private val triedDevices = mutableSetOf<String>()
 
     // 4. BLE 스캔
@@ -252,7 +249,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         bleScanner.addConnectedDevice(device.address)
 
         _activeConnection.value =
-            BLEClient(context, device, uwbCommunicator.getUWBAddress(), SenderId.toString(), "KIOSK")
+            BLEClient(context, device, uwbCommunicator.getUWBAddress(), SenderId.toString(), "WITCH")
         val activeConnection: BLEClient? = _activeConnection.value
 
         withContext(Dispatchers.Main) {
@@ -277,19 +274,35 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
                                 if (characteristicSuccess == true) {
                                     Log.d("BLEConnection", "특성 읽기 및 쓰기 작업 완료.")
-                                    val uwbData = _activeConnection.value?.partnerUWBData
-                                    val splitUwbData = uwbData?.value?.split("/") ?: listOf("", "")
-                                    val address = splitUwbData.getOrNull(0) ?: ""
-                                    val channel = splitUwbData.getOrNull(1) ?: ""
 
-                                    val callback = object : RangingCallback {
-                                        override fun onDistanceMeasured(distance: Float) {
-                                            DistanceMeasured(distance)
+                                    // StateFlow 데이터를 구독하여 최신 값 할당
+                                    viewModelScope.launch {
+                                        activeConnection.partnerUWBData.collectLatest { data ->
+                                            partnerUwbData = data
+                                            // UWB 데이터를 처리
+                                            val splitUwbData = partnerUwbData?.split("/") ?: listOf("", "")
+                                            val address = splitUwbData.getOrNull(0) ?: ""
+                                            val channel = splitUwbData.getOrNull(1) ?: ""
+
+                                            val callback = object : RangingCallback {
+                                                override fun onDistanceMeasured(distance: Float) {
+                                                    DistanceMeasured(distance)
+                                                }
+                                            }
+                                            // uwb Ranging 시작
+                                            measurementCount = 0
+                                            uwbCommunicator.createRanging(address, channel, callback)
                                         }
                                     }
-                                    // uwb Ranging 시작
-                                    measurementCount = 0
-                                    uwbCommunicator.createRanging(address, channel, callback)
+
+                                    viewModelScope.launch {
+                                        activeConnection.partnerIdData.collectLatest { id ->
+                                            ReceiverId = id
+                                            // userID 데이터를 처리
+                                            Log.d("BLEConnection", "UserID: $ReceiverId")
+                                        }
+                                    }
+
                                     _uiState.update {
                                         it.copy(
                                             isDeviceConnected = true,
@@ -400,24 +413,18 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
         if (measurementCount >= 30) {
             uwbCommunicator.destroyRanging()
-            completeLogin()
+            transferPoint()
+            goScreen(ScreenType.SENDLOADING)
         }
 
         // 10cm 이상 거리에서 타임아웃 처리
         timeoutHandler.postDelayed({
             if (distance > 10) {
                 uwbCommunicator.destroyRanging()
-                completeLogin()
+                //completeLogin()
             }
         }, 3000)
     }
-
-    private fun completeLogin() {
-        transferPoint()
-        goScreen(ScreenType.SENDLOADING)
-        println("입실 완료 처리")
-    }
-
 
     /////////////////////////// Loading ///////////////////////////
 
@@ -436,20 +443,16 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     fun transferPoint() {
         CoroutineScope(Dispatchers.IO).launch {
 
-            val toUserId = 1L
-            val transferRequest = TransferRequest(SenderId, toUserId, point.value.toLong())
-            val fromUserId = sharedPreferences.getLong("userId", -1L)
-            _toUserId.value = 1L
+            val transferRequest = TransferRequest(SenderId, ReceiverId!!.toLong(), point.value.toLong())
 
-            val userResponse = repository.getUserInfo(_toUserId.value)
+            // 상대정보 받아오기
+            val partnerUserResponse = repository.getUserInfo(ReceiverId!!.toLong())
 
-            if (userResponse.success)
+            if (partnerUserResponse.success)
             {
-                _toUserName.value = userResponse.data?.name!!
+                _partnerUserName.value = partnerUserResponse.data?.name!!
             }
-
-            // 상대 정보 받아오기
-            val toUser = repository.getUserInfo(_toUserId.value)
+            
             // 송금
             val response = repository.transfer(transferRequest)
 
@@ -465,7 +468,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                     _balance.value = newBalance
 
                     val myFcmToken = sharedPreferences.getString("fcmToken", null)
-                    val toFcmToken = toUser.data?.fcmtoken
+                    val toFcmToken = partnerUserResponse.data?.fcmtoken
                     val name = sharedPreferences.getString("name", null)
 
                     sendMessage(myFcmToken!!, toFcmToken!!,"${name}님 지갑에서\n${point.value} 포인트를\n받았습니다.")

@@ -95,19 +95,6 @@ fun SendLoadingScreen(viewModel: SendViewModel) {
             }
         )
 
-        Button(
-            onClick = { viewModel.goScreen(ScreenType.SENDCONFIRM) },
-            modifier = Modifier
-                .wrapContentSize()
-                .constrainAs(nextbtn) {
-                    top.linkTo(title.top)
-                    bottom.linkTo(title.bottom)
-                    start.linkTo(title.end, margin = 10.dp)
-                }
-        ) {
-            Text("다음")
-        }
-
         // 점이 변화하는 텍스트
         Text(
             text = "포인트 보내는 중 $dots",
