@@ -44,7 +44,10 @@ fun Map(viewModel: MainViewModel, offset: Pair<Dp, Dp>) {
         // 현재 위치
         Box(
             modifier = Modifier
-                .offset(x = offsetX - offset.first, y = offsetY - offset.second) // 현재 위치 표시를 원하는 좌표에 배치
+                .offset(
+                    x = offsetX - offset.first,
+                    y = offsetY - offset.second
+                ) // 현재 위치 표시를 원하는 좌표에 배치
                 .size(70.dp, 60.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -66,7 +69,6 @@ fun Map(viewModel: MainViewModel, offset: Pair<Dp, Dp>) {
                 }
             }
         }
-
 
 
         // A D G Box

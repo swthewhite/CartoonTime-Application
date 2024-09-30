@@ -25,7 +25,7 @@ class BLEClient @RequiresPermission("android.permission.BLUETOOTH_CONNECT") cons
     private val myIdData: String,
     private val mode: String,
 
-) {
+    ) {
     val isConnected = MutableStateFlow(false)
 
     val partnerUWBData = MutableStateFlow<String?>(null)
@@ -123,11 +123,13 @@ class BLEClient @RequiresPermission("android.permission.BLUETOOTH_CONNECT") cons
                         controleeWriteDeferred?.complete(true)
                         Log.d("BLE", "Controlee write successful")
                     }
+
                     BLEConstants.SENDER_ID_CHARACTERISTIC_UUID -> {
                         senderIdWriteCompleted.value = true
                         senderIdWriteDeferred?.complete(true)
                         Log.d("BLE", "Sender ID write successful")
                     }
+
                     BLEConstants.UWB_START_CHARACTERISTIC_UUID -> {
                         uwbStartWriteCompleted.value = true
                         uwbStartWriteDeferred?.complete(true)
@@ -144,10 +146,12 @@ class BLEClient @RequiresPermission("android.permission.BLUETOOTH_CONNECT") cons
                         controleeWriteCompleted.value = false
                         controleeWriteDeferred?.complete(false)
                     }
+
                     BLEConstants.SENDER_ID_CHARACTERISTIC_UUID -> {
                         senderIdWriteCompleted.value = false
                         senderIdWriteDeferred?.complete(false)
                     }
+
                     BLEConstants.UWB_START_CHARACTERISTIC_UUID -> {
                         uwbStartWriteCompleted.value = false
                         uwbStartWriteDeferred?.complete(false)

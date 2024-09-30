@@ -28,7 +28,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListener, RangingCallback {
+class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListener,
+    RangingCallback {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -71,7 +72,8 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
 
     val ReceiverId = sharedPreferences.getLong("userId", -1L)
 
-    private val server: BLEServerManager = BLEServerManager(context, ReceiverId.toString(), "WITCH", this)
+    private val server: BLEServerManager =
+        BLEServerManager(context, ReceiverId.toString(), "WITCH", this)
 
     private var measurementCount = 0
     private var sessionActive = false

@@ -42,7 +42,8 @@ class MyApplication : Application() {
 
     private fun saveFcmToken(token: String) {
         // SharedPreferences에 FCM 토큰 저장
-        val sharedPreferences: SharedPreferences = getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
+        val sharedPreferences: SharedPreferences =
+            getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.putString("fcmToken", token)
         editor.apply()

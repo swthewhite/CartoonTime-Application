@@ -141,7 +141,8 @@ fun BookNavScreen(viewModel: MainViewModel) {
             val offsetY = radiusPx * sin(Math.toRadians(angle.toDouble())).toFloat()
 
             // 각도를 계산해서 방향 이미지가 해당 방향을 가리키도록 회전
-            val pointingAngle = Math.toDegrees(atan2(offsetY.toDouble(), offsetX.toDouble())).toFloat() + 135f
+            val pointingAngle =
+                Math.toDegrees(atan2(offsetY.toDouble(), offsetX.toDouble())).toFloat() + 135f
 
 
             // 방향 표시 이미지 (책 이미지 바깥을 회전)

@@ -29,6 +29,7 @@ class BLEScanner(context: Context) {
 
     // 스캔 중인지 여부를 저장하는 MutableStateFlow 추가
     val isScanning = MutableStateFlow(false)
+
     // 찾은 기기들의 목록을 저장하는 MutableStateFlow 추가
     val foundDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
 
@@ -83,6 +84,7 @@ class BLEScanner(context: Context) {
                 }
             }
         }
+
         /**
          * Process a batch of scan results
          */
@@ -122,6 +124,7 @@ class BLEScanner(context: Context) {
                         .build()
                 )
             }
+
             "WITCH" -> {
                 listOf(
                     ScanFilter.Builder()

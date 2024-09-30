@@ -72,7 +72,7 @@ class ChargeViewModel(private val context: Context) : ViewModel(), NumpadAction,
             context = context,
             isPointExceeded = {
                 val currentPoint = point.value.toIntOrNull() ?: 0 // 안전하게 변환
-                
+
                 // 천만 이하만 충전 가능
                 if (currentPoint > 10000000) {
                     pointPadClickHandler.setPoint("10000000")
