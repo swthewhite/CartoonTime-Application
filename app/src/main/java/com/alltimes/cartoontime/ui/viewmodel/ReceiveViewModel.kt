@@ -71,7 +71,7 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
 
     val ReceiverId = sharedPreferences.getLong("userId", -1L)
 
-    private val server: BLEServerManager = BLEServerManager(context, ReceiverId.toString(), "KIOSK", this)
+    private val server: BLEServerManager = BLEServerManager(context, ReceiverId.toString(), "WITCH", this)
 
     private var measurementCount = 0
     private var sessionActive = false
@@ -155,42 +155,6 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
     }
 
     override fun onDistanceMeasured(distance: Float) {
-        println("거리 측정 : $distance")
 
-        if (!sessionActive) return
-
-        println("세션 활성화 상태에서 거리 측정 : $distance")
-
-        // 거리 측정 로직 처리
-        if (distance < 5) {
-            measurementCount++
-        } else {
-            measurementCount = 0  // 거리 벗어나면 카운트 초기화
-        }
-
-        if (measurementCount >= 30) {
-            server.disconnectUWB()
-            sessionActive = false  // 세션 종료
-            completeLogin()
-        }
-
-        // 10cm 이상 거리에서 타임아웃 처리
-        timeoutHandler.postDelayed({
-            if (distance > 10) {
-                server.disconnectUWB()
-                sessionActive = false  // 타임아웃 발생 시 세션 비활성화
-                // 추가 처리 로직
-            }
-        }, 3000)
-    }
-
-    private fun completeLogin() {
-        // UI 상태 업데이트
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLogin = true) }
-            // 화면 전환 처리
-            goScreen(ScreenType.RECEIVECONFIRM)
-        }
-        println("입실 완료 처리")
     }
 }
