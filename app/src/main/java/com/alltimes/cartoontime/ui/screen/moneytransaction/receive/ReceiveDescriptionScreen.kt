@@ -78,21 +78,6 @@ fun ReceiveDescriptionScreen(viewModel: ReceiveViewModel) {
             }
         )
 
-        Button(
-            onClick = {
-                viewModel.goScreen(ScreenType.RECEIVELOADING)
-            },
-            modifier = Modifier
-                .wrapContentSize()
-                .constrainAs(nextbtn) {
-                    top.linkTo(title.top)
-                    bottom.linkTo(title.bottom)
-                    start.linkTo(title.end, margin = 10.dp)
-                }
-        ) {
-            Text("다음")
-        }
-
         // 애니메이션 뷰
         Box(
             modifier = Modifier
