@@ -307,7 +307,7 @@ class BLEClient @RequiresPermission("android.permission.BLUETOOTH_CONNECT") cons
      * UWB Start 특성에 데이터를 쓰는 함수
      */
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
-    suspend fun uwbStart(): Boolean {
+    suspend fun writeUwbStartCharacteristic(): Boolean {
         uwbStartWriteDeferred = CompletableDeferred()
         return writeCharacteristic(
             BLEConstants.UWB_START_CHARACTERISTIC_UUID,
@@ -371,14 +371,15 @@ class BLEClient @RequiresPermission("android.permission.BLUETOOTH_CONNECT") cons
      * UWB 시작 함수
      */
     @RequiresPermission(Permissions.BLUETOOTH_CONNECT)
-    suspend fun startUwbSession(): Boolean {
+    suspend fun startUwbRanging(): Boolean {
         // UWB Start 쓰기
-        val uwbStartSuccess = uwbStart()
+        val uwbStartSuccess = writeUwbStartCharacteristic()
         if (!uwbStartSuccess) {
             Log.e("bluetooth", "Failed to write UWB Start characteristic")
             return false
         }
         Log.d("bluetooth", "UWB Start characteristic written successfully")
+
         return true
     }
 
