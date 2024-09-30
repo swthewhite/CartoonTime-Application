@@ -110,7 +110,7 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                 }
         ) {
             // 장치 연결 여부에 따른 UI 구현
-            if (!uiState.value.isDeviceConnected) {
+            if (uiState.value.isDeviceConnected) {
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally, // Column 안에서 수평 중앙 정렬
