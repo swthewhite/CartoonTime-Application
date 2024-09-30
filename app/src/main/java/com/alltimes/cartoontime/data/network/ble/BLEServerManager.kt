@@ -7,6 +7,7 @@ import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.alltimes.cartoontime.data.model.BLEConstants
+import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.uwb.UwbController
 import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
@@ -15,7 +16,12 @@ import kotlinx.coroutines.flow.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class BLEServerManager(private val context: Context, private val viewModel: ReceiveViewModel) {
+class BLEServerManager(
+    private val context: Context,
+    private val myIdData: String,
+    private val mode: String,
+    private val viewModel: ReceiveViewModel,
+    ) {
 
     private val bluetooth = context.getSystemService(Context.BLUETOOTH_SERVICE)
             as? BluetoothManager ?: throw Exception("This device doesn't support Bluetooth")
@@ -32,17 +38,9 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
     // 변경: controleeReceived와 senderID를 MutableStateFlow로 관리
     var controleeReceived = MutableStateFlow<String?>(null)
     val senderID = MutableStateFlow<String?>(null)
+    val uwbStart = MutableStateFlow<String?>(null)
 
     private val uwbCommunicator = UwbController(context)
-
-    // mode: true - login
-    // mode: false - money transaction
-    private val _mode = MutableStateFlow(false)
-    val mode = _mode.asStateFlow()
-
-    fun setMode(value: Boolean) {
-        _mode.update { value }
-    }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     suspend fun startServer() = withContext(Dispatchers.IO) {
@@ -52,6 +50,7 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
 
         startHandlingIncomingConnections()
         startAdvertising()
+        collectUwbStart()
         collectControllerReceived()
     }
 
@@ -81,8 +80,8 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
             .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
             .build()
 
-        val data = when (mode.value) {
-            true -> {
+        val data = when (mode) {
+            "KIOSK" -> {
                 // 로그인 모드일 때
                 AdvertiseData.Builder()
                     .setIncludeDeviceName(false)
@@ -90,7 +89,7 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
                     .addServiceUuid(ParcelUuid(BLEConstants.UWB_KIOSK_SERVICE_UUID))
                     .build()
             }
-            false -> {
+            "WITCH" -> {
                 // 송금 모드일 때
                 AdvertiseData.Builder()
                     .setIncludeDeviceName(false)
@@ -98,6 +97,7 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
                     .addServiceUuid(ParcelUuid(BLEConstants.UWB_WITCH_SERVICE_UUID))
                     .build()
             }
+            else -> null
         }
 
         advertiseCallback = suspendCoroutine { continuation ->
@@ -159,7 +159,7 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
 
                     BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID -> {
                         Log.d("BLE", "Reading Receiver ID Characteristic")
-                        "ct1256".toByteArray()
+                        myIdData.toByteArray()
                     }
 
                     else -> "UnknownCharacteristic".encodeToByteArray()
@@ -201,22 +201,31 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
                     BLEConstants.CONTROLEE_CHARACTERISTIC_UUID -> {
                         Log.d("BLE", "Writing to Controlee Characteristic")
                         val receivedData = String(value)
+                        Log.d("BLE", "Received data: $receivedData")
                         controleeReceived.value = receivedData
                     }
 
                     BLEConstants.SENDER_ID_CHARACTERISTIC_UUID -> {
                         Log.d("BLE", "Writing to Sender ID Characteristic")
                         val receivedData = String(value)
+                        Log.d("BLE", "Received data: $receivedData")
                         senderID.value = receivedData
+
+                        GlobalScope.launch(Dispatchers.Main) {
+                            Log.d("BLE", "Going to RECEIVEDESCRIPTION screen")
+                            viewModel.goScreen(ScreenType.RECEIVEDESCRIPTION)
+                        }
                     }
 
                     BLEConstants.UWB_START_CHARACTERISTIC_UUID -> {
                         Log.d("BLE", "Writing to UWB Start Characteristic")
                         val receivedData = String(value)
+                        Log.d("BLE", "Received data: $receivedData")
                         if (receivedData == "start") {
-                            startUwbRanging()
+                            uwbStart.value = receivedData
                         }
                     }
+
 
                     else -> {
                         Log.d("BLE", "Unknown Characteristic UUID")
@@ -258,9 +267,10 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
             }
         })
 
-        val serviceUuid = when (mode.value) {
-            true -> BLEConstants.UWB_KIOSK_SERVICE_UUID // 로그인 모드
-            false -> BLEConstants.UWB_WITCH_SERVICE_UUID // 송금 모드
+        val serviceUuid = when (mode) {
+            "KIOSK" -> BLEConstants.UWB_KIOSK_SERVICE_UUID // 로그인 모드
+            "WITCH" -> BLEConstants.UWB_WITCH_SERVICE_UUID // 송금 모드
+            else -> null
         }
 
         val service = BluetoothGattService(
@@ -322,7 +332,7 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
 
     private suspend fun collectControllerReceived() {
         Log.d("BLE", "Collecting data from clients")
-        combine(controleeReceived.filterNotNull(), senderID.filterNotNull()) { controleeData, senderId ->
+        combine(controleeReceived.filterNotNull(), senderID.filterNotNull(), ) { controleeData, senderId ->
             Pair(controleeData, senderId)
         }.collect { (controleeData, senderId) ->
             Log.d("BLE", "Received controleeData: $controleeData, senderId: $senderId")
@@ -337,7 +347,17 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
                 }
 
                 viewModel.setSession(true)
-                uwbCommunicator.createRanging(address, callback)
+            }
+        }
+    }
+
+    private suspend fun collectUwbStart() {
+        Log.d("BLE", "Starting to collect UWB start data")
+        uwbStart.filterNotNull().collect { uwbStartData ->
+            Log.d("BLE", "Received uwbStartData: $uwbStartData")
+
+            if (uwbStartData.isNotEmpty()) {
+                startUwbRanging()
             }
         }
     }
@@ -351,6 +371,11 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
         }
         viewModel.setSession(true)
         uwbCommunicator.createRanging(address, callback)
+
+        // UI 관련 작업은 Main 스레드에서 실행
+        GlobalScope.launch(Dispatchers.Main) {
+            viewModel.goScreen(ScreenType.RECEIVELOADING)
+        }
     }
 
     fun disconnectUWB() {

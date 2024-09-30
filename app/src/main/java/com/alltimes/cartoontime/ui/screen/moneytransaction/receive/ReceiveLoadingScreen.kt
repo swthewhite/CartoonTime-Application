@@ -62,19 +62,6 @@ fun ReceiveLoadingScreen(viewModel: ReceiveViewModel) {
             }
         )
 
-        Button(
-            onClick = { viewModel.goScreen(ScreenType.RECEIVECONFIRM) },
-            modifier = Modifier
-                .wrapContentSize()
-                .constrainAs(nextbtn) {
-                    top.linkTo(title.top)
-                    bottom.linkTo(title.bottom)
-                    start.linkTo(title.end, margin = 10.dp)
-                }
-        ) {
-            Text("다음")
-        }
-
         Text(
             text = "포인트 받는 중 $dots",
             fontSize = 24.sp,
