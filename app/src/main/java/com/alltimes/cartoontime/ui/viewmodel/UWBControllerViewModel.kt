@@ -8,7 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.data.model.UIStateModel
 import com.alltimes.cartoontime.data.model.UwbAddressModel // UwbAddressModel을 가져옵니다.
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
-import com.alltimes.cartoontime.data.network.uwb.UwbControllerCommunicator
+import com.alltimes.cartoontime.data.network.uwb.UwbController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -19,7 +19,8 @@ class UWBControllerViewModel(private val context: Context) : ViewModel(), Rangin
     private val _uiState = MutableStateFlow(UIStateModel())
     val uiState = _uiState.asStateFlow()
 
-    private val uwbCommunicator: UwbControllerCommunicator = UwbControllerCommunicator(context)
+    private val uwbCommunicator: UwbController =
+        UwbController(context)
     //private val uwbCommunicator: UwbControleeCommunicator = UwbControleeCommunicator(context)
 
     private var measurementCount = 0

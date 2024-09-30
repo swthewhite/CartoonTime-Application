@@ -1,7 +1,5 @@
 package com.alltimes.cartoontime.data.network.uwb;
 
-import static java.sql.DriverManager.println;
-
 import android.content.Context;
 import android.util.Log;
 
@@ -23,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.rxjava3.disposables.Disposable;
 
-public class UwbControllerCommunicator {
+public class UwbController {
 
     // 초기화 변수
     private final Context context;
@@ -31,7 +29,7 @@ public class UwbControllerCommunicator {
     private final AtomicReference<Disposable> rangingResultObservable = new AtomicReference<>(null);
     private final AtomicReference<UwbControllerSessionScope> currentUwbSessionScope = new AtomicReference<>(null);
 
-    public UwbControllerCommunicator(Context context) {
+    public UwbController(Context context) {
         this.context = context;
         this.uwbManager = UwbManager.createInstance(context);
 
@@ -63,7 +61,7 @@ public class UwbControllerCommunicator {
         }
     }
 
-    public void startCommunication(String controlee, RangingCallback callback) {
+    public void createRanging(String controlee, RangingCallback callback) {
         try {
             int otherSideLocalAddress = Integer.parseUnsignedInt(controlee);
             UwbAddress partnerAddress = new UwbAddress(Shorts.toByteArray((short) otherSideLocalAddress));
@@ -109,7 +107,7 @@ public class UwbControllerCommunicator {
         }
     }
 
-    public void stopCommunication() {
+    public void destroyRanging() {
         if (rangingResultObservable.get() != null) {
             rangingResultObservable.get().dispose();
             rangingResultObservable.set(null);  // dispose 후에 null로 설정하여 재사용 가능하게 함

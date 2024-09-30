@@ -2,6 +2,8 @@ package com.alltimes.cartoontime.ui.viewmodel
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Handler
+import android.os.Looper
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,19 +16,19 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.model.uwb.RangingCallback
+import com.alltimes.cartoontime.data.network.ble.BLEServerManager
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.repository.FCMRepository
 import com.alltimes.cartoontime.data.repository.UserInfoUpdater
 import com.alltimes.cartoontime.data.repository.UserRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListener {
+class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListener, RangingCallback {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -61,11 +63,32 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
 
     var isFCMActive = false
 
+    private val _content = MutableStateFlow("")
+    val content = _content.asStateFlow()
+
+    private val _uiState = MutableStateFlow(UIStateModel())
+    val uiState = _uiState.asStateFlow()
+
+    // mode: true - login
+    // mode: false - money transaction
+    private val _mode = MutableStateFlow(false)
+    val mode = _mode.asStateFlow()
+
+    private val server: BLEServerManager = BLEServerManager(context, this)
+
+    private var measurementCount = 0
+    private var sessionActive = false
+    private val timeoutHandler = Handler(Looper.getMainLooper())
+
     init {
-        val fcmToekn = sharedPreferences.getString("fcmToken", "") ?: ""
-        println("receiveViewModel FCM Token: $fcmToekn")
-        fcmRepository.listenForMessages(fcmToekn)
+        val fcmToken = sharedPreferences.getString("fcmToken", "") ?: ""
+        println("receiveViewModel FCM Token: $fcmToken")
+        fcmRepository.listenForMessages(fcmToken)
         isFCMActive = true
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRunning = false) }
+        }
     }
 
     fun onPuaseAll() {
@@ -74,12 +97,8 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
 
     fun onResumeAll() {
         UpdateUserInfo()
-
         isFCMActive = true
     }
-
-    private val _content = MutableStateFlow("")
-    val content = _content.asStateFlow()
 
     override fun onMessageReceived(message: FcmMessage) {
         if (!isFCMActive) return
@@ -101,26 +120,87 @@ class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListe
         userInfoUpdater.updateUserInfo(sharedPreferences.getLong("userId", -1L))
     }
 
-    /////////////////////////// Description ///////////////////////////
-
-
-    /////////////////////////// Loading ///////////////////////////
-
-
-    /////////////////////////// Confirm ///////////////////////////
-
-    private val bleServerViewModel: BLEServerViewModel = BLEServerViewModel(context)
-
-    private val _uiState = MutableStateFlow(UIStateModel())
-    val uiState = _uiState.asStateFlow()
+    /////////////////////////// BLE 서버 및 UWB 기능 ///////////////////////////
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     fun transactionBleServerStart() {
         println("서버 시작 ~~~~~")
-        // mode setting
-        bleServerViewModel.setMode(true)
-        // partnercheck
+        // 모드 설정
+        setMode(true)
+        // 서버 시작
+        onButtonClick()
+    }
 
-        bleServerViewModel.onButtonClick()
+    fun setMode(value: Boolean) {
+        _mode.update { value }
+        server.setMode(value)
+    }
+
+    @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
+    fun onButtonClick() {
+        _uiState.update { it.copy(isRunning = !_uiState.value.isRunning) }
+        if (_uiState.value.isRunning) {
+            startServer()
+        } else {
+            stopServer()
+        }
+    }
+
+    @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
+    private fun startServer() {
+        viewModelScope.launch {
+            server.startServer()
+        }
+    }
+
+    @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
+    private fun stopServer() {
+        viewModelScope.launch {
+            server.stopServer()
+        }
+    }
+
+    fun setSession(value: Boolean) {
+        sessionActive = value
+    }
+
+    override fun onDistanceMeasured(distance: Float) {
+        println("거리 측정 : $distance")
+
+        if (!sessionActive) return
+
+        println("세션 활성화 상태에서 거리 측정 : $distance")
+
+        // 거리 측정 로직 처리
+        if (distance < 5) {
+            measurementCount++
+        } else {
+            measurementCount = 0  // 거리 벗어나면 카운트 초기화
+        }
+
+        if (measurementCount >= 30) {
+            server.disconnectUWB()
+            sessionActive = false  // 세션 종료
+            completeLogin()
+        }
+
+        // 10cm 이상 거리에서 타임아웃 처리
+        timeoutHandler.postDelayed({
+            if (distance > 10) {
+                server.disconnectUWB()
+                sessionActive = false  // 타임아웃 발생 시 세션 비활성화
+                // 추가 처리 로직
+            }
+        }, 3000)
+    }
+
+    private fun completeLogin() {
+        // UI 상태 업데이트
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLogin = true) }
+            // 화면 전환 처리
+            goScreen(ScreenType.RECEIVECONFIRM)
+        }
+        println("입실 완료 처리")
     }
 }

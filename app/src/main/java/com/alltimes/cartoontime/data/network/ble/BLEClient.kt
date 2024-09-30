@@ -28,6 +28,7 @@ class BLEClient @RequiresPermission("PERMISSION_BLUETOOTH_CONNECT") constructor(
     private val myUWBData: String,
     private val myIdData: String,
     private val mode: String,
+
 ) {
     val isConnected = MutableStateFlow(false)
 

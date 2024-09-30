@@ -7,15 +7,22 @@ import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.alltimes.cartoontime.data.model.BLEConstants
-import com.alltimes.cartoontime.data.model.uwb.RangingCallback
-import com.alltimes.cartoontime.data.network.uwb.UwbController
-import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
+import java.util.*
+import kotlin.collections.HashMap
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-class BLEServerManager(private val context: Context, private val viewModel: ReceiveViewModel) {
+class BLEServer constructor(
+    private val context: Context,
+    private val myUWBChannel: String,
+    private val myUWBAddress: String,
+    private val myIdData: String,
+    private val mode: String
+){
 
     private val bluetooth = context.getSystemService(Context.BLUETOOTH_SERVICE)
             as? BluetoothManager ?: throw Exception("This device doesn't support Bluetooth")
@@ -29,34 +36,27 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
     private val typeWrites = HashMap<Int, String>()
     private val deviceNames = mutableMapOf<String, String>()
 
-    // 변경: controleeReceived와 senderID를 MutableStateFlow로 관리
     var controleeReceived = MutableStateFlow<String?>(null)
     val senderID = MutableStateFlow<String?>(null)
 
-    private val uwbCommunicator = UwbController(context)
-
-    // mode: true - login
-    // mode: false - money transaction
-    private val _mode = MutableStateFlow(false)
-    val mode = _mode.asStateFlow()
-
-    fun setMode(value: Boolean) {
-        _mode.update { value }
-    }
-
+    /**
+     * Start the BLE server
+     */
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
-    suspend fun startServer() = withContext(Dispatchers.IO) {
+    suspend fun start() = withContext(Dispatchers.IO) {
         if (server != null) {
             return@withContext
         }
 
         startHandlingIncomingConnections()
         startAdvertising()
-        collectControllerReceived()
     }
 
+    /**
+     * Stop the BLE server
+     */
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
-    suspend fun stopServer() = withContext(Dispatchers.IO) {
+    suspend fun stop() = withContext(Dispatchers.IO) {
         if (server == null) {
             return@withContext
         }
@@ -65,6 +65,9 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
         stopHandlingIncomingConnections()
     }
 
+    /**
+     * Get the server listening state
+     */
     @RequiresPermission("android.permission.BLUETOOTH_ADVERTISE")
     private suspend fun startAdvertising() {
         val advertiser: BluetoothLeAdvertiser = bluetooth.adapter.bluetoothLeAdvertiser
@@ -81,22 +84,23 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
             .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
             .build()
 
-        val data = when (mode.value) {
-            true -> {
-                // 로그인 모드일 때
+        val data = when (mode) {
+            "KIOSK" -> {
                 AdvertiseData.Builder()
                     .setIncludeDeviceName(false)
                     .setIncludeTxPowerLevel(false)
                     .addServiceUuid(ParcelUuid(BLEConstants.UWB_KIOSK_SERVICE_UUID))
                     .build()
             }
-            false -> {
-                // 송금 모드일 때
+            "WITCH" -> {
                 AdvertiseData.Builder()
                     .setIncludeDeviceName(false)
                     .setIncludeTxPowerLevel(false)
                     .addServiceUuid(ParcelUuid(BLEConstants.UWB_WITCH_SERVICE_UUID))
                     .build()
+            }
+            else -> {
+                throw Exception("Invalid mode")
             }
         }
 
@@ -116,6 +120,9 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
         }
     }
 
+    /**
+     * Stop advertising
+     */
     @RequiresPermission("android.permission.BLUETOOTH_ADVERTISE")
     private fun stopAdvertising() {
         val advertiser: BluetoothLeAdvertiser = bluetooth.adapter.bluetoothLeAdvertiser
@@ -127,6 +134,9 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
         }
     }
 
+    /**
+     * Start handling incoming connections
+     */
     @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     private fun startHandlingIncomingConnections() {
         server = bluetooth.openGattServer(context, object : BluetoothGattServerCallback() {
@@ -147,19 +157,16 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
             ) {
                 super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
 
-                val uwbAddress = uwbCommunicator.getUwbAddress()
-                val uwbChannel = uwbCommunicator.getUwbChannel()
-
-                Log.d("BLE", "Characteristic Read Request: ${characteristic?.uuid}")
+                Log.d("BLE", "${characteristic?.uuid}")
                 val responseData: ByteArray = when (characteristic?.uuid) {
                     BLEConstants.CONTROLLER_CHARACTERISTIC_UUID -> {
                         Log.d("BLE", "Reading Controller Characteristic")
-                        "$uwbAddress/$uwbChannel".toByteArray()
+                        "$myUWBAddress/$myUWBChannel".toByteArray()
                     }
 
                     BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID -> {
                         Log.d("BLE", "Reading Receiver ID Characteristic")
-                        "ct1256".toByteArray()
+                        myIdData.toByteArray()
                     }
 
                     else -> "UnknownCharacteristic".encodeToByteArray()
@@ -199,36 +206,30 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
 
                 when (characteristic.uuid) {
                     BLEConstants.CONTROLEE_CHARACTERISTIC_UUID -> {
-                        Log.d("BLE", "Writing to Controlee Characteristic")
+                        Log.d("UWB", "Writing to Controlee Characteristic")
                         val receivedData = String(value)
                         controleeReceived.value = receivedData
                     }
 
                     BLEConstants.SENDER_ID_CHARACTERISTIC_UUID -> {
-                        Log.d("BLE", "Writing to Sender ID Characteristic")
+                        Log.d("UWB", "Writing to Sender ID Characteristic")
                         val receivedData = String(value)
                         senderID.value = receivedData
                     }
 
-                    BLEConstants.UWB_START_CHARACTERISTIC_UUID -> {
-                        Log.d("BLE", "Writing to UWB Start Characteristic")
-                        val receivedData = String(value)
-                        if (receivedData == "start") {
-                            startUwbRanging()
-                        }
-                    }
-
                     else -> {
-                        Log.d("BLE", "Unknown Characteristic UUID")
+                        Log.d("UWB", "Unknown Characteristic UUID")
                     }
                 }
 
                 if (preparedWrite) {
-                    Log.d("BLE", "Prepared write")
+                    Log.d("UWB", "Prepared write")
                     val bytes = preparedWrites.getOrDefault(requestId, byteArrayOf())
                     preparedWrites[requestId] = bytes.plus(value)
                 } else {
-                    Log.d("BLE", "Not prepared write")
+                    Log.d("UWB", "Not prepared write")
+                    val receivedData = String(value)
+                    controleeReceived.update { it.plus(receivedData) }
                     val deviceName = device.name ?: "Unknown Device"
                     deviceNames[device.address] = deviceName
                 }
@@ -252,21 +253,31 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
                 super.onExecuteWrite(device, requestId, execute)
                 val bytes = preparedWrites.remove(requestId)
                 if (execute && bytes != null) {
-                    val data = String(bytes)
-                    controleeReceived.value = data
+                    if (typeWrites[requestId] == "CONTROLEE") {
+                        controleeReceived.update { it.plus(String(bytes)) }
+                    }
+                    controleeReceived.update { it.plus(String(bytes)) }
                 }
             }
         })
 
-        val serviceUuid = when (mode.value) {
-            true -> BLEConstants.UWB_KIOSK_SERVICE_UUID // 로그인 모드
-            false -> BLEConstants.UWB_WITCH_SERVICE_UUID // 송금 모드
+        val service = when (mode) {
+            "KIOSK" -> {
+                BluetoothGattService(
+                    BLEConstants.UWB_KIOSK_SERVICE_UUID,
+                    BluetoothGattService.SERVICE_TYPE_PRIMARY
+                )
+            }
+            "WITCH" -> {
+                BluetoothGattService(
+                    BLEConstants.UWB_WITCH_SERVICE_UUID,
+                    BluetoothGattService.SERVICE_TYPE_PRIMARY
+                )
+            }
+            else -> {
+                throw Exception("Invalid mode")
+            }
         }
-
-        val service = BluetoothGattService(
-            serviceUuid,
-            BluetoothGattService.SERVICE_TYPE_PRIMARY
-        )
 
         val controllerCharacteristic = BluetoothGattCharacteristic(
             BLEConstants.CONTROLLER_CHARACTERISTIC_UUID,
@@ -299,8 +310,8 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
         )
 
         service.addCharacteristic(controllerCharacteristic)
-        service.addCharacteristic(receiverIDCharacteristic)
         service.addCharacteristic(controleeCharacteristic)
+        service.addCharacteristic(receiverIDCharacteristic)
         service.addCharacteristic(senderIDCharacteristic)
         service.addCharacteristic(uwbStartCharacteristic)
         server?.addService(service)
@@ -313,47 +324,5 @@ class BLEServerManager(private val context: Context, private val viewModel: Rece
             server?.removeService(it)
             ctfService = null
         }
-    }
-
-    private fun parseReceivedData(data: String): String {
-        val parts = data.split("/")
-        return parts[0]
-    }
-
-    private suspend fun collectControllerReceived() {
-        Log.d("BLE", "Collecting data from clients")
-        combine(controleeReceived.filterNotNull(), senderID.filterNotNull()) { controleeData, senderId ->
-            Pair(controleeData, senderId)
-        }.collect { (controleeData, senderId) ->
-            Log.d("BLE", "Received controleeData: $controleeData, senderId: $senderId")
-            if (controleeData.isNotEmpty() && senderId.isNotEmpty()) {
-                val address = parseReceivedData(controleeData)
-
-                // RangingCallback을 viewModel로 연결
-                val callback = object : RangingCallback {
-                    override fun onDistanceMeasured(distance: Float) {
-                        viewModel.onDistanceMeasured(distance)
-                    }
-                }
-
-                viewModel.setSession(true)
-                uwbCommunicator.createRanging(address, callback)
-            }
-        }
-    }
-
-    private fun startUwbRanging() {
-        val address = controleeReceived.value ?: return
-        val callback = object : RangingCallback {
-            override fun onDistanceMeasured(distance: Float) {
-                viewModel.onDistanceMeasured(distance)
-            }
-        }
-        viewModel.setSession(true)
-        uwbCommunicator.createRanging(address, callback)
-    }
-
-    fun disconnectUWB() {
-        uwbCommunicator.destroyRanging()
     }
 }
