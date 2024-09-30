@@ -22,8 +22,9 @@ class BLEServer(
     private val mode: String
 ) {
 
-    private val bluetoothManager: BluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE)
-            as? BluetoothManager ?: throw Exception("This device doesn't support Bluetooth")
+    private val bluetoothManager: BluetoothManager =
+        context.getSystemService(Context.BLUETOOTH_SERVICE)
+                as? BluetoothManager ?: throw Exception("This device doesn't support Bluetooth")
 
     private var bluetoothGattServer: BluetoothGattServer? = null
     private var service: BluetoothGattService? = null
@@ -88,6 +89,7 @@ class BLEServer(
                     .addServiceUuid(ParcelUuid(BLEConstants.UWB_KIOSK_SERVICE_UUID))
                     .build()
             }
+
             "WITCH" -> {
                 AdvertiseData.Builder()
                     .setIncludeDeviceName(false)
@@ -95,6 +97,7 @@ class BLEServer(
                     .addServiceUuid(ParcelUuid(BLEConstants.UWB_WITCH_SERVICE_UUID))
                     .build()
             }
+
             else -> {
                 throw Exception("Invalid mode")
             }
@@ -138,125 +141,137 @@ class BLEServer(
      */
     @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
     private fun startHandlingIncomingConnections() {
-        bluetoothGattServer = bluetoothManager.openGattServer(context, object : BluetoothGattServerCallback() {
-            override fun onServiceAdded(status: Int, service: BluetoothGattService?) {
-                super.onServiceAdded(status, service)
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    isServerListening.value = true
-                    Log.d("BLEServer", "Service added successfully")
-                } else {
-                    Log.e("BLEServer", "Failed to add service, status: $status")
-                }
-            }
-
-            /**
-             * 읽기 요청 처리
-             */
-            @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
-            override fun onCharacteristicReadRequest(
-                device: BluetoothDevice?,
-                requestId: Int,
-                offset: Int,
-                characteristic: BluetoothGattCharacteristic?
-            ) {
-                super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
-
-                val responseData: ByteArray = when (characteristic?.uuid) {
-                    BLEConstants.CONTROLLER_CHARACTERISTIC_UUID -> {
-                        Log.d("BLEServer", "Reading Controller Characteristic")
-                        "$myUWBAddress/$myUWBChannel".toByteArray()
-                    }
-                    BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID -> {
-                        Log.d("BLEServer", "Reading Receiver ID Characteristic")
-                        myIdData.toByteArray()
-                    }
-                    else -> {
-                        Log.w("BLEServer", "Unknown Characteristic UUID: ${characteristic?.uuid}")
-                        byteArrayOf()
+        bluetoothGattServer =
+            bluetoothManager.openGattServer(context, object : BluetoothGattServerCallback() {
+                override fun onServiceAdded(status: Int, service: BluetoothGattService?) {
+                    super.onServiceAdded(status, service)
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        isServerListening.value = true
+                        Log.d("BLEServer", "Service added successfully")
+                    } else {
+                        Log.e("BLEServer", "Failed to add service, status: $status")
                     }
                 }
 
-                bluetoothGattServer?.sendResponse(
-                    device,
-                    requestId,
-                    BluetoothGatt.GATT_SUCCESS,
-                    offset,
-                    responseData
-                )
-            }
+                /**
+                 * 읽기 요청 처리
+                 */
+                @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
+                override fun onCharacteristicReadRequest(
+                    device: BluetoothDevice?,
+                    requestId: Int,
+                    offset: Int,
+                    characteristic: BluetoothGattCharacteristic?
+                ) {
+                    super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
 
-            /**
-             * 쓰기 요청 처리
-             */
-            @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
-            override fun onCharacteristicWriteRequest(
-                device: BluetoothDevice,
-                requestId: Int,
-                characteristic: BluetoothGattCharacteristic,
-                preparedWrite: Boolean,
-                responseNeeded: Boolean,
-                offset: Int,
-                value: ByteArray
-            ) {
-                super.onCharacteristicWriteRequest(
-                    device,
-                    requestId,
-                    characteristic,
-                    preparedWrite,
-                    responseNeeded,
-                    offset,
-                    value
-                )
+                    val responseData: ByteArray = when (characteristic?.uuid) {
+                        BLEConstants.CONTROLLER_CHARACTERISTIC_UUID -> {
+                            Log.d("BLEServer", "Reading Controller Characteristic")
+                            "$myUWBAddress/$myUWBChannel".toByteArray()
+                        }
 
-                when (characteristic.uuid) {
-                    BLEConstants.CONTROLEE_CHARACTERISTIC_UUID -> {
-                        val receivedData = String(value)
-                        Log.d("BLEServer", "Received Controlee data: $receivedData")
-                        controleeReceived.value = receivedData
-                    }
-                    BLEConstants.SENDER_ID_CHARACTERISTIC_UUID -> {
-                        val receivedData = String(value)
-                        Log.d("BLEServer", "Received Sender ID: $receivedData")
-                        senderID.value = receivedData
-                    }
-                    BLEConstants.UWB_START_CHARACTERISTIC_UUID -> {
-                        val receivedData = String(value)
-                        Log.d("BLEServer", "Received UWB Start command: $receivedData")
-                        if (receivedData == "start") {
-                            uwbStartReceived.value = true
-                            startUwbRanging()
+                        BLEConstants.RECEIVER_ID_CHARACTERISTIC_UUID -> {
+                            Log.d("BLEServer", "Reading Receiver ID Characteristic")
+                            myIdData.toByteArray()
+                        }
+
+                        else -> {
+                            Log.w(
+                                "BLEServer",
+                                "Unknown Characteristic UUID: ${characteristic?.uuid}"
+                            )
+                            byteArrayOf()
                         }
                     }
-                    else -> {
-                        Log.w("BLEServer", "Unknown Characteristic UUID: ${characteristic.uuid}")
-                    }
-                }
 
-                if (responseNeeded) {
                     bluetoothGattServer?.sendResponse(
                         device,
                         requestId,
                         BluetoothGatt.GATT_SUCCESS,
                         offset,
-                        byteArrayOf()
+                        responseData
                     )
                 }
-            }
 
-            override fun onConnectionStateChange(
-                device: BluetoothDevice?,
-                status: Int,
-                newState: Int
-            ) {
-                super.onConnectionStateChange(device, status, newState)
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    Log.d("BLEServer", "Device connected: ${device?.address}")
-                } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                    Log.d("BLEServer", "Device disconnected: ${device?.address}")
+                /**
+                 * 쓰기 요청 처리
+                 */
+                @RequiresPermission("android.permission.BLUETOOTH_CONNECT")
+                override fun onCharacteristicWriteRequest(
+                    device: BluetoothDevice,
+                    requestId: Int,
+                    characteristic: BluetoothGattCharacteristic,
+                    preparedWrite: Boolean,
+                    responseNeeded: Boolean,
+                    offset: Int,
+                    value: ByteArray
+                ) {
+                    super.onCharacteristicWriteRequest(
+                        device,
+                        requestId,
+                        characteristic,
+                        preparedWrite,
+                        responseNeeded,
+                        offset,
+                        value
+                    )
+
+                    when (characteristic.uuid) {
+                        BLEConstants.CONTROLEE_CHARACTERISTIC_UUID -> {
+                            val receivedData = String(value)
+                            Log.d("BLEServer", "Received Controlee data: $receivedData")
+                            controleeReceived.value = receivedData
+                        }
+
+                        BLEConstants.SENDER_ID_CHARACTERISTIC_UUID -> {
+                            val receivedData = String(value)
+                            Log.d("BLEServer", "Received Sender ID: $receivedData")
+                            senderID.value = receivedData
+                        }
+
+                        BLEConstants.UWB_START_CHARACTERISTIC_UUID -> {
+                            val receivedData = String(value)
+                            Log.d("BLEServer", "Received UWB Start command: $receivedData")
+                            if (receivedData == "start") {
+                                uwbStartReceived.value = true
+                                startUwbRanging()
+                            }
+                        }
+
+                        else -> {
+                            Log.w(
+                                "BLEServer",
+                                "Unknown Characteristic UUID: ${characteristic.uuid}"
+                            )
+                        }
+                    }
+
+                    if (responseNeeded) {
+                        bluetoothGattServer?.sendResponse(
+                            device,
+                            requestId,
+                            BluetoothGatt.GATT_SUCCESS,
+                            offset,
+                            byteArrayOf()
+                        )
+                    }
                 }
-            }
 
-        })
+                override fun onConnectionStateChange(
+                    device: BluetoothDevice?,
+                    status: Int,
+                    newState: Int
+                ) {
+                    super.onConnectionStateChange(device, status, newState)
+                    if (newState == BluetoothProfile.STATE_CONNECTED) {
+                        Log.d("BLEServer", "Device connected: ${device?.address}")
+                    } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                        Log.d("BLEServer", "Device disconnected: ${device?.address}")
+                    }
+                }
+
+            })
 
         // GATT 서비스 및 특성 설정
         service = createGattService()

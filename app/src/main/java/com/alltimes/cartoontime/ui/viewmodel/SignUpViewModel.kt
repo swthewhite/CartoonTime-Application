@@ -47,6 +47,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
 
     // 회원가입, 로그인 구분
     var isSignUp = false
+
     // 네이버 아이디, 비밀번호 유무
     var isNaverInfo = false
 
@@ -154,74 +155,87 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                 // 인증 확인 요청
                 CoroutineScope(Dispatchers.IO).launch {
 
-                        val response = try {
-                            repository.verifyAuthCode(verifyAuthRequest)
-                        } catch (e: HttpException) {
-                            // HTTP 예외를 잡아 UI에 표시하거나 적절히 처리
-                            withContext(Dispatchers.Main) {
-                                triggerVibration(it)
-                                _verificationCode.value = TextFieldValue()
-                                Toast.makeText(it, "인증번호가 틀립니다", Toast.LENGTH_SHORT).show()
-                            }
-                            return@launch // 예외 발생 시 함수 종료
-                        } catch (e: Exception) {
-                            // 다른 일반 예외 처리
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(it, "알 수 없는 오류 발생: ${e.message}", Toast.LENGTH_SHORT).show()
-                            }
-                            return@launch
+                    val response = try {
+                        repository.verifyAuthCode(verifyAuthRequest)
+                    } catch (e: HttpException) {
+                        // HTTP 예외를 잡아 UI에 표시하거나 적절히 처리
+                        withContext(Dispatchers.Main) {
+                            triggerVibration(it)
+                            _verificationCode.value = TextFieldValue()
+                            Toast.makeText(it, "인증번호가 틀립니다", Toast.LENGTH_SHORT).show()
                         }
-
-                        // 키패드 숨기기
-                        val inputMethodManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                        val view = (context as Activity).currentFocus
-                        view?.let {
-                            inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+                        return@launch // 예외 발생 시 함수 종료
+                    } catch (e: Exception) {
+                        // 다른 일반 예외 처리
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(it, "알 수 없는 오류 발생: ${e.message}", Toast.LENGTH_SHORT)
+                                .show()
                         }
+                        return@launch
+                    }
 
-                        if (response.success) {
-                            _isVerificationCodeCorret.value = true
+                    // 키패드 숨기기
+                    val inputMethodManager =
+                        context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    val view = (context as Activity).currentFocus
+                    view?.let {
+                        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+                    }
 
-                            // 유저 정보 받아오기
-                            val userId = response.data?.userId
+                    if (response.success) {
+                        _isVerificationCodeCorret.value = true
 
-                            // 응답 정보를 보고 회원가입인지 로그인인지 구분
-                            isSignUp = userId == -1L || userId == null
+                        // 유저 정보 받아오기
+                        val userId = response.data?.userId
 
-                            // userID가 있을 때 유저 정보를 받아와서 저장
-                            if (userId != null && userId != -1L) {
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    val userInfoResponse = try {
-                                        repository.getUserInfo(userId)
-                                    } catch (e: Exception) {
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(it, "예상치 못한 오류: ${e.message}", Toast.LENGTH_SHORT).show()
-                                        }
-                                        return@launch
+                        // 응답 정보를 보고 회원가입인지 로그인인지 구분
+                        isSignUp = userId == -1L || userId == null
+
+                        // userID가 있을 때 유저 정보를 받아와서 저장
+                        if (userId != null && userId != -1L) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                val userInfoResponse = try {
+                                    repository.getUserInfo(userId)
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(
+                                            it,
+                                            "예상치 못한 오류: ${e.message}",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
+                                    return@launch
+                                }
 
-                                    if (userInfoResponse.success) {
+                                if (userInfoResponse.success) {
 
-                                        // 네이버 정보 받아오기
-                                        // 없으면 네이버 정보 받는 쪽으로 넘겨야 함. ( 없으면 추천이 불가하니까 )
+                                    // 네이버 정보 받아오기
+                                    // 없으면 네이버 정보 받는 쪽으로 넘겨야 함. ( 없으면 추천이 불가하니까 )
 
-                                        editor?.putLong("balance", userInfoResponse.data?.currentMoney!!)
-                                        editor?.putLong("userId", userInfoResponse.data?.id!!)
-                                        editor?.putString("userName", userInfoResponse.data?.username!!)
-                                        editor?.putString("name", userInfoResponse.data?.name!!)
+                                    editor?.putLong(
+                                        "balance",
+                                        userInfoResponse.data?.currentMoney!!
+                                    )
+                                    editor?.putLong("userId", userInfoResponse.data?.id!!)
+                                    editor?.putString("userName", userInfoResponse.data?.username!!)
+                                    editor?.putString("name", userInfoResponse.data?.name!!)
 
-                                        // 이름 입력 필드 사용 불가
-                                        withContext(Dispatchers.Main) {
-                                            Toast.makeText(it, "${userInfoResponse.data?.name}님 환영합니다.", Toast.LENGTH_SHORT).show()
-                                        }
-                                        _name.value = TextFieldValue(userInfoResponse.data?.name!!)
-                                        _isNameCorrect.value = true
-                                        _isNameEnable.value = false
-                                        checkSubmitButtonState()
+                                    // 이름 입력 필드 사용 불가
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(
+                                            it,
+                                            "${userInfoResponse.data?.name}님 환영합니다.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
+                                    _name.value = TextFieldValue(userInfoResponse.data?.name!!)
+                                    _isNameCorrect.value = true
+                                    _isNameEnable.value = false
+                                    checkSubmitButtonState()
                                 }
                             }
                         }
+                    }
                 }
             } else {
                 Toast.makeText(it, "인증번호는 6자리 입니다.", Toast.LENGTH_SHORT).show()
@@ -361,7 +375,7 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
             if (password.value == PassWord) {
                 // 회원가입이거나 로그인이라도 네이버 정보가 없으면 naverlogin으로 전환
                 // 로그인이거나 네이버 정보가 있으면 signupscreen으로 전환
-                
+
                 // isSignUp => 네이버 정보가 있는지 없는지로 구분해도 될듯
                 if (isSignUp) goScreen(ScreenType.NAVERLOGIN)
                 else goScreen(ScreenType.SIGNUPCOMPLETE)
@@ -424,7 +438,13 @@ class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction
                 val userId = sharedPreferences?.getLong("userId", -1L).toString()
 
                 val response = try {
-                    repository.naverAuth(NaverAuthRequest(userId, _naverID.value.text, _naverPassword.value.text))
+                    repository.naverAuth(
+                        NaverAuthRequest(
+                            userId,
+                            _naverID.value.text,
+                            _naverPassword.value.text
+                        )
+                    )
                 } catch (e: Exception) {
                     // 오류 처리
                     return@launch

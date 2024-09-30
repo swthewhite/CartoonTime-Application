@@ -194,6 +194,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
             }
         )
     }
+
     /**
      * 비밀번호가 다를 때 에러 메시지 출력
      */
@@ -257,7 +258,13 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
         bleScanner.addConnectedDevice(device.address)
 
         _activeConnection.value =
-            BLEClient(context, device, uwbCommunicator.getUWBAddress(), SenderId.toString(), "WITCH")
+            BLEClient(
+                context,
+                device,
+                uwbCommunicator.getUWBAddress(),
+                SenderId.toString(),
+                "WITCH"
+            )
         val activeConnection: BLEClient? = _activeConnection.value
 
         withContext(Dispatchers.Main) {
@@ -287,11 +294,12 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                                             ReceiverId = id
 
                                             // 상대정보 받아오기
-                                            val partnerUserResponse = repository.getUserInfo(ReceiverId!!.toLong())
+                                            val partnerUserResponse =
+                                                repository.getUserInfo(ReceiverId!!.toLong())
 
-                                            if (partnerUserResponse.success)
-                                            {
-                                                _partnerUserName.value = partnerUserResponse.data?.name!!
+                                            if (partnerUserResponse.success) {
+                                                _partnerUserName.value =
+                                                    partnerUserResponse.data?.name!!
                                             }
                                             // userID 데이터를 처리
                                             Log.d("BLEConnection", "UserID: $ReceiverId")
@@ -366,7 +374,6 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     }
 
 
-
     /////////////////////////// 9. Description ///////////////////////////
     private val _isAcceptOpen = MutableStateFlow(false)
     val isAcceptOpen: StateFlow<Boolean> = _isAcceptOpen
@@ -375,7 +382,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
 
     // 각속도 센서 데이터 감지
     @SuppressLint("MissingPermission")
-    suspend fun readyUWB(bleClient: BLEClient){
+    suspend fun readyUWB(bleClient: BLEClient) {
         // 각속도 센서 데이터 감지
         Log.d("SendViewModel", "UWB 준비 중")
         isAcceptOpen.collectLatest { isOpen ->
@@ -454,8 +461,9 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
     fun transferPoint() {
         CoroutineScope(Dispatchers.IO).launch {
 
-            val transferRequest = TransferRequest(SenderId, ReceiverId!!.toLong(), point.value.toLong())
-            
+            val transferRequest =
+                TransferRequest(SenderId, ReceiverId!!.toLong(), point.value.toLong())
+
             // 송금
             val response = repository.transfer(transferRequest)
 
@@ -465,8 +473,7 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                     // 상대정보 받아오기
                     val partnerUserResponse = repository.getUserInfo(ReceiverId!!.toLong())
 
-                    if (partnerUserResponse.success)
-                    {
+                    if (partnerUserResponse.success) {
                         _partnerUserName.value = partnerUserResponse.data?.name!!
                     }
 
@@ -482,7 +489,11 @@ class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, P
                     val toFcmToken = partnerUserResponse.data?.fcmtoken
                     val name = sharedPreferences.getString("name", null)
 
-                    sendMessage(myFcmToken!!, toFcmToken!!,"${name}님 지갑에서\n${point.value} 포인트를\n받았습니다.")
+                    sendMessage(
+                        myFcmToken!!,
+                        toFcmToken!!,
+                        "${name}님 지갑에서\n${point.value} 포인트를\n받았습니다."
+                    )
 
                     goScreen(ScreenType.SENDCONFIRM)
                     bleScanner.stop()

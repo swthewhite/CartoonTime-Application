@@ -21,7 +21,7 @@ class BLEServerManager(
     private val myIdData: String,
     private val mode: String,
     private val viewModel: ReceiveViewModel,
-    ) {
+) {
 
     private val bluetooth = context.getSystemService(Context.BLUETOOTH_SERVICE)
             as? BluetoothManager ?: throw Exception("This device doesn't support Bluetooth")
@@ -89,6 +89,7 @@ class BLEServerManager(
                     .addServiceUuid(ParcelUuid(BLEConstants.UWB_KIOSK_SERVICE_UUID))
                     .build()
             }
+
             "WITCH" -> {
                 // 송금 모드일 때
                 AdvertiseData.Builder()
@@ -97,6 +98,7 @@ class BLEServerManager(
                     .addServiceUuid(ParcelUuid(BLEConstants.UWB_WITCH_SERVICE_UUID))
                     .build()
             }
+
             else -> null
         }
 
@@ -332,7 +334,10 @@ class BLEServerManager(
 
     private suspend fun collectControllerReceived() {
         Log.d("BLE", "Collecting data from clients")
-        combine(controleeReceived.filterNotNull(), senderID.filterNotNull(), ) { controleeData, senderId ->
+        combine(
+            controleeReceived.filterNotNull(),
+            senderID.filterNotNull(),
+        ) { controleeData, senderId ->
             Pair(controleeData, senderId)
         }.collect { (controleeData, senderId) ->
             Log.d("BLE", "Received controleeData: $controleeData, senderId: $senderId")

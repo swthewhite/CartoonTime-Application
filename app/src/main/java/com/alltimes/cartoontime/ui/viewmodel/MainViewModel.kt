@@ -63,8 +63,10 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
 
     // 내 유저 이름
     val name = sharedPreferences.getString("name", "")
+
     // 내 fcmToken
     val fcmToken = sharedPreferences.getString("fcmToken", "")
+
     // 내 유저ID
     val userId = sharedPreferences.getLong("userId", 0L)
 
@@ -121,7 +123,7 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
         CoroutineScope(Dispatchers.IO).launch {
             val fcmRequest = FCMRequest(userId, fcmToken)
 
-            val response = try{
+            val response = try {
                 repository.saveFcmToken(fcmRequest)
             } catch (e: Exception) {
                 null
@@ -170,8 +172,7 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
         if (message.content.contains("입퇴실")) {
             // 입퇴실 완료
             onKioskLoadingCompleted()
-        }
-        else if (message.content.contains("원")) {
+        } else if (message.content.contains("원")) {
             // 퇴실 과정 중 실패
             // 메시지에서 charge 값을 추출
             val chargePattern = Regex("(\\d+)원")
@@ -342,7 +343,8 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
                                         activeConnection.partnerUWBData.collectLatest { data ->
                                             partnerUwbData = data
                                             // UWB 데이터를 처리
-                                            val splitUwbData = partnerUwbData?.split("/") ?: listOf("", "")
+                                            val splitUwbData =
+                                                partnerUwbData?.split("/") ?: listOf("", "")
                                             val address = splitUwbData.getOrNull(0) ?: ""
                                             val channel = splitUwbData.getOrNull(1) ?: ""
 
@@ -353,7 +355,11 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
                                             }
                                             // uwb Ranging 시작
                                             measurementCount = 0
-                                            uwbCommunicator.createRanging(address, channel, callback)
+                                            uwbCommunicator.createRanging(
+                                                address,
+                                                channel,
+                                                callback
+                                            )
                                         }
                                     }
 
@@ -471,7 +477,8 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
                 Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
                 Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
                 Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
-                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
+                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
                 Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
 
                 // 추가 데이터...
