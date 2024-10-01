@@ -90,6 +90,8 @@ dependencies {
     implementation("com.google.firebase:firebase-crashlytics-buildtools:3.0.2")
     implementation("com.google.firebase:firebase-firestore-ktx:25.1.0")
 
+    // firebase authentication
+    implementation(libs.firebase.auth.ktx)
 
 
     testImplementation(libs.junit)

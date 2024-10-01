@@ -60,6 +60,7 @@ com-squareup-retrofit2-retrofit3 = { module = "com.squareup.retrofit2:retrofit",
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "comSquareupRetrofit2Retrofit2" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx" }
+firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-bom-v3220 = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBomVersion" }
 firebase-bom-v3320 = { module = "com.google.firebase:firebase-bom", version.ref = "googleFirebaseBom" }
