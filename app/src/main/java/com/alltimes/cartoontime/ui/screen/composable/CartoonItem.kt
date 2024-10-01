@@ -25,19 +25,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.alltimes.cartoontime.R
-import com.alltimes.cartoontime.data.model.Cartoon
+import coil.compose.rememberImagePainter
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
+import com.alltimes.cartoontime.data.remote.ComicResponse
 
 @Composable
-fun cartoon(cartoon: Cartoon, viewModel: MainViewModel) {
+fun CartoonItem(comic: ComicResponse, viewModel: MainViewModel) {
 
     // 버튼 클릭 상태를 관리할 변수
-    val clickedCartoon by viewModel.clickedCartoon.collectAsState()
+    val clickedComic by viewModel.clickedCartoon.collectAsState()
 
     // 동적 구성 배치 요소
     Box(
@@ -45,20 +44,19 @@ fun cartoon(cartoon: Cartoon, viewModel: MainViewModel) {
             .width(140.dp)
             .height(250.dp)
             .border(
-                if (clickedCartoon.title == cartoon.title) 3.dp else 1.dp,
-                if (clickedCartoon.title == cartoon.title) Color(0xFFF9B912) else Color.Black, // 같은 경우 F9B912로 변경
+                if (clickedComic?.id == comic.id) 3.dp else 1.dp,
+                if (clickedComic?.id == comic.id) Color(0xFFF9B912) else Color.Black,
                 RoundedCornerShape(8.dp)
             )
             .background(Color.White, RoundedCornerShape(8.dp))
             .clickable(
-                // 밑에 두개 다 써야 클릭시 효과 제거 가능
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = {
-                    viewModel.onClickedCartoon(cartoon)
+                    viewModel.onClickedCartoon(comic)
                 }
-            ) // 버튼처럼 동작하도록 clickable 사용
-            .padding(8.dp) // padding을 적절히 추가
+            )
+            .padding(8.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -69,8 +67,8 @@ fun cartoon(cartoon: Cartoon, viewModel: MainViewModel) {
         ) {
             // 만화 표지
             Image(
-                painter = painterResource(id = R.drawable.image_book), //rememberImagePainter(cartoon.coverUrl),
-                contentDescription = cartoon.title,
+                painter = rememberImagePainter(comic.imageUrl), // ComicResponse의 imageUrl 사용
+                contentDescription = comic.titleKo,
                 modifier = Modifier
                     .height(180.dp)
                     .fillMaxWidth()
@@ -82,7 +80,7 @@ fun cartoon(cartoon: Cartoon, viewModel: MainViewModel) {
 
             // 만화 제목
             Text(
-                text = cartoon.title,
+                text = comic.titleKo,
                 fontSize = 16.sp,
                 color = Color.Black,
                 maxLines = 1,
