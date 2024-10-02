@@ -31,6 +31,7 @@ import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.composable.Loading
 import com.alltimes.cartoontime.ui.screen.composable.Map
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 
@@ -39,6 +40,7 @@ fun ConfirmScreen(viewModel: MainViewModel) {
 
     val balance by viewModel.balance.collectAsState()
     val charge by viewModel.charge.collectAsState()
+    val networkStatus by viewModel.networkStatus.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -82,4 +84,7 @@ fun ConfirmScreen(viewModel: MainViewModel) {
             )
         }
     }
+
+    // 로딩 다이얼로그 표시
+    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 }

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -15,7 +16,9 @@ import com.alltimes.cartoontime.ui.screen.main.BookNavScreen
 import com.alltimes.cartoontime.ui.screen.main.BookRecommendScreen
 import com.alltimes.cartoontime.ui.screen.main.ConfirmScreen
 import com.alltimes.cartoontime.ui.screen.main.MainScreen
+import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 import com.alltimes.cartoontime.utils.PermissionsHelper
 
@@ -27,7 +30,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel = MainViewModel(this)
+        // ViewModelProvider를 사용하여 ViewModel 초기화
+        viewModel = MainViewModel(application, this)
         viewModel.accelerometerStart(lifecycleOwner = this)
         viewModel.UpdateUserInfo()
 

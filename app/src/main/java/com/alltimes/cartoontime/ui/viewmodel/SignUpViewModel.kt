@@ -1,6 +1,7 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.VibrationEffect
@@ -30,7 +31,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 
-class SignUpViewModel(private val context: Context?) : ViewModel(), NumpadAction {
+class SignUpViewModel(application: Application, private val context: Context) : BaseViewModel(application), NumpadAction {
 
     /////////////////////////// 공용 ///////////////////////////
 

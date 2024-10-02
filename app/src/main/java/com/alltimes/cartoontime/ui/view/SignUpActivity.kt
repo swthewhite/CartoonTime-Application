@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -15,16 +16,21 @@ import com.alltimes.cartoontime.ui.screen.signup.NaverLoginScreen
 import com.alltimes.cartoontime.ui.screen.signup.PasswordSettingScreen
 import com.alltimes.cartoontime.ui.screen.signup.SignUpCompleteScreen
 import com.alltimes.cartoontime.ui.screen.signup.SignUpScreen
+import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
 class SignUpActivity : ComponentActivity() {
 
     private lateinit var navController: NavController
+    private lateinit var viewModel: SignUpViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val viewModel = SignUpViewModel(this) // ViewModel 생성
+
+
+        viewModel = SignUpViewModel(application, this)
 
         setContent {
             navController = rememberNavController() // 전역 변수에 저장

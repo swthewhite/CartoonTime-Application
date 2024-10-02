@@ -10,6 +10,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -20,11 +21,13 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ActivityType
+import com.alltimes.cartoontime.ui.screen.composable.Loading
 import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
 
 @Composable
 fun ReceiveConfirmScreen(viewModel: ReceiveViewModel) {
 
+    val networkStatus by viewModel.networkStatus.collectAsState()
     val content = viewModel.content.collectAsState()
 
     ConstraintLayout(
@@ -97,4 +100,7 @@ fun ReceiveConfirmScreen(viewModel: ReceiveViewModel) {
             )
         }
     }
+
+    // 로딩 다이얼로그 표시
+    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 }

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -16,7 +17,9 @@ import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveConfir
 import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveDescriptionScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceiveLoadingScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.receive.ReceivePartnerReadyScreen
+import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
 class ReceiveActivity : ComponentActivity() {
@@ -28,7 +31,8 @@ class ReceiveActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel = ReceiveViewModel(this)
+        // ViewModelProvider를 사용하여 ViewModel 초기화
+        viewModel = ReceiveViewModel(application, this)
         viewModel.transactionBleServerStart()
 
         setContent {

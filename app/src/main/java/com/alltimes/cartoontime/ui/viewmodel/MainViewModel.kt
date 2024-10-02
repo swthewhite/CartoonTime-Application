@@ -1,11 +1,14 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
@@ -47,7 +50,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.properties.Delegates
 
-class MainViewModel(private val context: Context) : ViewModel(), MessageListener {
+class MainViewModel(application: Application, private val context: Context) : BaseViewModel(application), MessageListener {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -159,6 +162,16 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
         isFCMActive = true
     }
 
+    // 휴대폰 진동
+    private fun triggerVibration(context: Context) {
+        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        if (vibrator.hasVibrator()) {
+            val vibrationEffect =
+                VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            vibrator.vibrate(vibrationEffect)
+        }
+    }
+
     /////////////////////////// Main ///////////////////////////
 
     // 각속도 측정용
@@ -248,6 +261,8 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
 
     // 각속도 측정 후 입퇴실 진행
     fun onLoginOut() {
+        triggerVibration(context)
+
         if (_state.value == "입실 전") _state.value = "입실 중"
         else _state.value = "퇴실 중"
 

@@ -20,6 +20,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ActivityType
+import com.alltimes.cartoontime.ui.screen.composable.Loading
 import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 
 @Composable
@@ -28,6 +29,7 @@ fun SendConfirmScreen(viewModel: SendViewModel) {
     // viewmodel variable
     val point by viewModel.point.collectAsState()
     val partnerUserName by viewModel.partnerUserName.collectAsState()
+    val networkStatus by viewModel.networkStatus.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -118,4 +120,7 @@ fun SendConfirmScreen(viewModel: SendViewModel) {
             )
         }
     }
+
+    // 로딩 다이얼로그 표시
+    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 }

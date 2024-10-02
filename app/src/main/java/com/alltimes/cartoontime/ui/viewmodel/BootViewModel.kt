@@ -1,5 +1,6 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
+import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.VibrationEffect
@@ -28,7 +29,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
 
-class BootViewModel(private val context: Context) : ViewModel(), NumpadAction {
+class BootViewModel(application: Application, private val context: Context) : BaseViewModel(application), NumpadAction {
 
     /////////////////////////// 공용 ///////////////////////////
 

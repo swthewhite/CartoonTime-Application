@@ -1,6 +1,7 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.SharedPreferences
@@ -45,7 +46,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.properties.Delegates
 
-class SendViewModel(private val context: Context) : ViewModel(), NumpadAction, PointpadAction {
+class SendViewModel(application: Application, private val context: Context) : BaseViewModel(application), NumpadAction, PointpadAction {
     private val _activeConnection = MutableStateFlow<BLEClient?>(null)
     val activeConnection: MutableStateFlow<BLEClient?> get() = _activeConnection
 

@@ -37,11 +37,15 @@ import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.composable.Map
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.ui.screen.composable.CartoonItem // 수정된 부분
+import com.alltimes.cartoontime.ui.screen.composable.Loading
 
 
 @Composable
 fun BookRecommendScreen(viewModel: MainViewModel) {
+
+
     val name = viewModel.name
+    val networkStatus by viewModel.networkStatus.collectAsState()
     val cartoons by viewModel.cartoons.collectAsState()
     val clickedCartoon by viewModel.clickedCartoon.collectAsState()
     val category by viewModel.category.collectAsState()
@@ -244,4 +248,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
             }
         }
     }
+
+    // 로딩 다이얼로그 표시
+    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 }

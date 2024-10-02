@@ -28,11 +28,14 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.composable.Loading
 import com.alltimes.cartoontime.ui.screen.composable.Map
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 
 @Composable
 fun BookDetailScreen(viewModel: MainViewModel) {
+
+    val networkStatus by viewModel.networkStatus.collectAsState()
     val clickedCartoon by viewModel.clickedCartoon.collectAsState()
 
     ConstraintLayout(
@@ -78,38 +81,44 @@ fun BookDetailScreen(viewModel: MainViewModel) {
             contentScale = ContentScale.Crop
         )
 
-        Text(
-            text = clickedCartoon.title,
-            fontSize = 24.sp,
-            modifier = Modifier.constrainAs(title) {
-                top.linkTo(bookImage.bottom, margin = 20.dp)
-                start.linkTo(parent.start, margin = 10.dp)
-                end.linkTo(parent.end, margin = 10.dp)
-            }
-        )
+        clickedCartoon?.let {
+            Text(
+                text = it.titleKo,
+                fontSize = 24.sp,
+                modifier = Modifier.constrainAs(title) {
+                    top.linkTo(bookImage.bottom, margin = 20.dp)
+                    start.linkTo(parent.start, margin = 10.dp)
+                    end.linkTo(parent.end, margin = 10.dp)
+                }
+            )
+        }
+
+        clickedCartoon?.let {
+            Text(
+                text = it.authorKo,
+                fontSize = 12.sp,
+                modifier = Modifier.constrainAs(author) {
+                    top.linkTo(title.bottom, margin = 20.dp)
+                    start.linkTo(parent.start, margin = 10.dp)
+                    end.linkTo(parent.end, margin = 10.dp)
+                }
+            )
+        }
+
+        clickedCartoon?.genres?.get(0)?.let {
+            Text(
+                text = it.genreNameKo,
+                fontSize = 12.sp,
+                modifier = Modifier.constrainAs(genre) {
+                    top.linkTo(author.bottom, margin = 10.dp)
+                    start.linkTo(parent.start, margin = 10.dp)
+                    end.linkTo(parent.end, margin = 10.dp)
+                }
+            )
+        }
 
         Text(
-            text = clickedCartoon.author,
-            fontSize = 12.sp,
-            modifier = Modifier.constrainAs(author) {
-                top.linkTo(title.bottom, margin = 20.dp)
-                start.linkTo(parent.start, margin = 10.dp)
-                end.linkTo(parent.end, margin = 10.dp)
-            }
-        )
-
-        Text(
-            text = clickedCartoon.genre,
-            fontSize = 12.sp,
-            modifier = Modifier.constrainAs(genre) {
-                top.linkTo(author.bottom, margin = 10.dp)
-                start.linkTo(parent.start, margin = 10.dp)
-                end.linkTo(parent.end, margin = 10.dp)
-            }
-        )
-
-        Text(
-            text = "도서 위치  " + clickedCartoon.sector + "  구역",
+            text = "도서 위치  " + clickedCartoon?.location + "  구역",
             fontSize = 20.sp,
             modifier = Modifier.constrainAs(locationText) {
                 top.linkTo(genre.bottom, margin = 20.dp)
@@ -159,4 +168,7 @@ fun BookDetailScreen(viewModel: MainViewModel) {
             )
         }
     }
+
+    // 로딩 다이얼로그 표시
+    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 }

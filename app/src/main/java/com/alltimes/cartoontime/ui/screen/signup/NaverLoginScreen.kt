@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.alltimes.cartoontime.ui.screen.composable.Loading
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,6 +57,7 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
     val naverID by viewModel.naverID.collectAsState()
     val naverPassword by viewModel.naverPassword.collectAsState()
     val loginEnable by viewModel.naverLoginEnable.collectAsState()
+    val networkStatus by viewModel.networkStatus.collectAsState()
 
     // screen variable
     var passwordVisible by remember { mutableStateOf(false) }
@@ -254,4 +256,7 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
                 }
         )
     }
+
+    // 로딩 다이얼로그 표시
+    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 }

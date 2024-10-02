@@ -77,15 +77,17 @@ fun BookNavScreen(viewModel: MainViewModel) {
         )
 
 
-        Text(
-            text = clickedCartoon.title,
-            fontSize = 24.sp,
-            modifier = Modifier.constrainAs(title) {
-                top.linkTo(parent.top, margin = 20.dp)
-                start.linkTo(parent.start, margin = 10.dp)
-                end.linkTo(parent.end, margin = 10.dp)
-            }
-        )
+        clickedCartoon?.let {
+            Text(
+                text = it.titleKo,
+                fontSize = 24.sp,
+                modifier = Modifier.constrainAs(title) {
+                    top.linkTo(parent.top, margin = 20.dp)
+                    start.linkTo(parent.start, margin = 10.dp)
+                    end.linkTo(parent.end, margin = 10.dp)
+                }
+            )
+        }
 
         Box(
             modifier = Modifier
@@ -172,7 +174,7 @@ fun BookNavScreen(viewModel: MainViewModel) {
         )
 
         Text(
-            text = "도서 위치  " + clickedCartoon.sector + "  구역",
+            text = "도서 위치  " + clickedCartoon?.location + "  구역",
             fontSize = 20.sp,
             modifier = Modifier.constrainAs(locationText) {
                 top.linkTo(distance.bottom, margin = 20.dp)
