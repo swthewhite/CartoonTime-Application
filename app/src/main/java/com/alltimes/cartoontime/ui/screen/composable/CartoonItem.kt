@@ -1,5 +1,9 @@
 package com.alltimes.cartoontime.ui.screen.composable
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import android.widget.ImageView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -24,13 +29,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberImagePainter
+import androidx.core.graphics.drawable.toBitmap
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.data.remote.ComicResponse
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 
 @Composable
 fun CartoonItem(comic: ComicResponse, viewModel: MainViewModel) {
@@ -66,15 +76,7 @@ fun CartoonItem(comic: ComicResponse, viewModel: MainViewModel) {
                 .padding(5.dp)
         ) {
             // 만화 표지
-            Image(
-                painter = rememberImagePainter(comic.imageUrl), // ComicResponse의 imageUrl 사용
-                contentDescription = comic.titleKo,
-                modifier = Modifier
-                    .height(180.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-            )
+            GlideImage(url = comic.imageUrl, -1.dp, 180.dp)
 
             Spacer(modifier = Modifier.height(20.dp))
 
