@@ -1,7 +1,7 @@
 package com.alltimes.cartoontime.data.repository
 
 import com.alltimes.cartoontime.common.MessageListener
-import com.alltimes.cartoontime.data.model.FcmMessage
+import com.alltimes.cartoontime.data.model.fcm.FcmMessage
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration

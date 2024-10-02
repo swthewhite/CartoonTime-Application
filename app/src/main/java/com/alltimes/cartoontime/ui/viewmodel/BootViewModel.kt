@@ -18,6 +18,7 @@ import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.remote.ApiService
 import com.alltimes.cartoontime.data.remote.ChargeRequest
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.repository.UserRepository
@@ -30,31 +31,6 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.Executor
 
 class BootViewModel(application: Application, private val context: Context) : BaseViewModel(application), NumpadAction {
-
-    /////////////////////////// 공용 ///////////////////////////
-
-    private val _activityNavigationTo = MutableLiveData<ActivityNavigationTo>()
-    val activityNavigationTo: LiveData<ActivityNavigationTo> get() = _activityNavigationTo
-
-    private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
-    val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
-
-    private val sharedPreferences: SharedPreferences
-        get() = context.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
-
-    // Editor 객체를 가져옵니다.
-    val editor = sharedPreferences.edit()
-
-    // 서버 통신 관련 변수
-    private val repository = UserRepository(RetrofitClient.apiService)
-
-    fun goActivity(activity: ActivityType) {
-        _activityNavigationTo.value = ActivityNavigationTo(activity)
-    }
-
-    fun goScreen(screen: ScreenType) {
-        _screenNavigationTo.value = ScreenNavigationTo(screen)
-    }
 
     /////////////////////////// Boot ///////////////////////////
 

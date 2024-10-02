@@ -8,8 +8,8 @@ import android.bluetooth.BluetoothGattService
 import android.content.Context
 import android.util.Log
 import androidx.annotation.RequiresPermission
-import com.alltimes.cartoontime.data.model.BLEConstants
-import com.alltimes.cartoontime.data.model.Permissions
+import com.alltimes.cartoontime.data.model.ble.BLEConstants
+import com.alltimes.cartoontime.data.model.utils.Permissions
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn

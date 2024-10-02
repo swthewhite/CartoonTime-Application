@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.data.network
+package com.alltimes.cartoontime.data.network.utils
 
 import android.content.Context
 import android.net.ConnectivityManager

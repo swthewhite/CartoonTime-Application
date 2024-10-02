@@ -1,6 +1,7 @@
 package com.alltimes.cartoontime.ui.screen.composable
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,15 +29,18 @@ fun Loading(isLoading: Boolean, onDismiss: () -> Unit) {
         AlertDialog(
             onDismissRequest = onDismiss,
             title = null,
+            containerColor = Color(0xFFFAFAFA),
             text = {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(color = Color(0xFFF4F2EE), shape = RoundedCornerShape(16.dp))
-                        .padding(16.dp),
+                        .background(color = Color(0xFFF4F2EE), shape = RoundedCornerShape(16.dp)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column {
+                    Column (
+                        horizontalAlignment = Alignment.CenterHorizontally, // 가로 가운데 정렬
+                        verticalArrangement = Arrangement.Center,
+                    ){
                         CircularProgressIndicator(
                             modifier = Modifier.size(48.dp) // 스피너 크기 조정
                         )

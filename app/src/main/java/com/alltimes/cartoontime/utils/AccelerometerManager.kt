@@ -7,7 +7,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.alltimes.cartoontime.data.model.AccelerometerDataModel
+import com.alltimes.cartoontime.data.model.utils.AccelerometerDataModel
 
 class AccelerometerManager(context: Context) : SensorEventListener {
 

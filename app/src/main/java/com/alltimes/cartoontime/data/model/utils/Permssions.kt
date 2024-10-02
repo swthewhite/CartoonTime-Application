@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.data.model
+package com.alltimes.cartoontime.data.model.utils
 
 object Permissions {
     const val BLUETOOTH_SCAN = "android.permission.BLUETOOTH_SCAN"

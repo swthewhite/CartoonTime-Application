@@ -14,11 +14,10 @@ import android.widget.Toast
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.common.NumpadAction
 import com.alltimes.cartoontime.common.PointpadAction
-import com.alltimes.cartoontime.data.model.SendUiState
+import com.alltimes.cartoontime.data.model.ui.SendUiState
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
@@ -53,40 +52,15 @@ class SendViewModel(application: Application, private val context: Context) : Ba
 
     /////////////////////////// *공용* ///////////////////////////
 
-    private val _activityNavigationTo = MutableLiveData<ActivityNavigationTo>()
-    val activityNavigationTo: LiveData<ActivityNavigationTo> get() = _activityNavigationTo
-
-    private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
-    val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
-
-    private val sharedPreferences: SharedPreferences
-        get() = context.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
-
-    val editor = sharedPreferences.edit()
-
     val SenderId = sharedPreferences.getLong("userId", -1L)
 
-    var partnerUwbData: String? = null
     var ReceiverId: String? = null
-
-    var inputEnable: Boolean = true
 
     private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
 
     private val _partnerUserName = MutableStateFlow("")
     val partnerUserName: StateFlow<String> = _partnerUserName
-
-    private val repository = UserRepository(RetrofitClient.apiService)
-
-    fun goActivity(activity: ActivityType) {
-        _activityNavigationTo.value = ActivityNavigationTo(activity)
-    }
-
-    fun goScreen(screen: ScreenType) {
-        _screenNavigationTo.value = ScreenNavigationTo(screen)
-    }
-
 
     /////////////////////////// *UWB* ///////////////////////////
     private val uwbCommunicator = UWBControlee(context)
