@@ -35,23 +35,26 @@ import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.composable.Map
-import com.alltimes.cartoontime.ui.screen.composable.cartoon
-
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
+import com.alltimes.cartoontime.ui.screen.composable.CartoonItem // 수정된 부분
+import com.alltimes.cartoontime.ui.screen.composable.Loading
+
 
 @Composable
 fun BookRecommendScreen(viewModel: MainViewModel) {
+
+
     val name = viewModel.name
+    val networkStatus by viewModel.networkStatus.collectAsState()
     val cartoons by viewModel.cartoons.collectAsState()
     val clickedCartoon by viewModel.clickedCartoon.collectAsState()
     val category by viewModel.category.collectAsState()
 
-    val userString = "$name" + "님의 취향을 바탕으로 추천한 만화입니다."
+    val userString = "$name 님의 취향을 바탕으로 추천한 만화입니다."
     val bestString = "주간 베스트 셀러 만화입니다."
     val todayString = "오늘의 추천 만화입니다."
 
-    viewModel.bookRecommendInit()
-
+    // 카테고리에 따른 만화 리스트 초기화
     LaunchedEffect(category) {
         viewModel.fetchCartoons(category)
     }
@@ -63,8 +66,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
     ) {
         val (homeButton, title, descriptionBox, description, map, categoryRow, recommendationText, cartoonList, detailButton) = createRefs()
 
-        // 제일 위 홈버튼과 이름
-
+        // 홈 버튼
         Box(
             modifier = Modifier
                 .width(50.dp)
@@ -77,31 +79,30 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
                     onClick = { viewModel.goScreen(ScreenType.MAIN) }
-                ),
-
-            ) {
+                )
+        ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_home),
                 contentDescription = "Home",
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             )
         }
 
+        // 화면 제목
         Text(
-            text = "추천만화",
+            text = "추천 만화",
             fontSize = 30.sp,
             color = Color.Black,
             modifier = Modifier.constrainAs(title) {
-                top.linkTo(homeButton.top)   // 이미지의 상단에 맞추고
-                bottom.linkTo(homeButton.bottom)  // 이미지의 하단에 맞춤 (세로 중앙 정렬)
-                start.linkTo(parent.start, margin = 10.dp)  // 홈버튼 오른쪽에 위치
+                top.linkTo(homeButton.top)
+                bottom.linkTo(homeButton.bottom)
+                start.linkTo(parent.start, margin = 10.dp)
                 end.linkTo(parent.end, margin = 10.dp)
                 width = Dimension.wrapContent
             }
         )
 
-        // 상단 설명
+        // 설명 박스
         Box(
             modifier = Modifier
                 .width(5.dp)
@@ -113,6 +114,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                 }
         )
 
+        // 설명 텍스트
         Text(
             text = "만화 위치",
             fontSize = 18.sp,
@@ -155,7 +157,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                 "사용자 취향 만화" to "사용자 취향 만화",
                 "베스트 셀러 만화" to "베스트 셀러 만화",
                 "오늘의 추천 만화" to "오늘의 추천 만화"
-            ).forEachIndexed { index, (label, value) ->
+            ).forEach { (label, value) ->
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -183,6 +185,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
             }
         }
 
+        // 추천 텍스트
         Text(
             text = when (category) {
                 "사용자 취향 만화" -> userString
@@ -197,7 +200,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
             }
         )
 
-        // 만화 추천 리스트 뷰
+        // 만화 추천 리스트
         LazyRow(
             modifier = Modifier
                 .fillMaxWidth()
@@ -212,12 +215,13 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(horizontal = 10.dp)
         ) {
-            items(cartoons) { cartoon ->
-                cartoon(cartoon, viewModel)
+            items(cartoons) { comic ->
+                CartoonItem(comic, viewModel) // 수정된 부분
             }
         }
 
-        if (clickedCartoon.title.isNotEmpty()) {
+        // 선택된 만화 상세 버튼
+        if (clickedCartoon?.titleKo?.isNotEmpty() == true) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -244,4 +248,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
             }
         }
     }
+
+    // 로딩 다이얼로그 표시
+    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 }

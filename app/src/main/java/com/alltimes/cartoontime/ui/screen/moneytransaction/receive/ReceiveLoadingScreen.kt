@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,12 +22,15 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.composable.Loading
 import com.alltimes.cartoontime.ui.screen.composable.ReceiveAnimation
 import com.alltimes.cartoontime.ui.viewmodel.ReceiveViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun ReceiveLoadingScreen(viewModel: ReceiveViewModel) {
+
+    val networkStatus by viewModel.networkStatus.collectAsState()
 
     var dots by remember { mutableStateOf("") }
 
@@ -90,4 +94,7 @@ fun ReceiveLoadingScreen(viewModel: ReceiveViewModel) {
             ReceiveAnimation()
         }
     }
+
+    // 로딩 다이얼로그 표시
+    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 }

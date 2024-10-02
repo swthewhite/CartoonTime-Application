@@ -5,13 +5,12 @@ import com.alltimes.cartoontime.data.remote.AuthRequest
 import com.alltimes.cartoontime.data.remote.AuthResponse
 import com.alltimes.cartoontime.data.remote.ChargeRequest
 import com.alltimes.cartoontime.data.remote.ChargeResponse
-import com.alltimes.cartoontime.data.remote.EntryLogResponse
+import com.alltimes.cartoontime.data.remote.ComicResponse
+import com.alltimes.cartoontime.data.remote.ComicSearchResponse
 import com.alltimes.cartoontime.data.remote.FCMRequest
 import com.alltimes.cartoontime.data.remote.FCMResponse
 import com.alltimes.cartoontime.data.remote.NaverAuthRequest
 import com.alltimes.cartoontime.data.remote.NavertAuthResponse
-import com.alltimes.cartoontime.data.remote.PayRequest
-import com.alltimes.cartoontime.data.remote.PayResponse
 import com.alltimes.cartoontime.data.remote.SignInRequest
 import com.alltimes.cartoontime.data.remote.SignResponse
 import com.alltimes.cartoontime.data.remote.SignUpRequest
@@ -58,19 +57,12 @@ class UserRepository(private val apiService: ApiService) {
         return apiService.transfer(request)
     }
 
-    suspend fun pay(request: PayRequest): PayResponse {
-        return apiService.pay(request)
+    suspend fun getAllComics(): List<ComicResponse> {
+        return apiService.getAllComics()
     }
 
-    suspend fun entry(userId: Long): EntryLogResponse {
-        return apiService.entry(userId)
+    suspend fun searchComicsByTitle(titleKo: String): ComicSearchResponse {
+        return apiService.searchComicsByTitle(titleKo)
     }
 
-    suspend fun exit(userId: Long): EntryLogResponse {
-        return apiService.exit(userId)
-    }
-
-    suspend fun getEntryLog(userId: Long): EntryLogResponse {
-        return apiService.getEntryLog(userId)
-    }
 }

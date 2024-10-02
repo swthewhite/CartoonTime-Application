@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -14,7 +15,9 @@ import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.moneytransaction.charge.ChargeConfirmScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.charge.ChargePasswordInputScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.charge.ChargePointInputScreen
+import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
 class ChargeActivity : ComponentActivity() {
@@ -25,7 +28,8 @@ class ChargeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel = ChargeViewModel(this)
+        // ViewModelProvider를 사용하여 ViewModel 초기화
+        viewModel = ChargeViewModel(application, this)
 
         setContent {
             navController = rememberNavController() // 전역 변수에 저장

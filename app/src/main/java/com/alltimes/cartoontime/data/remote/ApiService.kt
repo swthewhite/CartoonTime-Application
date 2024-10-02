@@ -34,17 +34,13 @@ interface ApiService {
     @POST("ct/transfer")
     suspend fun transfer(@Body request: TransferRequest): TransferResponse
 
-    @POST("ct/pay")
-    suspend fun pay(@Body request: PayRequest): PayResponse
+    ///// 만화 조회 //////
 
-    @POST("ct/entry/{user_id}")
-    suspend fun entry(@Path("user_id") userId: Long): EntryLogResponse
+    @GET("ct/comics/all")
+    suspend fun getAllComics(): List<ComicResponse>
 
-    @POST("ct/entry/{user_id}/exit")
-    suspend fun exit(@Path("user_id") userId: Long): EntryLogResponse
-
-    @GET("ct/entries/all/{user_id}")
-    suspend fun getEntryLog(@Path("user_id") userId: Long): EntryLogResponse
+    @GET("ct/comics/search/ko")
+    suspend fun searchComicsByTitle(@Query("titleKo") titleKo: String): ComicSearchResponse
 }
 
 // 내 지갑 정보
@@ -191,34 +187,32 @@ data class TransferData(
     val to: AccountData
 )
 
-// 포인트 결제 /ct/pay
-data class PayRequest(
-    val userId: Long,
-    val amount: Long
-)
 
-data class PayResponse(
+// 만화 관련 api들
+// 만화 조회
+
+// 만화 응답 데이터 클래스
+// 만화 제목 검색 응답 데이터 클래스
+data class ComicSearchResponse(
     val success: Boolean,
     val message: String,
-    val data: AccountData,
+    val data: ComicResponse?,
     val error: Any?
 )
 
-// 입퇴실 조회 /ct/entries/all/{user_id}
-data class EntryLogRequest(
-    val userId: Long
+data class ComicResponse(
+    val id: Long,
+    val titleEn: String,
+    val titleKo: String,
+    val authorEn: String,
+    val authorKo: String,
+    val location: String,
+    val imageUrl: String,
+    val genres: List<Genre>
 )
 
-data class EntryLogResponse(
-    val success: Boolean,
-    val message: String,
-    val data: List<EntryLog>,
-    val error: Any?
-)
-
-data class EntryLog(
-    val userId: Long,
-    val entryDate: String,
-    val exitDate: String?,
-    val fee: Long,
+data class Genre(
+    val id: Long,
+    val genreNameEn: String,
+    val genreNameKo: String
 )

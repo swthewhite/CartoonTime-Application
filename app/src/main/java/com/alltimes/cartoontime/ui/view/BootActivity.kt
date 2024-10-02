@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -16,6 +17,7 @@ import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.boot.BootScreen
 import com.alltimes.cartoontime.ui.screen.boot.LoginScreen
 import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
 
@@ -29,8 +31,10 @@ class BootActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
         // ViewModelProvider를 사용하여 ViewModel 초기화
-        viewModel = BootViewModel(this)
+        viewModel = BootViewModel(application, this)
+
 
         // fingerprintLauncher 초기화
         // 지문인식을 먼저 진행

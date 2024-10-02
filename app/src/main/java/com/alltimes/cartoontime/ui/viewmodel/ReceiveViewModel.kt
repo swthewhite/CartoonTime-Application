@@ -1,5 +1,6 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
+import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Handler
@@ -28,7 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ReceiveViewModel(private val context: Context) : ViewModel(), MessageListener,
+class ReceiveViewModel(application: Application, private val context: Context) : BaseViewModel(application), MessageListener,
     RangingCallback {
 
     /////////////////////////// 공용 ///////////////////////////

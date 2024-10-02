@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ActivityType
+import com.alltimes.cartoontime.ui.screen.composable.Loading
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +43,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
     val isNameEnable by viewModel.isNameEnable.collectAsState()
     val isPhoneNumberEnable by viewModel.isPhoneNumberEnable.collectAsState()
     val isverificationCodeCorrect by viewModel.isVerificationCodeCorrect.collectAsState()
+    val networkStatus by viewModel.networkStatus.collectAsState()
 
     // screen variable
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -278,4 +280,7 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
             }
         }
     }
+
+    // 로딩 다이얼로그 표시
+    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 }

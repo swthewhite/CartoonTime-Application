@@ -1,11 +1,14 @@
 package com.alltimes.cartoontime.ui.viewmodel
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
@@ -24,6 +27,7 @@ import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.ble.BLEClient
 import com.alltimes.cartoontime.data.network.ble.BLEScanner
 import com.alltimes.cartoontime.data.network.uwb.UWBControlee
+import com.alltimes.cartoontime.data.remote.ComicResponse
 import com.alltimes.cartoontime.data.remote.FCMRequest
 import com.alltimes.cartoontime.data.remote.RetrofitClient
 import com.alltimes.cartoontime.data.repository.FCMRepository
@@ -46,7 +50,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.properties.Delegates
 
-class MainViewModel(private val context: Context) : ViewModel(), MessageListener {
+class MainViewModel(application: Application, private val context: Context) : BaseViewModel(application), MessageListener {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -158,6 +162,16 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
         isFCMActive = true
     }
 
+    // 휴대폰 진동
+    private fun triggerVibration(context: Context) {
+        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        if (vibrator.hasVibrator()) {
+            val vibrationEffect =
+                VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE)
+            vibrator.vibrate(vibrationEffect)
+        }
+    }
+
     /////////////////////////// Main ///////////////////////////
 
     // 각속도 측정용
@@ -247,6 +261,8 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
 
     // 각속도 측정 후 입퇴실 진행
     fun onLoginOut() {
+        triggerVibration(context)
+
         if (_state.value == "입실 전") _state.value = "입실 중"
         else _state.value = "퇴실 중"
 
@@ -438,66 +454,44 @@ class MainViewModel(private val context: Context) : ViewModel(), MessageListener
 
     /////////////////////////// BookRecommend ///////////////////////////
 
-    private val _cartoons = MutableStateFlow<List<Cartoon>>(emptyList())
-    val cartoons: StateFlow<List<Cartoon>> = _cartoons
+    private val _cartoons = MutableStateFlow<List<ComicResponse>>(emptyList())
+    val cartoons: StateFlow<List<ComicResponse>> = _cartoons
 
-    private val _clickedCartoon = MutableStateFlow<Cartoon>(Cartoon("", "", "", "", ""))
-    val clickedCartoon: StateFlow<Cartoon> = _clickedCartoon
+    private val _clickedCartoon = MutableStateFlow<ComicResponse?>(null)
+    val clickedCartoon: StateFlow<ComicResponse?> = _clickedCartoon
 
     private val _category = MutableStateFlow("사용자 취향 만화")
     val category: StateFlow<String> get() = _category
 
     fun bookRecommendInit() {
-        fetchCartoons(_category.toString())
+        fetchCartoons(_category.value)
     }
 
     fun onClickedCategory(category: String) {
         _category.value = category
+        fetchCartoons(category)
     }
 
-    fun onClickedCartoon(cartoon: Cartoon) {
+    fun onClickedCartoon(cartoon: ComicResponse) {
         if (_clickedCartoon.value == cartoon) {
-            _clickedCartoon.value = Cartoon("", "", "", "", "")
+            _clickedCartoon.value = null
         } else {
             _clickedCartoon.value = cartoon
         }
     }
 
     fun fetchCartoons(category: String) {
-        // 서버 통신 필요
-
-        if (category == "사용자 취향 만화") {
-            _cartoons.value = listOf(
-                Cartoon("만화 1", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
-                Cartoon("만화 2", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
-                Cartoon("만화 3", "작가 3", "무협", "https://example.com/cover3.jpg", "B"),
-                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
-                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
-                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
-                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
-                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
-                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
-                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
-                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
-                Cartoon("만화 4", "작가 4", "코믹", "https://example.com/cover4.jpg", "D"),
-
-                // 추가 데이터...
-            )
-        } else if (category == "베스트 셀러 만화") {
-            _cartoons.value = listOf(
-                Cartoon("만화 4", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
-                Cartoon("만화 3", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
-                // 추가 데이터...
-            )
-        } else if (category == "오늘의 추천 만화") {
-            _cartoons.value = listOf(
-                Cartoon("만화 2", "작가 1", "액션", "https://example.com/cover1.jpg", "F"),
-                Cartoon("만화 4", "작가 2", "판타지", "https://example.com/cover2.jpg", "A"),
-                Cartoon("만화 1", "작가 3", "무협", "https://example.com/cover3.jpg", "B"),
-                // 추가 데이터...
-            )
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val allComics = repository.getAllComics()
+                // 필요에 따라 카테고리별로 필터링
+                _cartoons.value = allComics
+            } catch (e: Exception) {
+                _cartoons.value = emptyList()
+            }
         }
     }
+
 
     /////////////////////////// Confirm ///////////////////////////
 

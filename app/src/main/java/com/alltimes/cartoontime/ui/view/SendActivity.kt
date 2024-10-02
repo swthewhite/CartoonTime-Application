@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -17,7 +18,9 @@ import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendLoadingScree
 import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendPartnerCheckScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendPasswordInputScreen
 import com.alltimes.cartoontime.ui.screen.moneytransaction.send.SendPointInputScreen
+import com.alltimes.cartoontime.ui.viewmodel.BootViewModel
 import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
+import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 import com.alltimes.cartoontime.utils.NavigationHelper
 
 class SendActivity : ComponentActivity() {
@@ -28,7 +31,8 @@ class SendActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        viewModel = SendViewModel(this)
+        // ViewModelProvider를 사용하여 ViewModel 초기화
+        viewModel = SendViewModel(application, this)
 
         setContent {
             navController = rememberNavController() // 전역 변수에 저장

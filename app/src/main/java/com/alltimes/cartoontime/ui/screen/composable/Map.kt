@@ -76,7 +76,7 @@ fun Map(viewModel: MainViewModel, offset: Pair<Dp, Dp>) {
             modifier = Modifier
                 .offset(x = 20.dp, y = 20.dp) // 원하는 위치로 이동
                 .size(30.dp, 60.dp)
-                .background(if (clickedCartoon.sector == "A") Color.Red else Color(0xFFF9B912))
+                .background(if (clickedCartoon?.location == "A") Color.Red else Color(0xFFF9B912))
                 .border(width = 1.dp, Color.Black),
             contentAlignment = Alignment.Center
         ) {
@@ -87,7 +87,7 @@ fun Map(viewModel: MainViewModel, offset: Pair<Dp, Dp>) {
             modifier = Modifier
                 .offset(x = 100.dp, y = 20.dp)
                 .size(30.dp, 60.dp)
-                .background(if (clickedCartoon.sector == "D") Color.Red else Color(0xFFF9B912))
+                .background(if (clickedCartoon?.location == "D") Color.Red else Color(0xFFF9B912))
                 .border(width = 1.dp, Color.Black),
             contentAlignment = Alignment.Center
         ) {
@@ -98,7 +98,7 @@ fun Map(viewModel: MainViewModel, offset: Pair<Dp, Dp>) {
             modifier = Modifier
                 .offset(x = 180.dp, y = 20.dp)
                 .size(30.dp, 60.dp)
-                .background(if (clickedCartoon.sector == "G") Color.Red else Color(0xFFF9B912))
+                .background(if (clickedCartoon?.location == "G") Color.Red else Color(0xFFF9B912))
                 .border(width = 1.dp, Color.Black),
             contentAlignment = Alignment.Center
         ) {
@@ -110,7 +110,7 @@ fun Map(viewModel: MainViewModel, offset: Pair<Dp, Dp>) {
             modifier = Modifier
                 .offset(x = 20.dp, y = 85.dp) // 원하는 위치로 이동
                 .size(30.dp, 60.dp)
-                .background(if (clickedCartoon.sector == "B") Color.Red else Color(0xFFF9B912))
+                .background(if (clickedCartoon?.location == "B") Color.Red else Color(0xFFF9B912))
                 .border(width = 1.dp, Color.Black),
             contentAlignment = Alignment.Center
         ) {
@@ -121,7 +121,7 @@ fun Map(viewModel: MainViewModel, offset: Pair<Dp, Dp>) {
             modifier = Modifier
                 .offset(x = 100.dp, y = 85.dp)
                 .size(30.dp, 60.dp)
-                .background(if (clickedCartoon.sector == "E") Color.Red else Color(0xFFF9B912))
+                .background(if (clickedCartoon?.location == "E") Color.Red else Color(0xFFF9B912))
                 .border(width = 1.dp, Color.Black),
             contentAlignment = Alignment.Center
         ) {
@@ -132,7 +132,7 @@ fun Map(viewModel: MainViewModel, offset: Pair<Dp, Dp>) {
             modifier = Modifier
                 .offset(x = 180.dp, y = 85.dp)
                 .size(30.dp, 60.dp)
-                .background(if (clickedCartoon.sector == "H") Color.Red else Color(0xFFF9B912))
+                .background(if (clickedCartoon?.location == "H") Color.Red else Color(0xFFF9B912))
                 .border(width = 1.dp, Color.Black),
             contentAlignment = Alignment.Center
         ) {
@@ -144,7 +144,7 @@ fun Map(viewModel: MainViewModel, offset: Pair<Dp, Dp>) {
             modifier = Modifier
                 .offset(x = 20.dp, y = 150.dp) // 원하는 위치로 이동
                 .size(30.dp, 60.dp)
-                .background(if (clickedCartoon.sector == "C") Color.Red else Color(0xFFF9B912))
+                .background(if (clickedCartoon?.location == "C") Color.Red else Color(0xFFF9B912))
                 .border(width = 1.dp, Color.Black),
             contentAlignment = Alignment.Center
         ) {
@@ -155,7 +155,7 @@ fun Map(viewModel: MainViewModel, offset: Pair<Dp, Dp>) {
             modifier = Modifier
                 .offset(x = 100.dp, y = 150.dp)
                 .size(30.dp, 60.dp)
-                .background(if (clickedCartoon.sector == "F") Color.Red else Color(0xFFF9B912))
+                .background(if (clickedCartoon?.location == "F") Color.Red else Color(0xFFF9B912))
                 .border(width = 1.dp, Color.Black),
             contentAlignment = Alignment.Center
         ) {

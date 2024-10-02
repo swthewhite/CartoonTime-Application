@@ -39,6 +39,7 @@ import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.ui.screen.composable.ApproachAnimate
 import com.alltimes.cartoontime.ui.screen.composable.PhoneReverseAnimate
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.text.TextStyle
@@ -51,6 +52,7 @@ import kotlinx.coroutines.delay
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.composable.Loading
 import com.alltimes.cartoontime.ui.screen.composable.LoadingAnimation
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -59,22 +61,20 @@ import java.time.temporal.ChronoUnit
 
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
+
+    // variable
+    var usedTime by remember { mutableStateOf("") }
     var currentAnimation by remember { mutableStateOf(1) }
     var showExitDialog by remember { mutableStateOf(false) }
 
+    // viewmodel variable
     val name = viewModel.name
     val balance by viewModel.balance.collectAsState()
     val state by viewModel.state.collectAsState()
     val enteredTime by viewModel.enteredTime.collectAsState()
+    val networkStatus by viewModel.networkStatus.collectAsState()
 
-    // 입실 중
-    //val uiState by viewModel.uiState.collectAsState()
-    val active = remember { mutableStateOf(false) }
-
-    // 입실 완료
-    var usedTime by remember { mutableStateOf("") }
-
-// 실시간으로 현재 시간과 enteredTime 차이를 계산하는 LaunchedEffect
+    // 실시간으로 현재 시간과 enteredTime 차이를 계산하는 LaunchedEffect
     LaunchedEffect(enteredTime) {
         while (true) {
             val formatterWithSeconds = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
@@ -392,16 +392,13 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 
+    // 로딩 다이얼로그 표시
+    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+
     // 팝업 표시
     if (showExitDialog) {
         ExitDialog(onDismiss = { showExitDialog = false })
     }
-
-    // 입퇴실
-//    if (!active.value && uiState.isLogin) {
-//        viewModel.onKioskLoadingCompleted()
-//        active.value = true
-//    }
 }
 
 @Composable
