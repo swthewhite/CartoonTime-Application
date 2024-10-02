@@ -5,20 +5,16 @@ import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Handler
-import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.common.MessageListener
-import com.alltimes.cartoontime.data.model.Cartoon
-import com.alltimes.cartoontime.data.model.FcmMessage
-import com.alltimes.cartoontime.data.model.SendUiState
+import com.alltimes.cartoontime.data.model.fcm.FcmMessage
+import com.alltimes.cartoontime.data.model.ui.SendUiState
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
@@ -54,17 +50,6 @@ class MainViewModel(application: Application, private val context: Context) : Ba
 
     /////////////////////////// 공용 ///////////////////////////
 
-    private val _activityNavigationTo = MutableLiveData<ActivityNavigationTo>()
-    val activityNavigationTo: LiveData<ActivityNavigationTo> get() = _activityNavigationTo
-
-    private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
-    val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
-
-    private val sharedPreferences: SharedPreferences
-        get() = context.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
-
-    val editor = sharedPreferences.edit()
-
     // 내 유저 이름
     val name = sharedPreferences.getString("name", "")
 
@@ -99,19 +84,6 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     private val _enteredTime =
         MutableStateFlow(sharedPreferences.getString("enteredTime", "2024-08-19 09:00:00"))
     val enteredTime: MutableStateFlow<String?> = _enteredTime
-
-    // 액티비티 전환
-    fun goActivity(activity: ActivityType) {
-        _activityNavigationTo.value = ActivityNavigationTo(activity)
-    }
-
-    // 스크린 전환
-    fun goScreen(screen: ScreenType) {
-        _screenNavigationTo.value = ScreenNavigationTo(screen)
-    }
-
-    // 서버 통신 관련 변수
-    private val repository = UserRepository(RetrofitClient.apiService)
 
     // 파이어베이스 통신 관련 변수
     private val fcmRepository = FCMRepository(this)

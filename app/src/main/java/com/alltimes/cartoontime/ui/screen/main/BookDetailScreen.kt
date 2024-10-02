@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.composable.GlideImage
 import com.alltimes.cartoontime.ui.screen.composable.Loading
 import com.alltimes.cartoontime.ui.screen.composable.Map
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
@@ -66,20 +67,22 @@ fun BookDetailScreen(viewModel: MainViewModel) {
         )
 
 
-        Image(
-            painter = painterResource(id = R.drawable.image_book),
-            contentDescription = "Book Image",
+        Box(
             modifier = Modifier
                 .width(200.dp)
                 .height(300.dp)
-                .clip(RoundedCornerShape(8.dp))
                 .constrainAs(bookImage) {
                     top.linkTo(parent.top, margin = 20.dp)
                     start.linkTo(parent.start, margin = 10.dp)
                     end.linkTo(parent.end, margin = 10.dp)
-                },
-            contentScale = ContentScale.Crop
-        )
+                }
+        ) {
+            GlideImage(
+                url = clickedCartoon?.imageUrl ?: "", // URL이 없을 경우 빈 문자열 처리
+                width = 200.dp,
+                height = 300.dp
+            )
+        }
 
         clickedCartoon?.let {
             Text(

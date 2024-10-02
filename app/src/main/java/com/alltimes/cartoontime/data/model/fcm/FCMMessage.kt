@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.data.model
+package com.alltimes.cartoontime.data.model.fcm
 
 import com.google.firebase.Timestamp
 

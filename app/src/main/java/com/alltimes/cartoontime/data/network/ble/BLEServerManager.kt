@@ -6,7 +6,7 @@ import android.content.Context
 import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresPermission
-import com.alltimes.cartoontime.data.model.BLEConstants
+import com.alltimes.cartoontime.data.model.ble.BLEConstants
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.uwb.UwbController

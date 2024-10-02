@@ -1,21 +1,25 @@
 package com.alltimes.cartoontime.data.remote
 
+import android.content.Context
+import android.content.SharedPreferences
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 
-class AuthInterceptor(private val tokenProvider: () -> String?) : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val original: Request = chain.request()
-        val requestBuilder: Request.Builder = original.newBuilder()
+class AuthInterceptor(context: Context) : Interceptor {
+    private val sharedPreferences: SharedPreferences = context.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
 
-        // JWT 토큰을 헤더에 추가
-        tokenProvider()?.let { token ->
-            requestBuilder.header("Authorization", "Bearer $token")
+    override fun intercept(chain: Interceptor.Chain): Response {
+        // SharedPreferences에서 JWT 토큰 가져오기
+        val accessToken = sharedPreferences.getString("accessToken", null)
+
+        // 요청을 빌드
+        val requestBuilder = chain.request().newBuilder()
+        if (accessToken != null) {
+            requestBuilder.addHeader("Authorization", "Bearer $accessToken")
         }
 
-        val request: Request = requestBuilder.build()
-        return chain.proceed(request)
+        return chain.proceed(requestBuilder.build())
     }
 }

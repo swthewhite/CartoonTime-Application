@@ -35,34 +35,11 @@ class SignUpViewModel(application: Application, private val context: Context) : 
 
     /////////////////////////// 공용 ///////////////////////////
 
-    private val _activityNavigationTo = MutableLiveData<ActivityNavigationTo>()
-    val activityNavigationTo: LiveData<ActivityNavigationTo> get() = _activityNavigationTo
-
-    private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
-    val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
-
-    private val sharedPreferences: SharedPreferences?
-        get() = context?.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
-
-    val editor = sharedPreferences?.edit()
-
     // 회원가입, 로그인 구분
     var isSignUp = false
 
     // 네이버 아이디, 비밀번호 유무
     var isNaverInfo = false
-
-    // 서버 통신 관련 변수
-    private val repository = UserRepository(RetrofitClient.apiService)
-
-    fun goActivity(activity: ActivityType) {
-        _activityNavigationTo.value = ActivityNavigationTo(activity)
-    }
-
-    fun goScreen(screen: ScreenType) {
-        println("스크린 전환")
-        _screenNavigationTo.value = ScreenNavigationTo(screen)
-    }
 
     /////////////////////////// SignUp ///////////////////////////
 

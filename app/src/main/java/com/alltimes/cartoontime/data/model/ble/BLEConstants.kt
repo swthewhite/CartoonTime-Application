@@ -1,4 +1,4 @@
-package com.alltimes.cartoontime.data.model
+package com.alltimes.cartoontime.data.model.ble
 
 import java.nio.charset.StandardCharsets
 import java.util.UUID

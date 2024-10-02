@@ -8,11 +8,10 @@ import android.os.Looper
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.common.MessageListener
-import com.alltimes.cartoontime.data.model.FcmMessage
-import com.alltimes.cartoontime.data.model.UIStateModel
+import com.alltimes.cartoontime.data.model.fcm.FcmMessage
+import com.alltimes.cartoontime.data.model.ui.UIStateModel
 import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
@@ -34,17 +33,6 @@ class ReceiveViewModel(application: Application, private val context: Context) :
 
     /////////////////////////// 공용 ///////////////////////////
 
-    private val _activityNavigationTo = MutableLiveData<ActivityNavigationTo>()
-    val activityNavigationTo: LiveData<ActivityNavigationTo> get() = _activityNavigationTo
-
-    private val _screenNavigationTo = MutableLiveData<ScreenNavigationTo>()
-    val screenNavigationTo: LiveData<ScreenNavigationTo> get() = _screenNavigationTo
-
-    private val sharedPreferences: SharedPreferences
-        get() = context.getSharedPreferences("MyPreferences", Context.MODE_PRIVATE)
-
-    val editor = sharedPreferences.edit()
-
     private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
 
@@ -52,14 +40,6 @@ class ReceiveViewModel(application: Application, private val context: Context) :
         UserRepository(RetrofitClient.apiService),
         sharedPreferences
     )
-
-    fun goActivity(activity: ActivityType) {
-        _activityNavigationTo.value = ActivityNavigationTo(activity)
-    }
-
-    fun goScreen(screen: ScreenType) {
-        _screenNavigationTo.value = ScreenNavigationTo(screen)
-    }
 
     val fcmRepository = FCMRepository(this)
 

@@ -8,11 +8,11 @@ import android.content.Context
 import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.RequiresPermission
-import com.alltimes.cartoontime.data.model.BLEConstants.UWB_KIOSK_SERVICE_UUID
-import com.alltimes.cartoontime.data.model.BLEConstants.UWB_WITCH_SERVICE_UUID
+import com.alltimes.cartoontime.data.model.ble.BLEConstants.UWB_KIOSK_SERVICE_UUID
+import com.alltimes.cartoontime.data.model.ble.BLEConstants.UWB_WITCH_SERVICE_UUID
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import com.alltimes.cartoontime.data.model.Permissions
+import com.alltimes.cartoontime.data.model.utils.Permissions
 
 /**
  * BluetoothManager를 이용하여 BluetoothAdapter와 BluetoothLeScanner를 초기화
@@ -172,5 +172,6 @@ class BLEScanner(context: Context) {
         Log.i("BLEScanner", "Stop scanning")
         scanner.stopScan(scanCallback)
         isScanning.value = false
+        foundDevices.value = emptyList()
     }
 }
