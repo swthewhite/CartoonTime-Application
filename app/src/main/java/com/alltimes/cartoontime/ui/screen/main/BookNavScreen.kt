@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.composable.GlideImage
 import com.alltimes.cartoontime.ui.screen.composable.Map
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import kotlin.math.atan2
@@ -54,7 +55,7 @@ fun BookNavScreen(viewModel: MainViewModel) {
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, directionBox, distance, locationText, map) = createRefs()
+        val (backButton, title, directionBox, bookImage, distance, locationText, map) = createRefs()
 
         // 상단 바 메뉴
         Image(
@@ -106,15 +107,28 @@ fun BookNavScreen(viewModel: MainViewModel) {
                 }
         ) {
             // 책이미지 (중앙에 위치)
-            Image(
-                painter = painterResource(id = R.drawable.image_book),
-                contentDescription = "Book Image",
+            Box(
                 modifier = Modifier
-                    .size(150.dp) // 크기를 줄이기 위해 width와 height 대신 size 사용
-                    .clip(CircleShape)
-                    .align(Alignment.Center), // 중앙에 배치
-                contentScale = ContentScale.Crop
-            )
+                    .size(150.dp) // 크기 설정
+                    .clip(CircleShape) // 원형 모양으로 자르기
+                    .align(Alignment.Center) // 중앙에 배치
+            ) {
+                GlideImage(
+                    url = clickedCartoon?.imageUrl ?: "", // URL이 없을 경우 빈 문자열 처리
+                    width = 150.dp, // GlideImage에 맞는 크기 설정
+                    height = 150.dp // GlideImage에 맞는 크기 설정
+                )
+            }
+
+//            Image(
+//                painter = painterResource(id = R.drawable.image_book),
+//                contentDescription = "Book Image",
+//                modifier = Modifier
+//                    .size(150.dp) // 크기를 줄이기 위해 width와 height 대신 size 사용
+//                    .clip(CircleShape)
+//                    .align(Alignment.Center), // 중앙에 배치
+//                contentScale = ContentScale.Crop
+//            )
 
             // 방향 표시 이미지
             // 책 이미지의 바깥에 위치하도록 오프셋을 조절해야함
