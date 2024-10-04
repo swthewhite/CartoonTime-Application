@@ -1,11 +1,6 @@
 package com.alltimes.cartoontime.ui.screen.main
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,10 +25,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
@@ -50,12 +46,29 @@ fun BookNavScreen(viewModel: MainViewModel) {
 
     val clickedCartoon by viewModel.clickedCartoon.collectAsState()
 
+    // 실시간 좌표 및 방향 정보 수집
+    val currentLocation by viewModel.currentLocation.collectAsState()
+    val targetLocation by viewModel.targetLocation.collectAsState()
+
+    // 거리 계산 및 포맷팅 (소수점 두 자리까지만 표시)
+    val distance = viewModel.calculateDistance(currentLocation, targetLocation)
+    val formattedDistance = String.format("%.2f", distance)
+
+    // 방향 계산 (자이로 센서와 목표 좌표를 기반으로 계산)
+    val direction = viewModel.calculateDirection(currentLocation, targetLocation)
+    val directAngle = viewModel.direction.collectAsState()
+
+    // 화면 크기 가져오기
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp.dp
+    val mapHeightDp = 250.dp
+
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
             .background(color = Color(0xFFF4F2EE))
     ) {
-        val (backButton, title, directionBox, bookImage, distance, locationText, map) = createRefs()
+        val (backButton, title, directionBox, bookImage, distanceBox, locationText, map) = createRefs()
 
         // 상단 바 메뉴
         Image(
@@ -90,76 +103,46 @@ fun BookNavScreen(viewModel: MainViewModel) {
             )
         }
 
+        // 책 이미지와 방향 이미지 배치
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp)
                 .background(Color.Transparent)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = {
-                        viewModel.goScreen(ScreenType.BOOKRECOMMEND)
-                    }
-                )
                 .constrainAs(directionBox) {
                     top.linkTo(title.bottom, margin = 10.dp)
                 }
         ) {
-            // 책이미지 (중앙에 위치)
+            // 중앙의 책 이미지
             Box(
                 modifier = Modifier
-                    .size(150.dp) // 크기 설정
-                    .clip(CircleShape) // 원형 모양으로 자르기
-                    .align(Alignment.Center) // 중앙에 배치
+                    .size(150.dp)
+                    .clip(CircleShape)
+                    .align(Alignment.Center)
             ) {
                 GlideImage(
-                    url = clickedCartoon?.imageUrl ?: "", // URL이 없을 경우 빈 문자열 처리
-                    width = 150.dp, // GlideImage에 맞는 크기 설정
-                    height = 150.dp // GlideImage에 맞는 크기 설정
+                    url = clickedCartoon?.imageUrl ?: "",
+                    width = 150.dp,
+                    height = 150.dp
                 )
             }
 
-//            Image(
-//                painter = painterResource(id = R.drawable.image_book),
-//                contentDescription = "Book Image",
-//                modifier = Modifier
-//                    .size(150.dp) // 크기를 줄이기 위해 width와 height 대신 size 사용
-//                    .clip(CircleShape)
-//                    .align(Alignment.Center), // 중앙에 배치
-//                contentScale = ContentScale.Crop
-//            )
-
-            // 방향 표시 이미지
-            // 책 이미지의 바깥에 위치하도록 오프셋을 조절해야함
-            // 방향 표시 이미지가 원형 경로를 따라 회전하도록 애니메이션 적용
-            // Density를 가져와서 Dp를 px로 변환
+            // 방향 이미지 애니메이션
             val density = LocalDensity.current
 
             // 반경을 Dp에서 Px로 변환
             val radiusPx = with(density) { 100.dp.toPx() }
 
-            // 일단은 애니메이션으로 구현
-            // 추후에 viewmodel에서 방향값을 받아서 계산하는 방식으로 변경
-            // 애니메이션 정의
-            val infiniteTransition = rememberInfiniteTransition()
-            val angle by infiniteTransition.animateFloat(
-                initialValue = 0f,
-                targetValue = 360f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(3000, easing = LinearEasing),
-                    repeatMode = RepeatMode.Restart
-                )
-            )
-
-            // X와 Y 좌표 계산 (각도를 기준으로 위치 이동)
-            val offsetX = radiusPx * cos(Math.toRadians(angle.toDouble())).toFloat()
-            val offsetY = radiusPx * sin(Math.toRadians(angle.toDouble())).toFloat()
 
             // 각도를 계산해서 방향 이미지가 해당 방향을 가리키도록 회전
-            val pointingAngle =
-                Math.toDegrees(atan2(offsetY.toDouble(), offsetX.toDouble())).toFloat() + 135f
+            val pointingAngle = directAngle.value//Math.toDegrees(atan2(offsetY.toDouble(), offsetX.toDouble())).toFloat() + 135f
 
+
+            // 새로운 오프셋 계산 (finalDirection을 radian으로 변환)
+            val offsetX = radiusPx * cos(Math.toRadians(pointingAngle.toDouble())).toFloat()
+            val offsetY = radiusPx * sin(Math.toRadians(pointingAngle.toDouble())).toFloat()
+
+            //Log.d("BookNavScreen", "offsetX: $offsetX, offsetY: $offsetY, pointingAngle: $pointingAngle, direcAngle: ${direcAngle.value}")
 
             // 방향 표시 이미지 (책 이미지 바깥을 회전)
             Image(
@@ -170,17 +153,18 @@ fun BookNavScreen(viewModel: MainViewModel) {
                     .graphicsLayer(
                         translationX = offsetX, // X 좌표 이동
                         translationY = offsetY, // Y 좌표 이동
-                        rotationZ = pointingAngle // 방향 이미지 회전
+                        rotationZ = pointingAngle + 135f// 방향 이미지 회전
                     )
                     .align(Alignment.Center), // 책 이미지 기준으로 위치
                 contentScale = ContentScale.Crop
             )
         }
 
+        // 거리 및 방향 텍스트
         Text(
-            text = "거리",
+            text = "거리: ${formattedDistance}m",
             fontSize = 40.sp,
-            modifier = Modifier.constrainAs(distance) {
+            modifier = Modifier.constrainAs(distanceBox) {
                 top.linkTo(directionBox.bottom, margin = 10.dp)
                 start.linkTo(parent.start, margin = 10.dp)
                 end.linkTo(parent.end, margin = 10.dp)
@@ -191,7 +175,7 @@ fun BookNavScreen(viewModel: MainViewModel) {
             text = "도서 위치  " + clickedCartoon?.location + "  구역",
             fontSize = 20.sp,
             modifier = Modifier.constrainAs(locationText) {
-                top.linkTo(distance.bottom, margin = 20.dp)
+                top.linkTo(distanceBox.bottom, margin = 20.dp)
                 start.linkTo(parent.start, margin = 10.dp)
                 end.linkTo(parent.end, margin = 10.dp)
             }
@@ -200,7 +184,7 @@ fun BookNavScreen(viewModel: MainViewModel) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp)
+                .height(mapHeightDp)
                 .padding(10.dp)
                 .background(Color.Transparent)
                 .constrainAs(map) {
@@ -210,7 +194,8 @@ fun BookNavScreen(viewModel: MainViewModel) {
                     bottom.linkTo(parent.bottom)
                 }
         ) {
-            Map(viewModel, Pair(0.dp, 0.dp))
+            // 지도 그리드에 맞춘 좌표
+            Map(viewModel, currentLocation)
         }
     }
 

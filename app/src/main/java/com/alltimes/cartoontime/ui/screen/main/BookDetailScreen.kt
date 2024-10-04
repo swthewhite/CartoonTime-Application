@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.model.uwb.Location
 import com.alltimes.cartoontime.ui.screen.composable.GlideImage
 import com.alltimes.cartoontime.ui.screen.composable.Loading
 import com.alltimes.cartoontime.ui.screen.composable.Map
@@ -142,7 +143,7 @@ fun BookDetailScreen(viewModel: MainViewModel) {
                     end.linkTo(parent.end)
                 }
         ) {
-            Map(viewModel, Pair(0.dp, 0.dp))
+            Map(viewModel, Location(0f, 0f))
         }
 
         Box(
@@ -154,7 +155,11 @@ fun BookDetailScreen(viewModel: MainViewModel) {
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
-                    onClick = { viewModel.goScreen(ScreenType.BOOKNAV) }
+                    onClick = {
+                        viewModel.goScreen(ScreenType.BOOKNAV)
+                        viewModel.initializeMQTT()
+                        viewModel.startGyroscope()
+                    }
                 )
                 .constrainAs(navButton) {
                     top.linkTo(map.bottom, margin = 5.dp)

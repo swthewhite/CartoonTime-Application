@@ -4,7 +4,10 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.content.Context
-import android.content.SharedPreferences
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
@@ -15,13 +18,13 @@ import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.common.MessageListener
 import com.alltimes.cartoontime.data.model.fcm.FcmMessage
 import com.alltimes.cartoontime.data.model.ui.SendUiState
-import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
-import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.model.uwb.Location
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.ble.BLEClient
 import com.alltimes.cartoontime.data.network.ble.BLEScanner
+import com.alltimes.cartoontime.data.network.mqtt.MqttClient
 import com.alltimes.cartoontime.data.network.uwb.UWBControlee
 import com.alltimes.cartoontime.data.remote.ComicResponse
 import com.alltimes.cartoontime.data.remote.FCMRequest
@@ -44,9 +47,12 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.atan2
 import kotlin.properties.Delegates
+import kotlinx.serialization.json.Json
 
-class MainViewModel(application: Application, private val context: Context) : BaseViewModel(application), MessageListener {
+class MainViewModel(application: Application, private val context: Context) : BaseViewModel(application), MessageListener,
+    SensorEventListener {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -77,7 +83,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     val balance: StateFlow<Long> = _balance
 
     // 입퇴실 상태
-    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
+    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 완료"))
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
@@ -462,6 +468,109 @@ class MainViewModel(application: Application, private val context: Context) : Ba
                 _cartoons.value = emptyList()
             }
         }
+    }
+
+    /////////////////////////// BookNav ///////////////////////////
+
+    // 콜백함수로 handleMessage 등록하면서 MQTT 초기화
+    private val mqttClient = MqttClient("myPos", context) { message ->
+        handleMessage(message)
+    }
+
+    // 메시지가 들어왔을때 실행될 함수
+    private fun handleMessage(message: String) {
+        // 메시지를 JSON 형태로 파싱
+        try {
+            // 수신된 메시지 예시: {"x": 2.3, "y": 1.1}
+            val json = Json.decodeFromString<Map<String, Float>>(message)
+            val x = json["x"] ?: 0f
+            val y = json["y"] ?: 0f
+            //_currentLocation.value = Location(x, y)  // 현재 위치 업데이트
+        } catch (e: Exception) {
+            println("Failed to parse message: ${e.message}")
+        }
+    }
+
+    // 현재 위치
+    private val _currentLocation = MutableStateFlow(Location(5f, 5f)) // 초기값
+    val currentLocation: StateFlow<Location> get() = _currentLocation
+
+    // 목표 위치
+    private val _targetLocation = MutableStateFlow(Location(10f, 8f)) // 예시값
+    val targetLocation: StateFlow<Location> get() = _targetLocation
+
+    private val _direction = MutableStateFlow<Float>(0f)
+    val direction: StateFlow<Float> get() = _direction
+
+    private var currentAngle: Float = 0f
+
+    // 거리 계산 함수
+    fun calculateDistance(currentLocation: Location, targetLocation: Location): Float {
+        val dx = _targetLocation.value.x - _currentLocation.value.x
+        val dy = _targetLocation.value.y - _currentLocation.value.y
+        return Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    // 방향 계산 함수
+    fun calculateDirection(currentLocation: Location, targetLocation: Location): Float {
+        val dx = targetLocation.x - currentLocation.x
+        val dy = targetLocation.y - currentLocation.y
+        return Math.toDegrees(atan2(dy, dx).toDouble()).toFloat()
+    }
+
+    fun updateDirection() {
+        val current = _currentLocation.value
+        val target = _targetLocation.value
+        if (current != null && target != null) {
+            // 목표 방향 계산
+            val calculatedDirection = calculateDirection(current, target)
+            // 최종 방향은 목표 방향 + 현재 각도 (자이로 센서)
+            _direction.value = (calculatedDirection + currentAngle + 360) % 360 // 0-360 범위로 조정
+        }
+    }
+
+    // 자이로 센서 데이터 업데이트
+    override fun onSensorChanged(event: SensorEvent) {
+        if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
+            // 자이로 센서 데이터를 통해 방향 업데이트
+            val rotationX = event.values[0] // X축 회전
+            val rotationY = event.values[1] // Y축 회전
+            val rotationZ = event.values[2] // Z축 회전
+            currentAngle = (currentAngle + rotationZ + 360) % 360
+
+            Log.d("MainViewModel", "rotationX: ${rotationX}, rotationY: ${rotationY}, rotationZ: ${rotationZ}, currentAngle: $currentAngle")
+
+            // 방향 업데이트
+            updateDirection()
+        }
+    }
+
+    private val sensorManager: SensorManager =
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+    // 자이로 센서 시작
+    fun startGyroscope() {
+        val gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
+        gyroscopeSensor?.let {
+            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+        }
+    }
+
+    // 자이로 센서 정지
+    fun stopGyroscope() {
+        sensorManager.unregisterListener(this)
+    }
+
+    // MQTT 연결 초기화 함수 호출
+    fun initializeMQTT() {
+        mqttClient.connectToMQTTBroker()
+    }
+
+    // MQTT 연결 해제 함수 호출
+    fun disconnectMQTT() {
+        mqttClient.disconnect()
     }
 
 
