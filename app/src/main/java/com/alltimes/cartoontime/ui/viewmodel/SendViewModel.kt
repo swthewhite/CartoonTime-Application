@@ -63,11 +63,11 @@ class SendViewModel(application: Application, private val context: Context) : Ba
     val partnerUserName: StateFlow<String> = _partnerUserName
 
     /////////////////////////// *UWB* ///////////////////////////
-    private val uwbCommunicator = UWBControlee(context)
+    private val uwbCommunicator = UWBControlee(application)
 
 
     /////////////////////////// *BLEScanner* ///////////////////////////
-    private val bleScanner = BLEScanner(context)
+    private val bleScanner = BLEScanner(application)
 
     /////////////////////////// 2. PointInput ///////////////////////////
 

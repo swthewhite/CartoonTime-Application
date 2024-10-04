@@ -54,7 +54,7 @@ class ReceiveViewModel(application: Application, private val context: Context) :
     val ReceiverId = sharedPreferences.getLong("userId", -1L)
 
     private val server: BLEServerManager =
-        BLEServerManager(context, ReceiverId.toString(), "WITCH", this)
+        BLEServerManager(application, ReceiverId.toString(), "WITCH", this)
 
     private var measurementCount = 0
     private var sessionActive = false

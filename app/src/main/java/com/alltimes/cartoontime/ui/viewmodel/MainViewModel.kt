@@ -4,7 +4,10 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.content.Context
-import android.content.SharedPreferences
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
@@ -15,13 +18,13 @@ import androidx.lifecycle.viewModelScope
 import com.alltimes.cartoontime.common.MessageListener
 import com.alltimes.cartoontime.data.model.fcm.FcmMessage
 import com.alltimes.cartoontime.data.model.ui.SendUiState
-import com.alltimes.cartoontime.data.model.ui.ActivityNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ActivityType
-import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.model.uwb.Location
 import com.alltimes.cartoontime.data.model.uwb.RangingCallback
 import com.alltimes.cartoontime.data.network.ble.BLEClient
 import com.alltimes.cartoontime.data.network.ble.BLEScanner
+import com.alltimes.cartoontime.data.network.mqtt.MqttClient
 import com.alltimes.cartoontime.data.network.uwb.UWBControlee
 import com.alltimes.cartoontime.data.remote.ComicResponse
 import com.alltimes.cartoontime.data.remote.FCMRequest
@@ -44,9 +47,12 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.atan2
 import kotlin.properties.Delegates
+import kotlinx.serialization.json.Json
 
-class MainViewModel(application: Application, private val context: Context) : BaseViewModel(application), MessageListener {
+class MainViewModel(application: Application, private val context: Context) : BaseViewModel(application), MessageListener,
+    SensorEventListener {
 
     /////////////////////////// 공용 ///////////////////////////
 
@@ -215,10 +221,10 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     }
 
     /////////////////////////// *UWB* ///////////////////////////
-    private val uwbCommunicator = UWBControlee(context)
+    private val uwbCommunicator = UWBControlee(application)
 
     /////////////////////////// *BLEScanner* ///////////////////////////
-    private val bleScanner = BLEScanner(context)
+    private val bleScanner = BLEScanner(application)
 
     private val triedDevices = mutableSetOf<String>()
 
@@ -462,6 +468,100 @@ class MainViewModel(application: Application, private val context: Context) : Ba
                 _cartoons.value = emptyList()
             }
         }
+    }
+
+    /////////////////////////// BookNav ///////////////////////////
+
+    // 콜백함수로 handleMessage 등록하면서 MQTT 초기화
+    private val mqttClient = MqttClient("myPos", context) { message ->
+        handleMessage(message)
+    }
+
+    // 메시지가 들어왔을때 실행될 함수
+    private fun handleMessage(message: String) {
+        // 메시지를 JSON 형태로 파싱
+        try {
+            // 수신된 메시지 예시: {"x": 2.3, "y": 1.1}
+            val json = Json.decodeFromString<Map<String, Float>>(message)
+            val x = json["x"] ?: 0f
+            val y = json["y"] ?: 0f
+            _currentLocation.value = Location(x, y)  // 현재 위치 업데이트
+        } catch (e: Exception) {
+            println("Failed to parse message: ${e.message}")
+        }
+    }
+
+    private val sensorManager: SensorManager =
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+    // 현재 위치
+    private val _currentLocation = MutableStateFlow(Location(5f, 5f)) // 초기값
+    val currentLocation: StateFlow<Location> get() = _currentLocation
+
+    // 목표 위치
+    private val _targetLocation = MutableStateFlow(Location(10f, 8f)) // 예시값
+    val targetLocation: StateFlow<Location> get() = _targetLocation
+
+    private val _direction = MutableStateFlow<Float>(0f)
+    val direction: StateFlow<Float> get() = _direction
+
+    private var accelerometerValues = FloatArray(3)
+    private var magnetometerValues = FloatArray(3)
+    private var gyroValues = FloatArray(3)
+
+
+    // 거리 계산 함수
+    fun calculateDistance(currentLocation: Location, targetLocation: Location): Float {
+        val dx = _targetLocation.value.x - _currentLocation.value.x
+        val dy = _targetLocation.value.y - _currentLocation.value.y
+        return Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+    }
+
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    fun initializeSensors() {
+        // 센서 초기화
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        val magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)
+        sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI)
+    }
+
+    override fun onSensorChanged(event: SensorEvent) {
+        when (event.sensor.type) {
+            Sensor.TYPE_ACCELEROMETER -> {
+                accelerometerValues = event.values.clone()
+            }
+            Sensor.TYPE_MAGNETIC_FIELD -> {
+                magnetometerValues = event.values.clone()
+            }
+        }
+
+        // 방향 계산
+        calculateOrientation()
+    }
+
+    private fun calculateOrientation() {
+        // 가속도계와 자기계 데이터를 사용하여 방향 계산
+        val rotationMatrix = FloatArray(9)
+        val inclinationMatrix = FloatArray(9)
+        val orientationValues = FloatArray(3)
+
+        if (SensorManager.getRotationMatrix(rotationMatrix, inclinationMatrix, accelerometerValues, magnetometerValues)) {
+            SensorManager.getOrientation(rotationMatrix, orientationValues)
+            val azimuth = Math.toDegrees(orientationValues[0].toDouble()).toFloat()
+            _direction.value = azimuth
+        }
+    }
+
+    // MQTT 연결 초기화 함수 호출
+    fun initializeMQTT() {
+        mqttClient.connectToMQTTBroker()
+    }
+
+    // MQTT 연결 해제 함수 호출
+    fun disconnectMQTT() {
+        mqttClient.disconnect()
     }
 
 

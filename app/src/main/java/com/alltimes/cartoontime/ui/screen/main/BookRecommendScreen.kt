@@ -34,6 +34,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.data.model.uwb.Location
 import com.alltimes.cartoontime.ui.screen.composable.Map
 import com.alltimes.cartoontime.ui.viewmodel.MainViewModel
 import com.alltimes.cartoontime.ui.screen.composable.CartoonItem // 수정된 부분
@@ -131,7 +132,6 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(250.dp)
-                .padding(5.dp)
                 .background(Color.Transparent)
                 .constrainAs(map) {
                     top.linkTo(description.bottom, margin = 10.dp)
@@ -139,7 +139,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
                     end.linkTo(parent.end)
                 }
         ) {
-            Map(viewModel, Pair(0.dp, 0.dp))
+            Map(viewModel, Location(0f, 0f))
         }
 
         // 카테고리
