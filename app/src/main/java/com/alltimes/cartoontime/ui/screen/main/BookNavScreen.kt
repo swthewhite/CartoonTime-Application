@@ -55,8 +55,7 @@ fun BookNavScreen(viewModel: MainViewModel) {
     val formattedDistance = String.format("%.2f", distance)
 
     // 방향 계산 (자이로 센서와 목표 좌표를 기반으로 계산)
-    val direction = viewModel.calculateDirection(currentLocation, targetLocation)
-    val directAngle = viewModel.direction.collectAsState()
+    val direction = viewModel.direction.collectAsState()
 
     // 화면 크기 가져오기
     val configuration = LocalConfiguration.current
@@ -129,33 +128,27 @@ fun BookNavScreen(viewModel: MainViewModel) {
 
             // 방향 이미지 애니메이션
             val density = LocalDensity.current
-
-            // 반경을 Dp에서 Px로 변환
             val radiusPx = with(density) { 100.dp.toPx() }
 
+            // 방향 표시 이미지가 현재 방향을 가리키도록 설정
+            val pointingAngle = -direction.value
 
-            // 각도를 계산해서 방향 이미지가 해당 방향을 가리키도록 회전
-            val pointingAngle = directAngle.value//Math.toDegrees(atan2(offsetY.toDouble(), offsetX.toDouble())).toFloat() + 135f
-
-
-            // 새로운 오프셋 계산 (finalDirection을 radian으로 변환)
+            // 새로운 오프셋 계산
             val offsetX = radiusPx * cos(Math.toRadians(pointingAngle.toDouble())).toFloat()
             val offsetY = radiusPx * sin(Math.toRadians(pointingAngle.toDouble())).toFloat()
 
-            //Log.d("BookNavScreen", "offsetX: $offsetX, offsetY: $offsetY, pointingAngle: $pointingAngle, direcAngle: ${direcAngle.value}")
-
-            // 방향 표시 이미지 (책 이미지 바깥을 회전)
+            // 방향 표시 이미지
             Image(
                 painter = painterResource(id = R.drawable.image_direction),
                 contentDescription = "Direction Image",
                 modifier = Modifier
-                    .size(50.dp) // 방향 이미지 크기
+                    .size(50.dp)
                     .graphicsLayer(
-                        translationX = offsetX, // X 좌표 이동
-                        translationY = offsetY, // Y 좌표 이동
-                        rotationZ = pointingAngle + 135f// 방향 이미지 회전
+                        translationX = offsetX,
+                        translationY = offsetY,
+                        rotationZ = pointingAngle + 135f // 회전 각도
                     )
-                    .align(Alignment.Center), // 책 이미지 기준으로 위치
+                    .align(Alignment.Center),
                 contentScale = ContentScale.Crop
             )
         }

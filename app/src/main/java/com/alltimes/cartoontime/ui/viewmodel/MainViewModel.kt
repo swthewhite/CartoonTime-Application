@@ -83,7 +83,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     val balance: StateFlow<Long> = _balance
 
     // 입퇴실 상태
-    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 완료"))
+    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
@@ -485,11 +485,14 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             val json = Json.decodeFromString<Map<String, Float>>(message)
             val x = json["x"] ?: 0f
             val y = json["y"] ?: 0f
-            //_currentLocation.value = Location(x, y)  // 현재 위치 업데이트
+            _currentLocation.value = Location(x, y)  // 현재 위치 업데이트
         } catch (e: Exception) {
             println("Failed to parse message: ${e.message}")
         }
     }
+
+    private val sensorManager: SensorManager =
+        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
     // 현재 위치
     private val _currentLocation = MutableStateFlow(Location(5f, 5f)) // 초기값
@@ -502,7 +505,10 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     private val _direction = MutableStateFlow<Float>(0f)
     val direction: StateFlow<Float> get() = _direction
 
-    private var currentAngle: Float = 0f
+    private var accelerometerValues = FloatArray(3)
+    private var magnetometerValues = FloatArray(3)
+    private var gyroValues = FloatArray(3)
+
 
     // 거리 계산 함수
     fun calculateDistance(currentLocation: Location, targetLocation: Location): Float {
@@ -513,54 +519,39 @@ class MainViewModel(application: Application, private val context: Context) : Ba
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
-    // 방향 계산 함수
-    fun calculateDirection(currentLocation: Location, targetLocation: Location): Float {
-        val dx = targetLocation.x - currentLocation.x
-        val dy = targetLocation.y - currentLocation.y
-        return Math.toDegrees(atan2(dy, dx).toDouble()).toFloat()
+    fun initializeSensors() {
+        // 센서 초기화
+        val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        val magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI)
+        sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI)
     }
 
-    fun updateDirection() {
-        val current = _currentLocation.value
-        val target = _targetLocation.value
-        if (current != null && target != null) {
-            // 목표 방향 계산
-            val calculatedDirection = calculateDirection(current, target)
-            // 최종 방향은 목표 방향 + 현재 각도 (자이로 센서)
-            _direction.value = (calculatedDirection + currentAngle + 360) % 360 // 0-360 범위로 조정
-        }
-    }
-
-    // 자이로 센서 데이터 업데이트
     override fun onSensorChanged(event: SensorEvent) {
-        if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-            // 자이로 센서 데이터를 통해 방향 업데이트
-            val rotationX = event.values[0] // X축 회전
-            val rotationY = event.values[1] // Y축 회전
-            val rotationZ = event.values[2] // Z축 회전
-            currentAngle = (currentAngle + rotationZ + 360) % 360
-
-            Log.d("MainViewModel", "rotationX: ${rotationX}, rotationY: ${rotationY}, rotationZ: ${rotationZ}, currentAngle: $currentAngle")
-
-            // 방향 업데이트
-            updateDirection()
+        when (event.sensor.type) {
+            Sensor.TYPE_ACCELEROMETER -> {
+                accelerometerValues = event.values.clone()
+            }
+            Sensor.TYPE_MAGNETIC_FIELD -> {
+                magnetometerValues = event.values.clone()
+            }
         }
+
+        // 방향 계산
+        calculateOrientation()
     }
 
-    private val sensorManager: SensorManager =
-        context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    private fun calculateOrientation() {
+        // 가속도계와 자기계 데이터를 사용하여 방향 계산
+        val rotationMatrix = FloatArray(9)
+        val inclinationMatrix = FloatArray(9)
+        val orientationValues = FloatArray(3)
 
-    // 자이로 센서 시작
-    fun startGyroscope() {
-        val gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
-        gyroscopeSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
+        if (SensorManager.getRotationMatrix(rotationMatrix, inclinationMatrix, accelerometerValues, magnetometerValues)) {
+            SensorManager.getOrientation(rotationMatrix, orientationValues)
+            val azimuth = Math.toDegrees(orientationValues[0].toDouble()).toFloat()
+            _direction.value = azimuth
         }
-    }
-
-    // 자이로 센서 정지
-    fun stopGyroscope() {
-        sensorManager.unregisterListener(this)
     }
 
     // MQTT 연결 초기화 함수 호출
