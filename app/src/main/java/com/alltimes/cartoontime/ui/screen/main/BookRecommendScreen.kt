@@ -57,7 +57,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
 
     // 카테고리에 따른 만화 리스트 초기화
     LaunchedEffect(category) {
-        viewModel.fetchCartoons(category)
+        viewModel.bookRecommendInit()
     }
 
     ConstraintLayout(
@@ -130,7 +130,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
         // 지도
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .width(300.dp)
                 .height(250.dp)
                 .background(Color.Transparent)
                 .constrainAs(map) {
