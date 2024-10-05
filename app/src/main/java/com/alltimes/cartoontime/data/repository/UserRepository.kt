@@ -11,11 +11,13 @@ import com.alltimes.cartoontime.data.remote.FCMRequest
 import com.alltimes.cartoontime.data.remote.FCMResponse
 import com.alltimes.cartoontime.data.remote.NaverAuthRequest
 import com.alltimes.cartoontime.data.remote.NavertAuthResponse
+import com.alltimes.cartoontime.data.remote.Recommendation
 import com.alltimes.cartoontime.data.remote.SignInRequest
 import com.alltimes.cartoontime.data.remote.SignResponse
 import com.alltimes.cartoontime.data.remote.SignUpRequest
 import com.alltimes.cartoontime.data.remote.TransferRequest
 import com.alltimes.cartoontime.data.remote.TransferResponse
+import com.alltimes.cartoontime.data.remote.UserComicRecommendResponse
 import com.alltimes.cartoontime.data.remote.UserResponse
 import com.alltimes.cartoontime.data.remote.VerifyAuthRequest
 import com.alltimes.cartoontime.data.remote.VerifyAuthResponse
@@ -63,6 +65,10 @@ class UserRepository(private val apiService: ApiService) {
 
     suspend fun searchComicsByTitle(titleKo: String): ComicSearchResponse {
         return apiService.searchComicsByTitle(titleKo)
+    }
+
+    suspend fun userRecommendComics(userId: Long): List<Recommendation> {
+        return apiService.userRecommendComics(userId)
     }
 
 }

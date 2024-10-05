@@ -41,6 +41,9 @@ interface ApiService {
 
     @GET("ct/comics/search/ko")
     suspend fun searchComicsByTitle(@Query("titleKo") titleKo: String): ComicSearchResponse
+
+    @GET("ctr/recommend/{user_id}")
+    suspend fun userRecommendComics(@Path("user_id") userId: Long): List<Recommendation>
 }
 
 // 내 지갑 정보
@@ -215,4 +218,30 @@ data class Genre(
     val id: Long,
     val genreNameEn: String,
     val genreNameKo: String
+)
+
+// 사용자 추천 만화 응답 데이터 클래스
+data class UserComicRecommendResponse(
+    val recommendations: List<Recommendation>
+)
+
+data class Recommendation(
+    val id: Long,
+    val titleKo: String,
+    val authorKo: String,
+    val location: String,
+    val imageUrl: String,
+    val genres: List<RecommendGenre>
+)
+
+data class RecommendGenre(
+    val id: Long,
+    val genreNameKo: String
+)
+
+// 만화 리뷰
+data class ComicReviewRequest(
+    val userId: Long,
+    val comicId: Long,
+    val score: Float,
 )

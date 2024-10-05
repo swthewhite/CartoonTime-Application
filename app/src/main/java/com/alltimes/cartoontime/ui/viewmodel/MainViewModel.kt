@@ -28,7 +28,10 @@ import com.alltimes.cartoontime.data.network.mqtt.MqttClient
 import com.alltimes.cartoontime.data.network.uwb.UWBControlee
 import com.alltimes.cartoontime.data.remote.ComicResponse
 import com.alltimes.cartoontime.data.remote.FCMRequest
+import com.alltimes.cartoontime.data.remote.Genre
+import com.alltimes.cartoontime.data.remote.Recommendation
 import com.alltimes.cartoontime.data.remote.RetrofitClient
+import com.alltimes.cartoontime.data.remote.UserComicRecommendResponse
 import com.alltimes.cartoontime.data.repository.FCMRepository
 import com.alltimes.cartoontime.data.repository.UserInfoUpdater
 import com.alltimes.cartoontime.data.repository.UserRepository
@@ -83,7 +86,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     val balance: StateFlow<Long> = _balance
 
     // 입퇴실 상태
-    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
+    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 완료"))
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
@@ -453,18 +456,57 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     fun onClickedCartoon(cartoon: ComicResponse) {
         if (_clickedCartoon.value == cartoon) {
             _clickedCartoon.value = null
+            _targetLocation.value = Location(10f, 8f) // 클릭 해제 시 기본 위치로 재설정
         } else {
             _clickedCartoon.value = cartoon
+            // 클릭한 만화책의 위치에 따라 목표 위치 업데이트
+            _targetLocation.value = mapLocationToTarget(cartoon.location)
         }
     }
 
+    // Recommendation을 ComicResponse로 변환하는 함수
+    private fun convertRecommendationToComicResponse(recommendation: Recommendation): ComicResponse {
+        return ComicResponse(
+            id = recommendation.id, // 이제 recommendation의 ID를 사용
+            titleEn = recommendation.titleKo, // 영어 제목이 없으므로, 한국 제목으로 설정
+            titleKo = recommendation.titleKo,
+            authorEn = recommendation.authorKo, // 영어 저자명도 한국 저자명으로 설정
+            authorKo = recommendation.authorKo,
+            location = recommendation.location,
+            imageUrl = recommendation.imageUrl,
+            genres = recommendation.genres.map {
+                Genre(
+                    id = it.id,
+                    genreNameEn = it.genreNameKo, // 필요에 따라 변환
+                    genreNameKo = it.genreNameKo
+                )
+            }
+        )
+    }
+
     fun fetchCartoons(category: String) {
+        println("fetchCartoons: $category")
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val allComics = repository.getAllComics()
-                // 필요에 따라 카테고리별로 필터링
-                _cartoons.value = allComics
+                when (category) {
+                    "사용자 취향 만화" -> {
+                        val recommendedComicsResponse = repository.userRecommendComics(userId)
+                        println("recommendedComicsResponse: $recommendedComicsResponse")
+
+                        // 추천 만화를 변환
+                        val convertedComics = recommendedComicsResponse.map { recommendation ->
+                            convertRecommendationToComicResponse(recommendation)
+                        }
+                        println("convertedComics: $convertedComics")
+                        _cartoons.value = convertedComics
+                    }
+                    else -> {
+                        val allComics = repository.getAllComics()
+                        _cartoons.value = allComics
+                    }
+                }
             } catch (e: Exception) {
+                println("Failed to fetch cartoons: ${e.message}")
                 _cartoons.value = emptyList()
             }
         }
@@ -485,7 +527,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             val json = Json.decodeFromString<Map<String, Float>>(message)
             val x = json["x"] ?: 0f
             val y = json["y"] ?: 0f
-            _currentLocation.value = Location(x, y)  // 현재 위치 업데이트
+            //_currentLocation.value = Location(x, y)  // 현재 위치 업데이트
         } catch (e: Exception) {
             println("Failed to parse message: ${e.message}")
         }
@@ -495,7 +537,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
     // 현재 위치
-    private val _currentLocation = MutableStateFlow(Location(5f, 5f)) // 초기값
+    private val _currentLocation = MutableStateFlow(Location(5f, 4f)) // 초기값
     val currentLocation: StateFlow<Location> get() = _currentLocation
 
     // 목표 위치
@@ -509,6 +551,18 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     private var magnetometerValues = FloatArray(3)
     private var gyroValues = FloatArray(3)
 
+    // 만화책 위치에 따른 목표 위치 매핑 함수
+    private fun mapLocationToTarget(location: String): Location {
+        return when (location) {
+            "A" -> Location(2.66f, 1.28f) // 좌표 (X, Y)
+            "B" -> Location(5.32f, 1.28f)
+            "C" -> Location(7.99f, 1.28f)
+            "D" -> Location(3.33f, 4.64f)
+            "E" -> Location(6.00f, 4.64f)
+            "F" -> Location(8.66f, 4.64f)
+            else -> Location(10.00f, 8.00f) // 기본값
+        }
+    }
 
     // 거리 계산 함수
     fun calculateDistance(currentLocation: Location, targetLocation: Location): Float {
@@ -539,6 +593,13 @@ class MainViewModel(application: Application, private val context: Context) : Ba
 
         // 방향 계산
         calculateOrientation()
+    }
+
+    // 현재 위치와 목표 위치를 사용하여 목표 방향을 계산하는 함수
+    fun calculateTargetDirection(current: Location, target: Location): Float {
+        val dx = target.x - current.x
+        val dy = target.y - current.y
+        return Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
     }
 
     private fun calculateOrientation() {

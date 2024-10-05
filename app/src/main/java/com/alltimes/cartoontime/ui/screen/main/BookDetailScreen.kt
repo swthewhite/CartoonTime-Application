@@ -133,9 +133,8 @@ fun BookDetailScreen(viewModel: MainViewModel) {
 
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .width(300.dp)
                 .height(250.dp)
-                .padding(10.dp)
                 .background(Color.Transparent)
                 .constrainAs(map) {
                     top.linkTo(locationText.bottom, margin = 5.dp)

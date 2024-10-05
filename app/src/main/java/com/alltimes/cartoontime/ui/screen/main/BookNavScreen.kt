@@ -54,6 +54,9 @@ fun BookNavScreen(viewModel: MainViewModel) {
     val distance = viewModel.calculateDistance(currentLocation, targetLocation)
     val formattedDistance = String.format("%.2f", distance)
 
+    // 목표 방향 계산
+    val targetDirection = viewModel.calculateTargetDirection(currentLocation, targetLocation)
+
     // 방향 계산 (자이로 센서와 목표 좌표를 기반으로 계산)
     val direction = viewModel.direction.collectAsState()
 
@@ -131,7 +134,7 @@ fun BookNavScreen(viewModel: MainViewModel) {
             val radiusPx = with(density) { 100.dp.toPx() }
 
             // 방향 표시 이미지가 현재 방향을 가리키도록 설정
-            val pointingAngle = -direction.value
+            val pointingAngle = -(direction.value + targetDirection)
 
             // 새로운 오프셋 계산
             val offsetX = radiusPx * cos(Math.toRadians(pointingAngle.toDouble())).toFloat()
