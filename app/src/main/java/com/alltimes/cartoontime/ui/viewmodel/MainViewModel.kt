@@ -527,7 +527,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             val json = Json.decodeFromString<Map<String, Float>>(message)
             val x = json["x"] ?: 0f
             val y = json["y"] ?: 0f
-            //_currentLocation.value = Location(x, y)  // 현재 위치 업데이트
+            _currentLocation.value = Location(x, y)  // 현재 위치 업데이트
         } catch (e: Exception) {
             println("Failed to parse message: ${e.message}")
         }
@@ -631,8 +631,11 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     fun handleChargeConfirm() {
         if (_balance.value < _charge.value) goActivity(ActivityType.CHARGE)
         else {
+            // 정산 완료
             UpdateUserInfo()
             goScreen(ScreenType.MAIN)
+
+            // 평점을 매겨주세요.
         }
     }
 }
