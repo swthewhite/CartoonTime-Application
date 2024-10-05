@@ -134,7 +134,7 @@ fun BookNavScreen(viewModel: MainViewModel) {
             val radiusPx = with(density) { 100.dp.toPx() }
 
             // 방향 표시 이미지가 현재 방향을 가리키도록 설정
-            val pointingAngle = -(direction.value + targetDirection)
+            val pointingAngle = -direction.value + targetDirection
 
             // 새로운 오프셋 계산
             val offsetX = radiusPx * cos(Math.toRadians(pointingAngle.toDouble())).toFloat()
