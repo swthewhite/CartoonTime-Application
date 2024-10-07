@@ -138,6 +138,7 @@ fun SendPointInputScreen(viewModel: SendViewModel) {
                 Button(
                     onClick = {
                         viewModel.goScreen(ScreenType.SENDPASSWORDINPUT)
+                        viewModel.initializePassword()
                     },
                     colors = ButtonDefaults.buttonColors(Color(0xFFF9B912)),
                     modifier = Modifier

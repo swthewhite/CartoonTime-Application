@@ -250,7 +250,10 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     repository.signUp(phoneNumber.value.text, name.value.text)
                 } catch (e: Exception) {
                     // 오류 처리
-                    Log.d("SignUpViewModel", "onSubmit: ${e.message}")
+                    // 실패 처리
+                    Log.d("SignUpViewModel", "onSubmit up: ${e.message}")
+                    _isLoading.value = false
+
                     return@launch
                 }
 
@@ -263,7 +266,8 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     repository.signIn(phoneNumber.value.text)
                 } catch (e: Exception) {
                     // 오류 처리
-                    Log.d("SignUpViewModel", "onSubmit: ${e.message}")
+                    Log.d("SignUpViewModel", "onSubmit in: ${e.message}")
+                    _isLoading.value = false
                     return@launch
                 }
                 handleResponse(response)
@@ -421,7 +425,6 @@ class SignUpViewModel(application: Application, private val context: Context) : 
     fun onNaverLogin() {
         _isLoading.value = true
         context?.let {
-            // 네이버 로그인 api 호출
             CoroutineScope(Dispatchers.IO).launch {
                 val userId = sharedPreferences?.getLong("userId", -1L).toString()
 
@@ -434,12 +437,8 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                         )
                     )
                 } catch (e: Exception) {
-                    // 오류 처리
-                    println("onNaverLogin: ${e.message}")
-                    Toast.makeText(it, "로그인 실패. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-                    _naverID.value = TextFieldValue()
-                    _naverPassword.value = TextFieldValue()
-                    _isLoading.value = false
+                    // 예외 발생 시 처리
+                    handleLoginError(it, e)
                     return@launch
                 }
 
@@ -447,15 +446,27 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     if (response.success) {
                         Toast.makeText(it, "로그인 성공.", Toast.LENGTH_SHORT).show()
                         goScreen(ScreenType.PASSWORDSETTING)
-                        _isLoading.value = false
                     } else {
-                        Toast.makeText(it, "로그인 실패. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
-                        _naverID.value = TextFieldValue()
-                        _naverPassword.value = TextFieldValue()
-                        _isLoading.value = false
+                        // response.success가 false인 경우 처리
+                        handleLoginError(it, null)
                     }
+                    _isLoading.value = false
                 }
             }
+        }
+    }
+
+    private suspend fun handleLoginError(context: Context, exception: Exception?) {
+        // UI 스레드에서 Toast를 보여줍니다.
+        withContext(Dispatchers.Main) {
+            exception?.let {
+                println("로그인 오류: ${it.message}") // 로그 찍기
+            } ?: println("로그인 오류: 서버에서 알 수 없는 오류 발생")
+
+            Toast.makeText(context, "로그인 실패. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+            _naverID.value = TextFieldValue()
+            _naverPassword.value = TextFieldValue()
+            _isLoading.value = false
         }
     }
 

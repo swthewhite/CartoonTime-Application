@@ -47,6 +47,7 @@ fun SendDescriptionScreen(viewModel: SendViewModel) {
                     indication = null,
                     onClick = {
                         viewModel.goScreen(ScreenType.SENDPOINTINPUT)
+                        viewModel.initializePassword()
                     }
                 )
                 .constrainAs(backButton) {

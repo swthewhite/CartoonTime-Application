@@ -35,6 +35,7 @@ fun ChargePasswordInputScreen(viewModel: ChargeViewModel) {
 
     // viewmodel variable
     val password by viewModel.password.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     // screen variable
     val imgSize = 40.dp
@@ -58,6 +59,7 @@ fun ChargePasswordInputScreen(viewModel: ChargeViewModel) {
                     indication = null,
                     onClick = {
                         viewModel.goScreen(ScreenType.CHARGEPOINTINPUT)
+                        viewModel.initializePassword()
                     }
                 )
                 .constrainAs(backButton) {

@@ -94,6 +94,7 @@ class ReceiveViewModel(application: Application, private val context: Context) :
         timeoutRunnable = Runnable {
             // 타임아웃 발생 시 처리할 코드
             Toast.makeText(context, "타임 아웃 ... !! 연결에 실패했습니다.", Toast.LENGTH_SHORT).show()
+            goActivity(ActivityType.MAIN)
         }
 
         timeoutHandler.postDelayed(timeoutRunnable!!, 60_000) // 60초 후 실행

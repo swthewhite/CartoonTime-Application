@@ -37,6 +37,10 @@ class ChargeViewModel(application: Application, private val context: Context) : 
     private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
 
+    // 로딩 다이얼로그
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     /////////////////////////// PointInput ///////////////////////////
 
     override fun onPointClickedButton(type: Int) {
@@ -80,8 +84,13 @@ class ChargeViewModel(application: Application, private val context: Context) : 
 
     val password: StateFlow<String> get() = numPadClickHandler.password
 
+    fun initializePassword() {
+        numPadClickHandler.clearPassword()
+    }
+
     fun pointCharge() {
         // 충전 api 호출
+        _isLoading.value = true
         CoroutineScope(Dispatchers.IO).launch {
             // userId와 amount를 ChargeRequest 객체에 담아서 전달
             val userId = sharedPreferences.getLong("userId", -1L)
@@ -93,11 +102,17 @@ class ChargeViewModel(application: Application, private val context: Context) : 
                 repository.charge(chargeRequest)
             } catch (e: Exception) {
                 // 에러처리
-                null
+                _isLoading.value = false
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "포인트 충전에 실패했습니다", Toast.LENGTH_SHORT).show()
+                    initializePassword()
+                }
+                return@launch
             }
 
             // 응답 처리
             if (response?.success == true) {
+                _isLoading.value = false
                 // 메인 스레드에서 값 변경 및 UI 업데이트
                 withContext(Dispatchers.Main) {
                     val currentBalance = sharedPreferences.getLong("balance", 0)
@@ -109,6 +124,14 @@ class ChargeViewModel(application: Application, private val context: Context) : 
                     _balance.value = newBalance
 
                     goScreen(ScreenType.CHARGECONFIRM)
+                }
+            }
+            else {
+                // 에러처리
+                _isLoading.value = false
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "포인트 충전에 실패했습니다", Toast.LENGTH_SHORT).show()
+                    initializePassword()
                 }
             }
         }
