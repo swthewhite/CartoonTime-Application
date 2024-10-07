@@ -87,7 +87,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     val balance: StateFlow<Long> = _balance
 
     // 입퇴실 상태
-    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
+    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 완료"))
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
@@ -102,7 +102,6 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     var isFCMActive = false
 
     init {
-        _state.value = "입실 전"
         fcmRepository.listenForMessages(fcmToken!!)
         isFCMActive = true
 
