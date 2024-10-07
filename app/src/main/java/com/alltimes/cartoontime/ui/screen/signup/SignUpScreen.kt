@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -24,10 +26,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.ui.screen.composable.Loading
+import com.alltimes.cartoontime.ui.screen.composable.LoadingAnimation
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +48,8 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
     val isPhoneNumberEnable by viewModel.isPhoneNumberEnable.collectAsState()
     val isverificationCodeCorrect by viewModel.isVerificationCodeCorrect.collectAsState()
     val networkStatus by viewModel.networkStatus.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState() // isLoading 변수를 뷰모델에서 관리
+
 
     // screen variable
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -276,6 +282,27 @@ fun SignUpScreen(viewModel: SignUpViewModel) {
                         }
                 ) {
                     Text(text = "등록하기", color = Color(0xFF606060))
+                }
+            }
+        }
+    }
+
+    // 로딩 다이얼로그
+    if (isLoading) {
+        Dialog(onDismissRequest = {  }) {
+            Box(
+                modifier = Modifier
+                    .size(200.dp)
+                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                // 애니메이션을 추가할 수 있는 부분입니다.
+                // 여기서는 단순히 로딩 텍스트와 애니메이션을 보여줍니다.
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    LoadingAnimation() // 로딩 인디케이터
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = "등록 중...", fontWeight = FontWeight.Bold)
                 }
             }
         }

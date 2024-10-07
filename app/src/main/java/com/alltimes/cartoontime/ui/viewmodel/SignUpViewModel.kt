@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.compose.ui.text.input.TextFieldValue
@@ -78,6 +79,10 @@ class SignUpViewModel(application: Application, private val context: Context) : 
     // 버튼 활성화용 (회원가입, 로그인)
     private val _isSubmitButtonEnabled = MutableStateFlow(false)
     val isSubmitButtonEnabled: StateFlow<Boolean> = _isSubmitButtonEnabled
+
+    // 로딩 다이얼로그
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     // 등록하기 버튼 활성화 여부 검사
     private fun checkSubmitButtonState() {
@@ -236,6 +241,8 @@ class SignUpViewModel(application: Application, private val context: Context) : 
 
     // 등록하기 버튼
     fun onSubmit() {
+        _isLoading.value = true
+
         if (isSignUp) {
             // sign-up api 호출
             CoroutineScope(Dispatchers.IO).launch {
@@ -243,6 +250,7 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     repository.signUp(phoneNumber.value.text, name.value.text)
                 } catch (e: Exception) {
                     // 오류 처리
+                    Log.d("SignUpViewModel", "onSubmit: ${e.message}")
                     return@launch
                 }
 
@@ -255,6 +263,7 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     repository.signIn(phoneNumber.value.text)
                 } catch (e: Exception) {
                     // 오류 처리
+                    Log.d("SignUpViewModel", "onSubmit: ${e.message}")
                     return@launch
                 }
                 handleResponse(response)
@@ -264,6 +273,7 @@ class SignUpViewModel(application: Application, private val context: Context) : 
 
     // 회원 가입, 로그인 처리 로직
     private fun handleResponse(response: SignResponse?) {
+        _isLoading.value = false
         if (response?.success == true) {
             // 유저 정보 저장
             editor?.putLong("userId", response.data?.user?.id ?: -1)
@@ -283,6 +293,9 @@ class SignUpViewModel(application: Application, private val context: Context) : 
             }
         } else {
             // 실패 처리
+            context?.let {
+                Toast.makeText(it, response?.message, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
