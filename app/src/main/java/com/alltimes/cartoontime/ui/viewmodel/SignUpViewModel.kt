@@ -423,6 +423,7 @@ class SignUpViewModel(application: Application, private val context: Context) : 
 
     // 네이버 로그인
     fun onNaverLogin() {
+        _isLoading.value = true
         context?.let {
             // 네이버 로그인 api 호출
             CoroutineScope(Dispatchers.IO).launch {
@@ -445,10 +446,12 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     if (response.success) {
                         Toast.makeText(it, "로그인 성공.", Toast.LENGTH_SHORT).show()
                         goScreen(ScreenType.SIGNUPCOMPLETE)
+                        _isLoading.value = false
                     } else {
                         Toast.makeText(it, "로그인 실패. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
                         _naverID.value = TextFieldValue()
                         _naverPassword.value = TextFieldValue()
+                        _isLoading.value = false
                     }
                 }
             }
