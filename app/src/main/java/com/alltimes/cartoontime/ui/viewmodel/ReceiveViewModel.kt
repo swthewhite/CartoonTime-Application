@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.Handler
 import android.os.Looper
+import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -41,6 +42,10 @@ class ReceiveViewModel(application: Application, private val context: Context) :
         sharedPreferences
     )
 
+    private var timeoutHandler: Handler = Handler(Looper.getMainLooper())
+    private var timeoutRunnable: Runnable? = null
+
+
     val fcmRepository = FCMRepository(this)
 
     var isFCMActive = false
@@ -58,7 +63,6 @@ class ReceiveViewModel(application: Application, private val context: Context) :
 
     private var measurementCount = 0
     private var sessionActive = false
-    private val timeoutHandler = Handler(Looper.getMainLooper())
 
     init {
         val fcmToken = sharedPreferences.getString("fcmToken", "") ?: ""
@@ -69,6 +73,8 @@ class ReceiveViewModel(application: Application, private val context: Context) :
         viewModelScope.launch {
             _uiState.update { it.copy(isRunning = false) }
         }
+
+        startTimeout()
     }
 
     fun onPuaseAll() {
@@ -78,6 +84,24 @@ class ReceiveViewModel(application: Application, private val context: Context) :
     fun onResumeAll() {
         UpdateUserInfo()
         isFCMActive = true
+    }
+
+    private fun startTimeout() {
+        // 이전 타이머 제거
+        timeoutRunnable?.let { timeoutHandler.removeCallbacks(it) }
+
+        // 새 타이머 설정 (1분)
+        timeoutRunnable = Runnable {
+            // 타임아웃 발생 시 처리할 코드
+            Toast.makeText(context, "타임 아웃 ... !! 연결에 실패했습니다.", Toast.LENGTH_SHORT).show()
+        }
+
+        timeoutHandler.postDelayed(timeoutRunnable!!, 60_000) // 60초 후 실행
+    }
+
+    // 화면 전환이 발생할 때 호출
+    fun onScreenChanged() {
+        startTimeout() // 타이머 리셋
     }
 
     override fun onMessageReceived(message: FcmMessage) {

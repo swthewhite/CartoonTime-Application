@@ -83,11 +83,11 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     val charge: StateFlow<Long> = _charge
 
     // 잔액
-    private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 1000000L))
+    private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
 
     // 입퇴실 상태
-    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
+    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 완료"))
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
@@ -556,8 +556,19 @@ class MainViewModel(application: Application, private val context: Context) : Ba
                         println("convertedComics: $convertedComics")
                         _cartoons.value = convertedComics
                     }
+                    "오늘의 추천 만화" -> {
+                        val todayrecommendedComicsResponse = repository.todayRecommendComics()
+                        println("todayrecommendedComicsResponse: $todayrecommendedComicsResponse")
+
+                        val convertedComics = todayrecommendedComicsResponse.map { recommendation ->
+                            convertRecommendationToComicResponse(recommendation)
+                        }
+                        println("convertedComics: $convertedComics")
+                        _cartoons.value = convertedComics
+                    }
                     else -> {
                         val allComics = repository.getAllComics()
+                        println("allComics: $allComics")
                         _cartoons.value = allComics
                     }
                 }

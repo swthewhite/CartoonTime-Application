@@ -414,6 +414,10 @@ class SendViewModel(application: Application, private val context: Context) : Ba
         timeoutHandler.postDelayed({
             if (distance > 10) {
                 uwbCommunicator.destroyRanging()
+                CoroutineScope(Dispatchers.Main).launch {
+                    goActivity(ActivityType.MAIN)
+                    Toast.makeText(context, "거리가 너무 멀어 거래가 취소되었습니다.", Toast.LENGTH_SHORT).show()
+                }
                 //completeLogin()
             }
         }, 3000)

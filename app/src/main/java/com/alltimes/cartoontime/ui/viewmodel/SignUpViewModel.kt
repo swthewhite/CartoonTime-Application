@@ -289,7 +289,7 @@ class SignUpViewModel(application: Application, private val context: Context) : 
 
             // 화면 전환은 메인 스레드에서
             CoroutineScope(Dispatchers.Main).launch {
-                goScreen(ScreenType.PASSWORDSETTING)
+                goScreen(ScreenType.NAVERLOGIN)
             }
         } else {
             // 실패 처리
@@ -364,12 +364,8 @@ class SignUpViewModel(application: Application, private val context: Context) : 
     private fun checkPassword() {
         context?.let {
             if (password.value == PassWord) {
-                // 회원가입이거나 로그인이라도 네이버 정보가 없으면 naverlogin으로 전환
-                // 로그인이거나 네이버 정보가 있으면 signupscreen으로 전환
 
-                // isSignUp => 네이버 정보가 있는지 없는지로 구분해도 될듯
-                if (isSignUp) goScreen(ScreenType.NAVERLOGIN)
-                else goScreen(ScreenType.SIGNUPCOMPLETE)
+                goScreen(ScreenType.SIGNUPCOMPLETE)
 
                 // 비밀번호 저장
                 editor?.putString("password", password.value)
@@ -439,13 +435,18 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     )
                 } catch (e: Exception) {
                     // 오류 처리
+                    println("onNaverLogin: ${e.message}")
+                    Toast.makeText(it, "로그인 실패. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                    _naverID.value = TextFieldValue()
+                    _naverPassword.value = TextFieldValue()
+                    _isLoading.value = false
                     return@launch
                 }
 
                 withContext(Dispatchers.Main) {
                     if (response.success) {
                         Toast.makeText(it, "로그인 성공.", Toast.LENGTH_SHORT).show()
-                        goScreen(ScreenType.SIGNUPCOMPLETE)
+                        goScreen(ScreenType.PASSWORDSETTING)
                         _isLoading.value = false
                     } else {
                         Toast.makeText(it, "로그인 실패. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()

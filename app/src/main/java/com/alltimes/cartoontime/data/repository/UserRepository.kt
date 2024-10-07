@@ -71,4 +71,8 @@ class UserRepository(private val apiService: ApiService) {
         return apiService.userRecommendComics(userId)
     }
 
+    suspend fun todayRecommendComics(): List<Recommendation> {
+        return apiService.todayRecommendComics()
+    }
+
 }

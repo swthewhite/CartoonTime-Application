@@ -52,7 +52,7 @@ fun BookRecommendScreen(viewModel: MainViewModel) {
     val category by viewModel.category.collectAsState()
 
     val userString = "$name 님의 취향을 바탕으로 추천한 만화입니다."
-    val bestString = "주간 베스트 셀러 만화입니다."
+    val bestString = "베스트 셀러 만화입니다."
     val todayString = "오늘의 추천 만화입니다."
 
     // 카테고리에 따른 만화 리스트 초기화

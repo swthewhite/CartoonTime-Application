@@ -44,6 +44,9 @@ interface ApiService {
 
     @GET("ctr/recommend/{user_id}")
     suspend fun userRecommendComics(@Path("user_id") userId: Long): List<Recommendation>
+
+    @GET("ctr/today")
+    suspend fun todayRecommendComics(): List<Recommendation>
 }
 
 // 내 지갑 정보
