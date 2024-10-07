@@ -86,7 +86,7 @@ class ChargeViewModel(application: Application, private val context: Context) : 
             // userId와 amount를 ChargeRequest 객체에 담아서 전달
             val userId = sharedPreferences.getLong("userId", -1L)
             val chargeRequest =
-                ChargeRequest(userId = userId, amount = point.value.toLong())
+                ChargeRequest(cid = "ct", partnerUserId = userId, itemName = "카툰타임 ${point.value.toInt()}원 충전", totalAmount = point.value.toLong())
 
             // API 호출
             val response = try {
@@ -97,7 +97,7 @@ class ChargeViewModel(application: Application, private val context: Context) : 
             }
 
             // 응답 처리
-            if (response!!.success) {
+            if (response?.success == true) {
                 // 메인 스레드에서 값 변경 및 UI 업데이트
                 withContext(Dispatchers.Main) {
                     val currentBalance = sharedPreferences.getLong("balance", 0)

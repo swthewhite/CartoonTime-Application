@@ -160,8 +160,10 @@ data class NavertAuthResponse(
 
 // 포인트 충전 /ct/charge
 data class ChargeRequest(
-    val userId: Long,
-    val amount: Long
+    val cid: String,
+    val partnerUserId: Long,
+    val itemName: String,
+    val totalAmount: Long,
 )
 
 data class ChargeResponse(

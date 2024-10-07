@@ -23,7 +23,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
-import com.alltimes.cartoontime.ui.screen.composable.SendDescription
+import com.alltimes.cartoontime.ui.screen.composable.Description
 import com.alltimes.cartoontime.ui.viewmodel.SendViewModel
 
 @Composable
@@ -89,7 +89,7 @@ fun SendDescriptionScreen(viewModel: SendViewModel) {
                     bottom.linkTo(parent.bottom)
                 }
         ) {
-            SendDescription()
+            Description()
         }
 
         // 설명

@@ -430,10 +430,10 @@ class SignUpViewModel(application: Application, private val context: Context) : 
 
                 withContext(Dispatchers.Main) {
                     if (response.success) {
-                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(it, "로그인 성공.", Toast.LENGTH_SHORT).show()
                         goScreen(ScreenType.SIGNUPCOMPLETE)
                     } else {
-                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(it, "로그인 실패. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
                         _naverID.value = TextFieldValue()
                         _naverPassword.value = TextFieldValue()
                     }

@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -46,7 +47,7 @@ import kotlinx.coroutines.delay
 fun ApproachAnimate() {
     // 애니메이션을 위한 상태 값 (0.dp에서 150.dp 사이의 값을 애니메이션)
     // spacerWidth의 초기값을 150.dp로 설정
-    var spacerWidth by remember { mutableStateOf(150.dp) }
+    var spacerWidth by remember { mutableStateOf(130.dp) }
 
     // 애니메이션 상태
     val animatedSpacerWidth by animateDpAsState(
@@ -58,9 +59,8 @@ fun ApproachAnimate() {
     LaunchedEffect(Unit) {
         while (true) {
             spacerWidth = 0.dp // Spacer를 왼쪽으로 이동
-            delay(1000) // 1초 대기
-            delay(2000)
-            spacerWidth = 150.dp // Spacer를 오른쪽으로 이동
+            delay(3000) // 3초 대기
+            spacerWidth = 130.dp // Spacer를 오른쪽으로 이동
             delay(1000) // 1초 대기
         }
     }
@@ -83,7 +83,8 @@ fun ApproachAnimate() {
                 modifier = Modifier
                     .width(150.dp)
                     .height(200.dp)
-                    .padding(start = 15.dp)
+                    .padding(start = 15.dp),
+                contentScale = ContentScale.Crop
             )
 
             // 애니메이션되는 Spacer
@@ -94,8 +95,8 @@ fun ApproachAnimate() {
                 painter = painterResource(id = R.drawable.ic_phone_front),
                 contentDescription = null,
                 modifier = Modifier
-                    .width(50.dp)
-                    .height(50.dp)
+                    .width(100.dp)
+                    .height(100.dp)
                     .padding(start = 5.dp)
             )
         }
@@ -107,7 +108,7 @@ fun PhoneReverseAnimate() {
     // density 값을 로컬에서 가져옴
     val density = LocalDensity.current.density
 
-    // 회전 각도 상태 (0f에서 180f로 회전)
+    // 회전 각도 상태 (0f에서 -180f로 회전)
     var rotationAngle by remember { mutableStateOf(0f) }
 
     // 애니메이션 상태
@@ -117,18 +118,17 @@ fun PhoneReverseAnimate() {
     )
 
     // 회전 후 정면 이미지인지 뒷면 이미지인지 결정
-    val isFrontVisible = animatedRotationAngle < 90f
+    val isFrontVisible = animatedRotationAngle > -90f // 각도가 -90 이하일 때 뒷면 표시
 
     // LaunchedEffect를 사용해 애니메이션 반복
     LaunchedEffect(Unit) {
         while (true) {
-            rotationAngle = 180f // 휴대폰을 뒤집음
+            rotationAngle = -180f // 휴대폰을 뒤집음 (왼쪽으로 회전)
             delay(2000) // 뒤집은 후 2초 대기
             rotationAngle = 0f // 원래대로 복귀
             delay(2000) // 복귀 후 2초 대기
         }
     }
-
 
     // 휴대폰 애니메이션 영역
     Box(
@@ -146,8 +146,8 @@ fun PhoneReverseAnimate() {
                 painter = painterResource(id = R.drawable.ic_phone_front),
                 contentDescription = null,
                 modifier = Modifier
-                    .width(100.dp)
-                    .height(100.dp)
+                    .width(150.dp)
+                    .height(150.dp)
             )
         } else {
             // 뒷면 이미지
@@ -155,22 +155,21 @@ fun PhoneReverseAnimate() {
                 painter = painterResource(id = R.drawable.ic_phone_back),
                 contentDescription = null,
                 modifier = Modifier
-                    .width(100.dp)
-                    .height(100.dp)
+                    .width(150.dp)
+                    .height(150.dp)
             )
         }
     }
-
 }
 
 @Composable
-fun SendDescription() {
+fun Description() {
     // Define the infinite transition for Spacer height
     val infiniteTransition = rememberInfiniteTransition()
 
     // Animate the spacer height from 200.dp to 0.dp and back
     val spacerHeight by infiniteTransition.animateFloat(
-        initialValue = 200f,
+        initialValue = 150f,
         targetValue = 0f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1000, easing = LinearEasing),
@@ -181,7 +180,7 @@ fun SendDescription() {
     // Animate the spacer width from 0.dp to 150.dp and back
     val spacerWidth by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 150f,
+        targetValue = 100f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -224,7 +223,9 @@ fun SendDescription() {
                 Image(
                     painter = painterResource(id = R.drawable.ic_phone_front),
                     contentDescription = "Left Image",
-                    modifier = Modifier.size(100.dp) // Keep the image size fixed
+                    modifier = Modifier
+                        .size(150.dp) // Keep the image size fixed
+                        .graphicsLayer { rotationZ = 180f } // Rotate the image
                 )
             }
             Spacer(modifier = Modifier.height(spacerHeight.dp))
@@ -237,7 +238,7 @@ fun SendDescription() {
                 Image(
                     painter = painterResource(id = R.drawable.ic_phone_back),
                     contentDescription = "Right Image",
-                    modifier = Modifier.size(100.dp) // Keep the image size fixed
+                    modifier = Modifier.size(150.dp) // Keep the image size fixed
                 )
                 Spacer(modifier = Modifier.width(spacerWidth.dp))
             }
@@ -477,11 +478,11 @@ fun deviceFindingAnimation() {
         // 항상 보여지는 추가 이미지 (애니메이션 이미지들과 겹치도록 위치 조정)
         Image(
             painter = painterResource(id = R.drawable.ic_phone_front), // 고정 이미지 리소스
-            contentDescription = "Static Image",
+            contentDescription = "Phone Image",
             modifier = Modifier
-                .width(70.dp)  // 이미지의 가로 크기
-                .height(70.dp) // 이미지의 세로 크기
-                .offset(y = 50.dp) // 약간 위로 올려 애니메이션 이미지와 겹치도록 설정
+                .width(120.dp)  // 이미지의 가로 크기
+                .height(120.dp) // 이미지의 세로 크기
+                .offset(x = 5.dp, y = 50.dp) // 약간 위로 올려 애니메이션 이미지와 겹치도록 설정
         )
 
         // 고정된 텍스트 (추가된 이미지 아래쪽에 위치)

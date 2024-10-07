@@ -11,6 +11,7 @@ import android.hardware.SensorManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -86,7 +87,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     val balance: StateFlow<Long> = _balance
 
     // 입퇴실 상태
-    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 완료"))
+    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
@@ -101,6 +102,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     var isFCMActive = false
 
     init {
+        _state.value = "입실 전"
         fcmRepository.listenForMessages(fcmToken!!)
         isFCMActive = true
 
@@ -160,6 +162,18 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     private var accelerometerCount by Delegates.notNull<Int>()
     private var accelerometerIsCounting = true // 1분 동안 카운팅 방지용 플래그
 
+    // FCM 메시지 전송
+    private fun sendMessage(senderId: String, receiverId: String, content: String) {
+        println("메시지 전송을 시작합니다.")
+        fcmRepository.saveMessage(senderId, receiverId, content)
+    }
+
+    fun sendKioskSkip(){
+        if (fcmToken != null) {
+            sendMessage(fcmToken, "kiosk", "kioskskip")
+        }
+    }
+
     // FCM 메시지 수신
     override fun onMessageReceived(message: FcmMessage) {
         if (!isFCMActive) return
@@ -177,6 +191,49 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             _charge.value = matchResult!!.groupValues[1].toLong()
             _state.value = "입실 완료"
             goScreen(ScreenType.CONFIRM)
+        } else if (message.content.contains("만화")) {
+            // "만화/{category_index}/{comic_index}"에서 category_index와 comic_index를 추출
+            val pattern = Regex("만화/(\\d+)/(\\d+)")
+            val matchResult = pattern.find(message.content)
+
+            if (matchResult != null) {
+                val categoryIndex = matchResult.groupValues[1].toInt()
+                val comicIndex = matchResult.groupValues[2].toInt()
+
+                // categoryIndex에 따라 카테고리 설정
+                when (categoryIndex) {
+                    0 -> _category.value = "사용자 취향 만화"
+                    1 -> _category.value = "베스트 셀러 만화"
+                    2 -> _category.value = "오늘의 추천 만화"
+                    else -> _category.value = "사용자 취향 만화" // 기본값
+                }
+
+                // 카테고리 만화 목록을 불러온 후 comicIndex에 해당하는 만화 선택
+                fetchCartoons(_category.value)
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    // 만화 목록이 업데이트될 때까지 대기
+                    cartoons.collect { cartoonList ->
+                        if (cartoonList.isNotEmpty()) {
+                            // comicIndex가 목록의 범위를 벗어나지 않으면 clickedCartoon 설정
+                            triggerVibration(context)
+                            if (comicIndex in cartoonList.indices) {
+                                _clickedCartoon.value = cartoonList[comicIndex]
+                                context?.let {
+                                    Toast.makeText(it, "선택하신 만화로 경로를 안내합니다.", Toast.LENGTH_SHORT).show()
+                                }
+                                goScreen(ScreenType.BOOKNAV)
+                            } else {
+                                // comicIndex가 범위를 벗어나면 기본 처리
+                                _clickedCartoon.value = null
+                                context?.let {
+                                    Toast.makeText(it, "에러발생. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
