@@ -87,7 +87,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     val balance: StateFlow<Long> = _balance
 
     // 입퇴실 상태
-    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 완료"))
+    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
