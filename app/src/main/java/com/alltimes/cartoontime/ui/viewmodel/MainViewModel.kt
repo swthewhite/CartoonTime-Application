@@ -101,6 +101,10 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     // 특정 화면일 때만 메시지 처리
     var isFCMActive = false
 
+    // 로딩 다이얼로그
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     init {
         fcmRepository.listenForMessages(fcmToken!!)
         isFCMActive = true
@@ -192,6 +196,8 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             goScreen(ScreenType.CONFIRM)
         } else if (message.content.contains("만화")) {
             // "만화/{category_index}/{comic_index}"에서 category_index와 comic_index를 추출
+            _isLoading.value = true
+
             val pattern = Regex("만화/(\\d+)/(\\d+)")
             val matchResult = pattern.find(message.content)
 
@@ -222,12 +228,14 @@ class MainViewModel(application: Application, private val context: Context) : Ba
                                     Toast.makeText(it, "선택하신 만화로 경로를 안내합니다.", Toast.LENGTH_SHORT).show()
                                 }
                                 goScreen(ScreenType.BOOKNAV)
+                                _isLoading.value = false
                             } else {
                                 // comicIndex가 범위를 벗어나면 기본 처리
                                 _clickedCartoon.value = null
                                 context?.let {
                                     Toast.makeText(it, "에러발생. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
                                 }
+                                _isLoading.value = false
                             }
                         }
                     }
