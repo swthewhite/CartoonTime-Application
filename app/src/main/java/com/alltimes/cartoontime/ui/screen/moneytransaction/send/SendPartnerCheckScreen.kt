@@ -68,6 +68,8 @@ fun SendPartnerCheckScreen(viewModel: SendViewModel) {
                     indication = null,
                     onClick = {
                         viewModel.goScreen(ScreenType.SENDPOINTINPUT)
+                        // 진행하다가 돌아가는 경우, 비밀번 재입력 필요
+                        viewModel.initializePassword()
                     }
                 )
                 .constrainAs(backButton) {

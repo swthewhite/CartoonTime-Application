@@ -96,6 +96,11 @@ class SendActivity : ComponentActivity() {
 
         // 현재 화면과 다를 때 화면 전환
         if (currentRoute != route) {
+
+            if (!(route == "sendPointInputScreen" || route == "sendPasswordInputScreen")) {
+                viewModel.onScreenChanged()
+            }
+
             navController.navigate(route) {
                 // 모든 과정에서
                 popUpTo(route) { inclusive = true }

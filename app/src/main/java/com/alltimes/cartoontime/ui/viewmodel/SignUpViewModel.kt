@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.compose.ui.text.input.TextFieldValue
@@ -19,7 +20,8 @@ import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.remote.NaverAuthRequest
 import com.alltimes.cartoontime.data.remote.RetrofitClient
-import com.alltimes.cartoontime.data.remote.SignResponse
+import com.alltimes.cartoontime.data.remote.SigninResponse
+import com.alltimes.cartoontime.data.remote.SignupResponse
 import com.alltimes.cartoontime.data.remote.VerifyAuthRequest
 import com.alltimes.cartoontime.data.repository.UserRepository
 import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
@@ -78,6 +80,10 @@ class SignUpViewModel(application: Application, private val context: Context) : 
     // 버튼 활성화용 (회원가입, 로그인)
     private val _isSubmitButtonEnabled = MutableStateFlow(false)
     val isSubmitButtonEnabled: StateFlow<Boolean> = _isSubmitButtonEnabled
+
+    // 로딩 다이얼로그
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     // 등록하기 버튼 활성화 여부 검사
     private fun checkSubmitButtonState() {
@@ -236,6 +242,8 @@ class SignUpViewModel(application: Application, private val context: Context) : 
 
     // 등록하기 버튼
     fun onSubmit() {
+        _isLoading.value = true
+
         if (isSignUp) {
             // sign-up api 호출
             CoroutineScope(Dispatchers.IO).launch {
@@ -243,10 +251,14 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     repository.signUp(phoneNumber.value.text, name.value.text)
                 } catch (e: Exception) {
                     // 오류 처리
+                    // 실패 처리
+                    Log.d("SignUpViewModel", "onSubmit up: ${e.message}")
+                    _isLoading.value = false
+
                     return@launch
                 }
 
-                handleResponse(response)
+                handleSignup(response)
             }
         } else {
             // sign-in api 호출
@@ -255,15 +267,20 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     repository.signIn(phoneNumber.value.text)
                 } catch (e: Exception) {
                     // 오류 처리
+                    Log.d("SignUpViewModel", "onSubmit in: ${e.message}")
+                    _isLoading.value = false
                     return@launch
                 }
-                handleResponse(response)
+                handleSignin(response)
             }
         }
     }
 
-    // 회원 가입, 로그인 처리 로직
-    private fun handleResponse(response: SignResponse?) {
+    private fun handleSignin(response: SigninResponse) {
+        _isLoading.value = false
+
+        isNaverInfo = (response.data?.hasNaverId == true)
+
         if (response?.success == true) {
             // 유저 정보 저장
             editor?.putLong("userId", response.data?.user?.id ?: -1)
@@ -279,10 +296,46 @@ class SignUpViewModel(application: Application, private val context: Context) : 
 
             // 화면 전환은 메인 스레드에서
             CoroutineScope(Dispatchers.Main).launch {
-                goScreen(ScreenType.PASSWORDSETTING)
+                if (isNaverInfo) {
+                    goScreen(ScreenType.PASSWORDSETTING)
+                } else {
+                    goScreen(ScreenType.NAVERLOGIN)
+                }
             }
         } else {
             // 실패 처리
+            context?.let {
+                Toast.makeText(it, response?.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // 회원 가입, 로그인 처리 로직
+    private fun handleSignup(response: SignupResponse) {
+        _isLoading.value = false
+
+        if (response?.success == true) {
+            // 유저 정보 저장
+            editor?.putLong("userId", response.data?.user?.id ?: -1)
+            editor?.putString("username", response.data?.user?.username ?: "")
+            editor?.putString("name", response.data?.user?.name ?: "")
+
+            // jwtToken 저장
+            editor?.putString("grantType", response.data?.jwtToken?.grantType)
+            editor?.putString("accessToken", response.data?.jwtToken?.accessToken)
+            editor?.putString("refreshToken", response.data?.jwtToken?.refreshToken)
+
+            editor?.apply()
+
+            // 화면 전환은 메인 스레드에서
+            CoroutineScope(Dispatchers.Main).launch {
+                goScreen(ScreenType.NAVERLOGIN)
+            }
+        } else {
+            // 실패 처리
+            context?.let {
+                Toast.makeText(it, response?.message, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -351,12 +404,8 @@ class SignUpViewModel(application: Application, private val context: Context) : 
     private fun checkPassword() {
         context?.let {
             if (password.value == PassWord) {
-                // 회원가입이거나 로그인이라도 네이버 정보가 없으면 naverlogin으로 전환
-                // 로그인이거나 네이버 정보가 있으면 signupscreen으로 전환
 
-                // isSignUp => 네이버 정보가 있는지 없는지로 구분해도 될듯
-                if (isSignUp) goScreen(ScreenType.NAVERLOGIN)
-                else goScreen(ScreenType.SIGNUPCOMPLETE)
+                goScreen(ScreenType.SIGNUPCOMPLETE)
 
                 // 비밀번호 저장
                 editor?.putString("password", password.value)
@@ -410,8 +459,8 @@ class SignUpViewModel(application: Application, private val context: Context) : 
 
     // 네이버 로그인
     fun onNaverLogin() {
+        _isLoading.value = true
         context?.let {
-            // 네이버 로그인 api 호출
             CoroutineScope(Dispatchers.IO).launch {
                 val userId = sharedPreferences?.getLong("userId", -1L).toString()
 
@@ -424,21 +473,36 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                         )
                     )
                 } catch (e: Exception) {
-                    // 오류 처리
+                    // 예외 발생 시 처리
+                    handleLoginError(it, e)
                     return@launch
                 }
 
                 withContext(Dispatchers.Main) {
                     if (response.success) {
-                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
-                        goScreen(ScreenType.SIGNUPCOMPLETE)
+                        Toast.makeText(it, "로그인 성공.", Toast.LENGTH_SHORT).show()
+                        goScreen(ScreenType.PASSWORDSETTING)
                     } else {
-                        Toast.makeText(it, response.message, Toast.LENGTH_SHORT).show()
-                        _naverID.value = TextFieldValue()
-                        _naverPassword.value = TextFieldValue()
+                        // response.success가 false인 경우 처리
+                        handleLoginError(it, null)
                     }
+                    _isLoading.value = false
                 }
             }
+        }
+    }
+
+    private suspend fun handleLoginError(context: Context, exception: Exception?) {
+        // UI 스레드에서 Toast를 보여줍니다.
+        withContext(Dispatchers.Main) {
+            exception?.let {
+                println("로그인 오류: ${it.message}") // 로그 찍기
+            } ?: println("로그인 오류: 서버에서 알 수 없는 오류 발생")
+
+            Toast.makeText(context, "로그인 실패. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+            _naverID.value = TextFieldValue()
+            _naverPassword.value = TextFieldValue()
+            _isLoading.value = false
         }
     }
 

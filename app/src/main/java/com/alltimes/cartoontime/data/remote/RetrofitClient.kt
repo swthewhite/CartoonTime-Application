@@ -4,6 +4,7 @@ import android.content.Context
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
     private const val BASE_URL = "https://j11a507.p.ssafy.io/"
@@ -15,6 +16,9 @@ object RetrofitClient {
             // OkHttpClient에 AuthInterceptor 추가
             val client = OkHttpClient.Builder()
                 .addInterceptor(AuthInterceptor(context))
+                .connectTimeout(100, TimeUnit.SECONDS)
+                .readTimeout(100, TimeUnit.SECONDS)
+                .writeTimeout(100, TimeUnit.SECONDS)
                 .build()
 
             retrofit = Retrofit.Builder()
@@ -29,16 +33,3 @@ object RetrofitClient {
     val apiService: ApiService
         get() = retrofit.create(ApiService::class.java)
 }
-
-
-
-//object RetrofitClient {
-//    private const val BASE_URL = "https://j11a507.p.ssafy.io/"
-//
-//    private val retrofit: Retrofit = Retrofit.Builder()
-//        .baseUrl(BASE_URL)
-//        .addConverterFactory(GsonConverterFactory.create())
-//        .build()
-//
-//    val apiService: ApiService = retrofit.create(ApiService::class.java)
-//}

@@ -69,6 +69,7 @@ fun SendLoadingScreen(viewModel: SendViewModel) {
                     indication = null,
                     onClick = {
                         viewModel.goScreen(ScreenType.SENDPOINTINPUT)
+                        viewModel.initializePassword()
                     }
                 )
                 .constrainAs(backButton) {
@@ -129,6 +130,7 @@ fun SendLoadingScreen(viewModel: SendViewModel) {
         }
     }
 
-    // 로딩 다이얼로그 표시
-    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+    // 인터넷 로딩 다이얼로그 표시
+    networkStatus?.let { Loading("인터넷 연결 시도중 ... ", isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+
 }

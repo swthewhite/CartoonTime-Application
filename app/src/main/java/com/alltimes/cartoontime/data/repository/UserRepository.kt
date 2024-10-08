@@ -13,8 +13,9 @@ import com.alltimes.cartoontime.data.remote.NaverAuthRequest
 import com.alltimes.cartoontime.data.remote.NavertAuthResponse
 import com.alltimes.cartoontime.data.remote.Recommendation
 import com.alltimes.cartoontime.data.remote.SignInRequest
-import com.alltimes.cartoontime.data.remote.SignResponse
 import com.alltimes.cartoontime.data.remote.SignUpRequest
+import com.alltimes.cartoontime.data.remote.SigninResponse
+import com.alltimes.cartoontime.data.remote.SignupResponse
 import com.alltimes.cartoontime.data.remote.TransferRequest
 import com.alltimes.cartoontime.data.remote.TransferResponse
 import com.alltimes.cartoontime.data.remote.UserComicRecommendResponse
@@ -31,11 +32,11 @@ class UserRepository(private val apiService: ApiService) {
         return apiService.verifyAuthCode(verifyAuthRequest)
     }
 
-    suspend fun signUp(phoneNumber: String, name: String): SignResponse {
+    suspend fun signUp(phoneNumber: String, name: String): SignupResponse {
         return apiService.signUp(SignUpRequest(phoneNumber, name))
     }
 
-    suspend fun signIn(phoneNumber: String): SignResponse {
+    suspend fun signIn(phoneNumber: String): SigninResponse {
         return apiService.signIn(SignInRequest(phoneNumber))
     }
 
@@ -69,6 +70,10 @@ class UserRepository(private val apiService: ApiService) {
 
     suspend fun userRecommendComics(userId: Long): List<Recommendation> {
         return apiService.userRecommendComics(userId)
+    }
+
+    suspend fun todayRecommendComics(): List<Recommendation> {
+        return apiService.todayRecommendComics()
     }
 
 }

@@ -373,7 +373,10 @@ fun MainScreen(viewModel: MainViewModel) {
             )
         } else if (state == "입실 완료") {
             Button(
-                onClick = { viewModel.goScreen(ScreenType.BOOKRECOMMEND) },
+                onClick = {
+                    viewModel.goScreen(ScreenType.BOOKRECOMMEND)
+                    viewModel.sendKioskSkip()
+                          },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF9B912)),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -392,8 +395,8 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 
-    // 로딩 다이얼로그 표시
-    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+    // 인터넷 로딩 다이얼로그 표시
+    networkStatus?.let { Loading("인터넷 연결 시도중 ... ", isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 
     // 팝업 표시
     if (showExitDialog) {

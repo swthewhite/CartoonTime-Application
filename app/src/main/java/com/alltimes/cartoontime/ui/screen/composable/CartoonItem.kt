@@ -58,7 +58,7 @@ fun CartoonItem(comic: ComicResponse, viewModel: MainViewModel) {
                 if (clickedComic?.id == comic.id) Color(0xFFF9B912) else Color.Black,
                 RoundedCornerShape(8.dp)
             )
-            .background(Color.White, RoundedCornerShape(8.dp))
+            .background(Color(0xFFF4F2EE), RoundedCornerShape(8.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,

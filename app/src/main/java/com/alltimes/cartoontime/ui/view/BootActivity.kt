@@ -13,6 +13,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.alltimes.cartoontime.data.model.ui.ActivityType
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.ui.screen.boot.BootScreen
 import com.alltimes.cartoontime.ui.screen.boot.LoginScreen
@@ -77,7 +78,15 @@ class BootActivity : ComponentActivity() {
         // ViewModel에서 Activity 전환 요청 처리
         viewModel.activityNavigationTo.observe(this) { navigationTo ->
             navigationTo?.activityType?.let { activityType ->
-                NavigationHelper.navigate(this, activityType)
+                if (activityType == ActivityType.MAIN) {
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        putExtra("MAIN", true) // 데이터 전달
+                    }
+                    startActivity(intent)
+                    finish()
+                } else {
+                    NavigationHelper.navigate(this, activityType)
+                }
             }
         }
 

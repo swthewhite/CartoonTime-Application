@@ -154,6 +154,10 @@ class SendViewModel(application: Application, private val context: Context) : Ba
 
     val password: StateFlow<String> get() = numPadClickHandler.password
 
+    fun initializePassword() {
+        numPadClickHandler.clearPassword()
+    }
+
     private val numPadClickHandler: NumPadClickHandler by lazy {
         NumPadClickHandler(
             context = context,
@@ -162,6 +166,7 @@ class SendViewModel(application: Application, private val context: Context) : Ba
                 if (userPassword == password) {
                     findingPartner()
                     goScreen(ScreenType.SENDPARTNERCHECK)
+                    startTimeout()
                 } else {
                     numPadClickHandler.clearPassword()
                     showPasswordError()
@@ -352,8 +357,31 @@ class SendViewModel(application: Application, private val context: Context) : Ba
     /////////////////////////// 9. Description ///////////////////////////
     private val _isAcceptOpen = MutableStateFlow(false)
     val isAcceptOpen: StateFlow<Boolean> = _isAcceptOpen
+
     private var measurementCount = 0
+    private var overMeasureCount = 0
+
     private val timeoutHandler = Handler(Looper.getMainLooper())
+    private var timeoutRunnable: Runnable? = null
+
+    // 화면 전환이 발생할 때 호출
+    fun onScreenChanged() {
+        startTimeout() // 타이머 리셋
+    }
+
+    private fun startTimeout() {
+        // 이전 타이머 제거
+        timeoutRunnable?.let { timeoutHandler.removeCallbacks(it) }
+
+        // 새 타이머 설정 (1분)
+        timeoutRunnable = Runnable {
+            // 타임아웃 발생 시 처리할 코드
+            Toast.makeText(context, "타임 아웃 ... !! 연결에 실패했습니다.", Toast.LENGTH_SHORT).show()
+            goActivity(ActivityType.MAIN)
+        }
+
+        timeoutHandler.postDelayed(timeoutRunnable!!, 60_000) // 60초 후 실행
+    }
 
     // 각속도 센서 데이터 감지
     @SuppressLint("MissingPermission")
@@ -379,6 +407,7 @@ class SendViewModel(application: Application, private val context: Context) : Ba
                 }
                 // uwb Ranging 시작
                 measurementCount = 0
+                overMeasureCount = 0
                 Log.d("SendViewModel", "Ranging 시작")
                 CoroutineScope(Dispatchers.Main).launch {
                     val characteristicSuccess =
@@ -399,24 +428,33 @@ class SendViewModel(application: Application, private val context: Context) : Ba
         println("거리 측정 : ${distance}")
 
         // 거리 측정 로직 처리
+        
+        // 5cm 이내일 경우 측정 증가
+        // 값이 튄 경우는 초기화
         if (distance < 5) {
             measurementCount++
-        } else {
+            overMeasureCount = 0
+        }
+        // 5cm 이상일 경우 측정 초기화
+        // 값이 튄 경우 측정 증가
+        else {
             measurementCount = 0  // 거리 벗어나면 카운트 초기화
+            overMeasureCount++
         }
 
-        if (measurementCount >= 30) {
+        // 5cm 이하 15회 측정 시 거래 진행
+        if (measurementCount >= 15) {
             uwbCommunicator.destroyRanging()
             transferPoint()
         }
-
-        // 10cm 이상 거리에서 타임아웃 처리
-        timeoutHandler.postDelayed({
-            if (distance > 10) {
-                uwbCommunicator.destroyRanging()
-                //completeLogin()
+        // 5cm 이상 15회 측정 시 거래 취소
+        else if (overMeasureCount >= 15) {
+            uwbCommunicator.destroyRanging()
+            CoroutineScope(Dispatchers.Main).launch {
+                goActivity(ActivityType.MAIN)
+                Toast.makeText(context, "거리가 너무 멀어 거래가 취소되었습니다.", Toast.LENGTH_SHORT).show()
             }
-        }, 3000)
+        }
     }
 
     /////////////////////////// Loading ///////////////////////////

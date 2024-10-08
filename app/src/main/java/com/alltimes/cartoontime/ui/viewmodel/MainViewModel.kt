@@ -11,6 +11,7 @@ import android.hardware.SensorManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -82,11 +83,11 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     val charge: StateFlow<Long> = _charge
 
     // 잔액
-    private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 1000000L))
+    private val _balance = MutableStateFlow(sharedPreferences.getLong("balance", 0L))
     val balance: StateFlow<Long> = _balance
 
     // 입퇴실 상태
-    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 완료"))
+    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
@@ -100,9 +101,15 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     // 특정 화면일 때만 메시지 처리
     var isFCMActive = false
 
+    // 로딩 다이얼로그
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     init {
         fcmRepository.listenForMessages(fcmToken!!)
         isFCMActive = true
+
+        Log.d("MainViewModel", "fcmToken : $fcmToken")
 
         // 서버 api 호출
         CoroutineScope(Dispatchers.IO).launch {
@@ -111,8 +118,11 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             val response = try {
                 repository.saveFcmToken(fcmRequest)
             } catch (e: Exception) {
+                Log.d("MainViewModel", "fcmToken 저장 실패 : $e")
                 null
             }
+
+            Log.d("MainViewModel", "response : $response")
 
             if (response?.success == true) {
                 println("fcmToken 저장 성공")
@@ -160,6 +170,18 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     private var accelerometerCount by Delegates.notNull<Int>()
     private var accelerometerIsCounting = true // 1분 동안 카운팅 방지용 플래그
 
+    // FCM 메시지 전송
+    private fun sendMessage(senderId: String, receiverId: String, content: String) {
+        println("메시지 전송을 시작합니다.")
+        fcmRepository.saveMessage(senderId, receiverId, content)
+    }
+
+    fun sendKioskSkip(){
+        if (fcmToken != null) {
+            sendMessage(fcmToken, "kiosk", "kioskskip")
+        }
+    }
+
     // FCM 메시지 수신
     override fun onMessageReceived(message: FcmMessage) {
         if (!isFCMActive) return
@@ -177,6 +199,57 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             _charge.value = matchResult!!.groupValues[1].toLong()
             _state.value = "입실 완료"
             goScreen(ScreenType.CONFIRM)
+        } else if (message.content.contains("만화")) {
+            // "만화/{category_index}/{comic_index}"에서 category_index와 comic_index를 추출
+            _isLoading.value = true
+
+            val pattern = Regex("만화/(\\d+)/(\\d+)")
+            val matchResult = pattern.find(message.content)
+
+            if (matchResult != null) {
+
+                initializeMQTT()
+                initializeSensors()
+
+                val categoryIndex = matchResult.groupValues[1].toInt()
+                val comicIndex = matchResult.groupValues[2].toInt()
+
+                // categoryIndex에 따라 카테고리 설정
+                when (categoryIndex) {
+                    0 -> _category.value = "사용자 취향 만화"
+                    1 -> _category.value = "베스트 셀러 만화"
+                    2 -> _category.value = "오늘의 추천 만화"
+                    else -> _category.value = "사용자 취향 만화" // 기본값
+                }
+
+                // 카테고리 만화 목록을 불러온 후 comicIndex에 해당하는 만화 선택
+                fetchCartoons(_category.value)
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    // 만화 목록이 업데이트될 때까지 대기
+                    cartoons.collect { cartoonList ->
+                        if (cartoonList.isNotEmpty()) {
+                            // comicIndex가 목록의 범위를 벗어나지 않으면 clickedCartoon 설정
+                            triggerVibration(context)
+                            if (comicIndex in cartoonList.indices) {
+                                _clickedCartoon.value = cartoonList[comicIndex]
+                                context?.let {
+                                    Toast.makeText(it, "선택하신 만화로 경로를 안내합니다.", Toast.LENGTH_SHORT).show()
+                                }
+                                goScreen(ScreenType.BOOKNAV)
+                                _isLoading.value = false
+                            } else {
+                                // comicIndex가 범위를 벗어나면 기본 처리
+                                _clickedCartoon.value = null
+                                context?.let {
+                                    Toast.makeText(it, "에러발생. 다시 시도해주세요.", Toast.LENGTH_SHORT).show()
+                                }
+                                _isLoading.value = false
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -486,6 +559,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
 
     fun fetchCartoons(category: String) {
         println("fetchCartoons: $category")
+        _cartoons.value = emptyList()
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 when (category) {
@@ -500,8 +574,19 @@ class MainViewModel(application: Application, private val context: Context) : Ba
                         println("convertedComics: $convertedComics")
                         _cartoons.value = convertedComics
                     }
+                    "오늘의 추천 만화" -> {
+                        val todayrecommendedComicsResponse = repository.todayRecommendComics()
+                        println("todayrecommendedComicsResponse: $todayrecommendedComicsResponse")
+
+                        val convertedComics = todayrecommendedComicsResponse.map { recommendation ->
+                            convertRecommendationToComicResponse(recommendation)
+                        }
+                        println("convertedComics: $convertedComics")
+                        _cartoons.value = convertedComics
+                    }
                     else -> {
                         val allComics = repository.getAllComics()
+                        println("allComics: $allComics")
                         _cartoons.value = allComics
                     }
                 }
@@ -528,6 +613,10 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             val x = json["x"] ?: 0f
             val y = json["y"] ?: 0f
             _currentLocation.value = Location(x, y)  // 현재 위치 업데이트
+            _distance.value = calculateDistance(_currentLocation.value, _targetLocation.value)  // 거리 계산
+            Log.d("MainViewModel", "Received message: $message")
+            Log.d("MainViewModel", "Current location: ${_currentLocation.value}")
+            Log.d("MainViewModel", "Distance: ${_distance.value}")
         } catch (e: Exception) {
             println("Failed to parse message: ${e.message}")
         }
@@ -537,7 +626,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
     // 현재 위치
-    private val _currentLocation = MutableStateFlow(Location(5f, 4f)) // 초기값
+    private val _currentLocation = MutableStateFlow(Location(0f, 0f)) // 초기값
     val currentLocation: StateFlow<Location> get() = _currentLocation
 
     // 목표 위치
@@ -546,6 +635,9 @@ class MainViewModel(application: Application, private val context: Context) : Ba
 
     private val _direction = MutableStateFlow<Float>(0f)
     val direction: StateFlow<Float> get() = _direction
+
+    private val _distance = MutableStateFlow(0f)
+    val distance: StateFlow<Float> get() = _distance
 
     private var accelerometerValues = FloatArray(3)
     private var magnetometerValues = FloatArray(3)
@@ -596,9 +688,19 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     }
 
     // 현재 위치와 목표 위치를 사용하여 목표 방향을 계산하는 함수
+//    fun calculateTargetDirection(current: Location, target: Location): Float {
+//        val dx = target.x - current.x
+//        val dy = target.y - current.y
+//        return Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
+//    }
+
     fun calculateTargetDirection(current: Location, target: Location): Float {
-        val dx = target.x - current.x
-        val dy = target.y - current.y
+        // 변경된 좌표계: X의 증가 방향이 아래쪽, Y의 증가 방향이 왼쪽
+        //val dx = current.x - target.x  // X의 증가 방향이 아래쪽이므로 방향 반대로 계산
+        val dx = -(target.x - current.x)
+        val dy = target.y - current.y  // Y의 증가 방향이 왼쪽이므로 방향 반대로 계산
+
+        // 각도를 계산하고, 360도를 기준으로 보정
         return Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
     }
 

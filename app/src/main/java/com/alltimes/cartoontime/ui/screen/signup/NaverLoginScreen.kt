@@ -38,15 +38,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.ui.viewmodel.SignUpViewModel
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.alltimes.cartoontime.ui.screen.composable.Loading
+import com.alltimes.cartoontime.ui.screen.composable.LoadingAnimation
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +61,7 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
     val naverPassword by viewModel.naverPassword.collectAsState()
     val loginEnable by viewModel.naverLoginEnable.collectAsState()
     val networkStatus by viewModel.networkStatus.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     // screen variable
     var passwordVisible by remember { mutableStateOf(false) }
@@ -257,6 +261,10 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
         )
     }
 
-    // 로딩 다이얼로그 표시
-    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+    // 로딩 다이얼로그
+    isLoading?.let { Loading("등록 중...", isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+
+    // 인터넷 로딩 다이얼로그 표시
+    networkStatus?.let { Loading("인터넷 연결 시도중 ... ", isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+
 }
