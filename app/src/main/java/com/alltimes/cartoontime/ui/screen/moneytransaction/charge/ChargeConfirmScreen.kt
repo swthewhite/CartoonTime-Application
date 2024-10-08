@@ -29,7 +29,6 @@ fun ChargeConfirmScreen(viewModel: ChargeViewModel) {
     // viewmodel variable
     val name = viewModel.userName
     val point by viewModel.point.collectAsState()
-    val networkStatus by viewModel.networkStatus.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -121,6 +120,4 @@ fun ChargeConfirmScreen(viewModel: ChargeViewModel) {
         }
     }
 
-    // 로딩 다이얼로그 표시
-    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 }

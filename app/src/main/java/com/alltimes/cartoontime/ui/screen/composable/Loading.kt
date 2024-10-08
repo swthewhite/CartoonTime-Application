@@ -20,44 +20,42 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.alltimes.cartoontime.common.NumpadAction
 
 @Composable
-fun Loading(isLoading: Boolean, onDismiss: () -> Unit) {
+fun Loading(content: String, isLoading: Boolean, onDismiss: () -> Unit) {
     if (isLoading) {
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = null,
-            containerColor = Color(0xFFFAFAFA),
-            text = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = Color(0xFFF4F2EE), shape = RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center
+        Dialog(onDismissRequest = onDismiss) {
+            Box(
+                modifier = Modifier
+                    .width(200.dp)
+                    .background(color = Color(0xFFF4F2EE), shape = RoundedCornerShape(16.dp))
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Column (
-                        horizontalAlignment = Alignment.CenterHorizontally, // 가로 가운데 정렬
-                        verticalArrangement = Arrangement.Center,
-                    ){
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(48.dp) // 스피너 크기 조정
-                        )
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(48.dp),
+                        color = Color(0xFFE5A911) // 스피너 색상 조정
+                    )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                        Text(
-                            text = "인터넷 연결 시도 중 ..."
-                        )
-                    }
+                    Text(
+                        text = content,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
                 }
-            },
-            confirmButton = {
-                // 확인 버튼 필요 시 추가
-                // 스피너 대신 설명 텍스트를 넣을 수 있음
-            },
-            dismissButton = null // 필요에 따라 버튼 추가 가능
-        )
+            }
+        }
     }
 }

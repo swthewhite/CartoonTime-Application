@@ -27,6 +27,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.alltimes.cartoontime.R
 import com.alltimes.cartoontime.data.model.ui.ScreenType
+import com.alltimes.cartoontime.ui.screen.composable.Loading
 import com.alltimes.cartoontime.ui.screen.composable.Numpad
 import com.alltimes.cartoontime.ui.viewmodel.ChargeViewModel
 
@@ -36,6 +37,7 @@ fun ChargePasswordInputScreen(viewModel: ChargeViewModel) {
     // viewmodel variable
     val password by viewModel.password.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val networkStatus by viewModel.networkStatus.collectAsState()
 
     // screen variable
     val imgSize = 40.dp
@@ -171,5 +173,11 @@ fun ChargePasswordInputScreen(viewModel: ChargeViewModel) {
             Numpad(viewModel)
         }
     }
+
+    // 로딩 다이얼로그
+    isLoading?.let { Loading("충전 중...", isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+
+    // 인터넷 로딩 다이얼로그 표시
+    networkStatus?.let { Loading("인터넷 연결 시도중 ... ", isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 
 }

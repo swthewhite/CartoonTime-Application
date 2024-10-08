@@ -262,26 +262,9 @@ fun NaverLoginScreen(viewModel: SignUpViewModel) {
     }
 
     // 로딩 다이얼로그
-    if (isLoading) {
-        Dialog(onDismissRequest = {  }) {
-            Box(
-                modifier = Modifier
-                    .size(200.dp)
-                    .background(Color.White, RoundedCornerShape(16.dp))
-                    .padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                // 애니메이션을 추가할 수 있는 부분입니다.
-                // 여기서는 단순히 로딩 텍스트와 애니메이션을 보여줍니다.
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    LoadingAnimation() // 로딩 인디케이터
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "등록 중...", fontWeight = FontWeight.Bold)
-                }
-            }
-        }
-    }
+    isLoading?.let { Loading("등록 중...", isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
 
-    // 로딩 다이얼로그 표시
-    networkStatus?.let { Loading(isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+    // 인터넷 로딩 다이얼로그 표시
+    networkStatus?.let { Loading("인터넷 연결 시도중 ... ", isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+
 }

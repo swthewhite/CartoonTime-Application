@@ -550,6 +550,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
 
     fun fetchCartoons(category: String) {
         println("fetchCartoons: $category")
+        _cartoons.value = emptyList()
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 when (category) {
