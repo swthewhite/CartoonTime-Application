@@ -1,6 +1,7 @@
 package com.alltimes.cartoontime.ui.screen.composable
 
 import android.content.res.Resources
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +59,8 @@ fun Map(viewModel: MainViewModel, currentLocation: Location) {
         // x와 y 좌표 매핑
         val xMapped = (currentLocation.x / 10f) * screenWidth // x는 0~10을 기준으로 화면 너비에 맞춰 매핑
         val yMapped = (currentLocation.y / 8f) * screenHeight // y는 0~8을 기준으로 250.dp에 맞춰 매핑
+
+        Log.d("Map", "xMapped: $xMapped, yMapped: $yMapped")
 
         // 현재 위치
         Box(

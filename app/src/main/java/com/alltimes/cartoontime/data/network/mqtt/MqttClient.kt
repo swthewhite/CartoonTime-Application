@@ -12,7 +12,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 // MQTT
 class MqttClient(private val myTopic: String, private val context: Context, private val messageListener: (String) -> Unit) {
     // MQTT를 위한 클라이언트 객체 생성
-    private val mqttClient = MqttClient("tcp://13.209.126.231:1883", MqttClient.generateClientId(), MemoryPersistence())
+    private val mqttClient = MqttClient("tcp://3.36.77.202:1883", MqttClient.generateClientId(), MemoryPersistence())
     // 사용할 주제 ( 넘겨받은 것으로 해도됨 )
     private val mqttTopic = myTopic
 

@@ -87,7 +87,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     val balance: StateFlow<Long> = _balance
 
     // 입퇴실 상태
-    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 완료"))
+    private val _state = MutableStateFlow(sharedPreferences.getString("state", "입실 전"))
     val state: MutableStateFlow<String?> = _state
 
     // 입실 시간
@@ -109,6 +109,8 @@ class MainViewModel(application: Application, private val context: Context) : Ba
         fcmRepository.listenForMessages(fcmToken!!)
         isFCMActive = true
 
+        Log.d("MainViewModel", "fcmToken : $fcmToken")
+
         // 서버 api 호출
         CoroutineScope(Dispatchers.IO).launch {
             val fcmRequest = FCMRequest(userId, fcmToken)
@@ -116,8 +118,11 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             val response = try {
                 repository.saveFcmToken(fcmRequest)
             } catch (e: Exception) {
+                Log.d("MainViewModel", "fcmToken 저장 실패 : $e")
                 null
             }
+
+            Log.d("MainViewModel", "response : $response")
 
             if (response?.success == true) {
                 println("fcmToken 저장 성공")
@@ -202,6 +207,10 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             val matchResult = pattern.find(message.content)
 
             if (matchResult != null) {
+
+                initializeMQTT()
+                initializeSensors()
+
                 val categoryIndex = matchResult.groupValues[1].toInt()
                 val comicIndex = matchResult.groupValues[2].toInt()
 
@@ -604,6 +613,10 @@ class MainViewModel(application: Application, private val context: Context) : Ba
             val x = json["x"] ?: 0f
             val y = json["y"] ?: 0f
             _currentLocation.value = Location(x, y)  // 현재 위치 업데이트
+            _distance.value = calculateDistance(_currentLocation.value, _targetLocation.value)  // 거리 계산
+            Log.d("MainViewModel", "Received message: $message")
+            Log.d("MainViewModel", "Current location: ${_currentLocation.value}")
+            Log.d("MainViewModel", "Distance: ${_distance.value}")
         } catch (e: Exception) {
             println("Failed to parse message: ${e.message}")
         }
@@ -622,6 +635,9 @@ class MainViewModel(application: Application, private val context: Context) : Ba
 
     private val _direction = MutableStateFlow<Float>(0f)
     val direction: StateFlow<Float> get() = _direction
+
+    private val _distance = MutableStateFlow(0f)
+    val distance: StateFlow<Float> get() = _distance
 
     private var accelerometerValues = FloatArray(3)
     private var magnetometerValues = FloatArray(3)

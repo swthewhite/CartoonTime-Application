@@ -157,7 +157,6 @@ fun BookDetailScreen(viewModel: MainViewModel) {
                     onClick = {
                         viewModel.goScreen(ScreenType.BOOKNAV)
                         viewModel.initializeMQTT()
-                        //viewModel.startGyroscope()
                         viewModel.initializeSensors()
                     }
                 )

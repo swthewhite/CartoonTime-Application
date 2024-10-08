@@ -14,10 +14,10 @@ interface ApiService {
     suspend fun verifyAuthCode(@Body request: VerifyAuthRequest): VerifyAuthResponse
 
     @POST("ct/sign-up")
-    suspend fun signUp(@Body request: SignUpRequest): SignResponse
+    suspend fun signUp(@Body request: SignUpRequest): SignupResponse
 
     @POST("ct/sign-in")
-    suspend fun signIn(@Body request: SignInRequest): SignResponse
+    suspend fun signIn(@Body request: SignInRequest): SigninResponse
 
     @POST("ct/auth/fcm-token")
     suspend fun saveFcmToken(@Body request: FCMRequest): FCMResponse
@@ -95,16 +95,29 @@ data class SignInRequest(
 
 // 회원가입, 로그인 응답
 // /ct/sign-up, /ct/sign-in
-data class SignResponse(
+data class SignupResponse(
     val success: Boolean,
     val message: String,
-    val data: SignResponseData?,
+    val data: SignupResponseData?,
     val error: Any?
 )
 
-data class SignResponseData(
+data class SigninResponse(
+    val success: Boolean,
+    val message: String,
+    val data: SigninResponseData?,
+    val error: Any?
+)
+
+data class SignupResponseData(
     val user: User,
     val jwtToken: JwtToken
+)
+
+data class SigninResponseData(
+    val user: User,
+    val jwtToken: JwtToken,
+    val hasNaverId: Boolean
 )
 
 data class User(
@@ -172,7 +185,7 @@ data class ChargeRequest(
 data class ChargeResponse(
     val success: Boolean,
     val message: String,
-    val data: AccountData?,
+    val data: String?,
     val error: Any?
 )
 

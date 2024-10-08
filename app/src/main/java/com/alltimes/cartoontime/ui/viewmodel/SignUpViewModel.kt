@@ -20,7 +20,8 @@ import com.alltimes.cartoontime.data.model.ui.ScreenNavigationTo
 import com.alltimes.cartoontime.data.model.ui.ScreenType
 import com.alltimes.cartoontime.data.remote.NaverAuthRequest
 import com.alltimes.cartoontime.data.remote.RetrofitClient
-import com.alltimes.cartoontime.data.remote.SignResponse
+import com.alltimes.cartoontime.data.remote.SigninResponse
+import com.alltimes.cartoontime.data.remote.SignupResponse
 import com.alltimes.cartoontime.data.remote.VerifyAuthRequest
 import com.alltimes.cartoontime.data.repository.UserRepository
 import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
@@ -257,7 +258,7 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     return@launch
                 }
 
-                handleResponse(response)
+                handleSignup(response)
             }
         } else {
             // sign-in api 호출
@@ -270,14 +271,49 @@ class SignUpViewModel(application: Application, private val context: Context) : 
                     _isLoading.value = false
                     return@launch
                 }
-                handleResponse(response)
+                handleSignin(response)
+            }
+        }
+    }
+
+    private fun handleSignin(response: SigninResponse) {
+        _isLoading.value = false
+
+        isNaverInfo = (response.data?.hasNaverId == true)
+
+        if (response?.success == true) {
+            // 유저 정보 저장
+            editor?.putLong("userId", response.data?.user?.id ?: -1)
+            editor?.putString("username", response.data?.user?.username ?: "")
+            editor?.putString("name", response.data?.user?.name ?: "")
+
+            // jwtToken 저장
+            editor?.putString("grantType", response.data?.jwtToken?.grantType)
+            editor?.putString("accessToken", response.data?.jwtToken?.accessToken)
+            editor?.putString("refreshToken", response.data?.jwtToken?.refreshToken)
+
+            editor?.apply()
+
+            // 화면 전환은 메인 스레드에서
+            CoroutineScope(Dispatchers.Main).launch {
+                if (isNaverInfo) {
+                    goScreen(ScreenType.PASSWORDSETTING)
+                } else {
+                    goScreen(ScreenType.NAVERLOGIN)
+                }
+            }
+        } else {
+            // 실패 처리
+            context?.let {
+                Toast.makeText(it, response?.message, Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     // 회원 가입, 로그인 처리 로직
-    private fun handleResponse(response: SignResponse?) {
+    private fun handleSignup(response: SignupResponse) {
         _isLoading.value = false
+
         if (response?.success == true) {
             // 유저 정보 저장
             editor?.putLong("userId", response.data?.user?.id ?: -1)

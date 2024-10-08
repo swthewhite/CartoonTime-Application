@@ -44,6 +44,7 @@
         <activity android:name=".ui.view.SendActivity" />
         <activity android:name=".ui.view.ReceiveActivity" />
         <activity android:name=".ui.view.ChargeActivity" />
+        <activity android:name=".ui.view.PaymentResultActivity" />
     </application>
 
 </manifest>

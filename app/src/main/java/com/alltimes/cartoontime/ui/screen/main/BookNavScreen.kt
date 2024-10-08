@@ -51,8 +51,10 @@ fun BookNavScreen(viewModel: MainViewModel) {
     val targetLocation by viewModel.targetLocation.collectAsState()
 
     // 거리 계산 및 포맷팅 (소수점 두 자리까지만 표시)
-    val distance = viewModel.calculateDistance(currentLocation, targetLocation)
-    val formattedDistance = String.format("%.2f", distance)
+    val distance by viewModel.distance.collectAsState(initial = 0f)
+    val formattedDistance = remember(distance) {
+        String.format("%.2f", distance)
+    }
 
     // 목표 방향 계산
     val targetDirection = viewModel.calculateTargetDirection(currentLocation, targetLocation)
