@@ -626,7 +626,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
     // 현재 위치
-    private val _currentLocation = MutableStateFlow(Location(5f, 4f)) // 초기값
+    private val _currentLocation = MutableStateFlow(Location(0f, 0f)) // 초기값
     val currentLocation: StateFlow<Location> get() = _currentLocation
 
     // 목표 위치
@@ -688,9 +688,19 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     }
 
     // 현재 위치와 목표 위치를 사용하여 목표 방향을 계산하는 함수
+//    fun calculateTargetDirection(current: Location, target: Location): Float {
+//        val dx = target.x - current.x
+//        val dy = target.y - current.y
+//        return Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
+//    }
+
     fun calculateTargetDirection(current: Location, target: Location): Float {
-        val dx = target.x - current.x
-        val dy = target.y - current.y
+        // 변경된 좌표계: X의 증가 방향이 아래쪽, Y의 증가 방향이 왼쪽
+        //val dx = current.x - target.x  // X의 증가 방향이 아래쪽이므로 방향 반대로 계산
+        val dx = -(target.x - current.x)
+        val dy = target.y - current.y  // Y의 증가 방향이 왼쪽이므로 방향 반대로 계산
+
+        // 각도를 계산하고, 360도를 기준으로 보정
         return Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
     }
 
