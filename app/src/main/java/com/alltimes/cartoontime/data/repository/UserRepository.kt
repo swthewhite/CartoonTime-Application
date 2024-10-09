@@ -3,6 +3,7 @@ package com.alltimes.cartoontime.data.repository
 import com.alltimes.cartoontime.data.remote.ApiService
 import com.alltimes.cartoontime.data.remote.AuthRequest
 import com.alltimes.cartoontime.data.remote.AuthResponse
+import com.alltimes.cartoontime.data.remote.ChargeCheckResponse
 import com.alltimes.cartoontime.data.remote.ChargeRequest
 import com.alltimes.cartoontime.data.remote.ChargeResponse
 import com.alltimes.cartoontime.data.remote.ComicResponse
@@ -54,6 +55,10 @@ class UserRepository(private val apiService: ApiService) {
 
     suspend fun charge(request: ChargeRequest): ChargeResponse {
         return apiService.charge(request)
+    }
+
+    suspend fun checkCharge(userId: Long): ChargeCheckResponse {
+        return apiService.checkCharge(userId)
     }
 
     suspend fun transfer(request: TransferRequest): TransferResponse {

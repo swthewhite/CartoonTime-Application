@@ -125,7 +125,6 @@ class ChargeViewModel(application: Application, private val context: Context) : 
 
             // 응답 처리 - 리다이렉트 URL 받기
             if (response?.success == true) {
-                _isLoading.value = false
 
                 println("response.data: ${response.data}")
 
@@ -139,24 +138,40 @@ class ChargeViewModel(application: Application, private val context: Context) : 
                 }
             } else {
                 // 에러 처리
-                _isLoading.value = false
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "포인트 충전에 실패했습니다", Toast.LENGTH_SHORT).show()
-                    initializePassword()
-                }
+                handlePaymentError(response?.message ?: "포인트 충전에 실패했습니다")
             }
         }
     }
 
     suspend fun handlePaymentResult(){
-        withContext(Dispatchers.Main) {
-            goScreen(ScreenType.CHARGECONFIRM)
+        // 서버에 결제 완료 여부 확인
+        CoroutineScope(Dispatchers.IO).launch {
+            // 결제 완료 여부 확인
+            val response = try {
+                repository.checkCharge(sharedPreferences.getLong("userId", -1L))
+            } catch (e: Exception) {
+                // 에러 처리
+                handlePaymentError("결제에 실패했습니다")
+                return@launch
+            }
+
+            if (response.success) {
+                // 결제 완료
+                _isLoading.value = false
+                withContext(Dispatchers.Main) {
+                    goScreen(ScreenType.CHARGECONFIRM)
+                }
+            } else {
+                // 결제 실패
+                handlePaymentError(response.message)
+            }
         }
     }
 
     suspend fun handlePaymentError(error: String){
+        _isLoading.value = false
         withContext(Dispatchers.Main) {
-            Toast.makeText(context, "결제에 실패했습니다", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             initializePassword()
         }
     }
