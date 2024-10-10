@@ -168,7 +168,7 @@ class ChargeViewModel(application: Application, private val context: Context) : 
                     return@launch
                 }
 
-                Log.d("ChargePasswordInputScreen", "response.data: ${response.data}")
+                Log.d("ChargePasswordInputScreen", "response.data: ${response}")
 
                 if (response.data) {
                     // 결제가 아직 완료되지 않음, 1초 후 다시 시도

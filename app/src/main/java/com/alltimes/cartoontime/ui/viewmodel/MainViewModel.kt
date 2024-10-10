@@ -345,7 +345,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
 
         kioskLoadingJob?.cancel()  // 이전 작업이 있으면 취소
         kioskLoadingJob = CoroutineScope(Dispatchers.Main).launch {
-            delay(20000)
+            delay(60000)
             onKioskLoadingTimeout()  // 타임아웃 시 실행할 함수 호출
         }
     }
