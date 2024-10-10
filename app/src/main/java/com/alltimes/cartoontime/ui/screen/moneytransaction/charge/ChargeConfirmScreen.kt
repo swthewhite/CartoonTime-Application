@@ -29,6 +29,7 @@ fun ChargeConfirmScreen(viewModel: ChargeViewModel) {
     // viewmodel variable
     val name = viewModel.userName
     val point by viewModel.point.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     ConstraintLayout(
         modifier = Modifier
@@ -119,5 +120,9 @@ fun ChargeConfirmScreen(viewModel: ChargeViewModel) {
             )
         }
     }
+
+    // 로딩 다이얼로그
+    isLoading?.let { Loading("충전 중...", isLoading = it, onDismiss = { /* Dismiss Logic */ }) }
+
 
 }

@@ -7,6 +7,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -126,6 +127,7 @@ class ChargeViewModel(application: Application, private val context: Context) : 
 
             // 응답 처리 - 리다이렉트 URL 받기
             if (response?.success == true) {
+                _isLoading.value = false
 
                 println("response.data: ${response.data}")
 
@@ -145,6 +147,16 @@ class ChargeViewModel(application: Application, private val context: Context) : 
     }
 
     suspend fun handlePaymentResult() {
+
+        Log.d("ChargePasswordInputScreen", "OK 드가자")
+
+        // 화면 전환 및 로딩 시작
+        withContext(Dispatchers.Main) {
+            goScreen(ScreenType.CHARGECONFIRM)
+            _isLoading.value = true
+        }
+
+        // 결제 완료 여부 확인 작업을 백그라운드에서 수행
         CoroutineScope(Dispatchers.IO).launch {
             while (true) {
                 // 결제 완료 여부 확인
@@ -156,14 +168,17 @@ class ChargeViewModel(application: Application, private val context: Context) : 
                     return@launch
                 }
 
+                Log.d("ChargePasswordInputScreen", "response.data: ${response.data}")
+
                 if (response.data) {
                     // 결제가 아직 완료되지 않음, 1초 후 다시 시도
+                    Log.d("ChargePasswordInputScreen", "블록체인 진행중: ${response.message}")
                     delay(1000) // 1초 대기
                 } else {
-                    // 결제 완료, 메인 스레드에서 화면 전환 처리
+                    // 결제 완료, 메인 스레드에서 로딩 상태 종료
+                    Log.d("ChargePasswordInputScreen", "결제 완료: ${response.message}")
                     withContext(Dispatchers.Main) {
                         _isLoading.value = false
-                        goScreen(ScreenType.CHARGECONFIRM)
                     }
                     return@launch // 루프 종료
                 }

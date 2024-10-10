@@ -148,7 +148,28 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     // 화면이 돌아왔을 때 호출
     // 모든 기능 시작
     fun onResumeAll() {
-        UpdateUserInfo()
+        CoroutineScope(Dispatchers.IO).launch {
+            // API 호출
+            val response = try {
+                repository.getUserInfo(userId)
+            } catch (e: Exception) {
+                // 에러처리
+                null
+            }
+
+            // 응답 처리
+            if (response?.success == true) {
+                editor.putLong("balance", response.data?.currentMoney!!)
+                editor.putLong("userId", response.data?.id!!)
+                editor.putString("userName", response.data?.username!!)
+                editor.putString("name", response.data?.name!!)
+
+                editor.apply()
+
+                _balance.value = sharedPreferences.getLong("balance", 0L)
+            }
+
+        }
 
         isFCMActive = true
     }

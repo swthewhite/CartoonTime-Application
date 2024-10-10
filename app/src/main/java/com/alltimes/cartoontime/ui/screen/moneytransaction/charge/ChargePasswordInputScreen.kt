@@ -65,6 +65,25 @@ fun ChargePasswordInputScreen(viewModel: ChargeViewModel) {
         Log.d("ChargePasswordInputScreen", "onActivityResult: CANCELED: ${Activity.RESULT_CANCELED}")
         CoroutineScope(Dispatchers.Main).launch {
             viewModel.handlePaymentResult()
+
+            if (result.resultCode == Activity.RESULT_OK) {
+                // 결과 처리
+                val data = result.data
+                // 원하는 데이터 처리 (예: 결제 성공 후의 데이터)
+                Log.d("ChargePasswordInputScreen", "onActivityResult: ${data?.extras}")
+            } else if (result.resultCode == Activity.RESULT_CANCELED) {
+                // 결과가 취소된 경우 처리
+//                CoroutineScope(Dispatchers.Main).launch {
+//                    viewModel.handlePaymentError("결제 취소")
+//                }
+                Log.d("ChargePasswordInputScreen", "결제 취소")
+            } else {
+                // 결과가 실패한 경우 처리
+//                CoroutineScope(Dispatchers.Main).launch {
+//                    viewModel.handlePaymentError("결제 실패")
+//                }
+                Log.d("ChargePasswordInputScreen", "결제 실패")
+            }
         }
     }
 
