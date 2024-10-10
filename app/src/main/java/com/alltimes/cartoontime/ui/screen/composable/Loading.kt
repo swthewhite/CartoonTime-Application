@@ -31,8 +31,10 @@ fun Loading(content: String, isLoading: Boolean, onDismiss: () -> Unit) {
     if (isLoading) {
         Dialog(onDismissRequest = onDismiss) {
             Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .width(200.dp)
+                    .height(300.dp)
                     .background(color = Color(0xFFF4F2EE), shape = RoundedCornerShape(16.dp))
                     .padding(16.dp)
             ) {

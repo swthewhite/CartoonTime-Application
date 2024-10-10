@@ -28,8 +28,12 @@ interface ApiService {
     @POST("ct/auth/naver")
     suspend fun naverAuth(@Body request: NaverAuthRequest): NavertAuthResponse
 
+    // 충전
     @POST("ct/charge")
     suspend fun charge(@Body request: ChargeRequest): ChargeResponse
+
+    @GET("ct/charge/check/{user_id}")
+    suspend fun checkCharge(@Path("user_id") userId: Long): ChargeCheckResponse
 
     @POST("ct/transfer")
     suspend fun transfer(@Body request: TransferRequest): TransferResponse
@@ -186,6 +190,13 @@ data class ChargeResponse(
     val success: Boolean,
     val message: String,
     val data: String?,
+    val error: Any?
+)
+
+data class ChargeCheckResponse(
+    val success: Boolean,
+    val message: String,
+    val data: Boolean,
     val error: Any?
 )
 

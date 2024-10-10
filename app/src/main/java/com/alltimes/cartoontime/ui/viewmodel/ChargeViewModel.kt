@@ -7,6 +7,7 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -24,6 +25,7 @@ import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
 import com.alltimes.cartoontime.ui.handler.PointPadClickHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -139,24 +141,55 @@ class ChargeViewModel(application: Application, private val context: Context) : 
                 }
             } else {
                 // 에러 처리
-                _isLoading.value = false
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "포인트 충전에 실패했습니다", Toast.LENGTH_SHORT).show()
-                    initializePassword()
+                handlePaymentError(response?.message ?: "포인트 충전에 실패했습니다")
+            }
+        }
+    }
+
+    suspend fun handlePaymentResult() {
+
+        Log.d("ChargePasswordInputScreen", "OK 드가자")
+
+        // 화면 전환 및 로딩 시작
+        withContext(Dispatchers.Main) {
+            goScreen(ScreenType.CHARGECONFIRM)
+            _isLoading.value = true
+        }
+
+        // 결제 완료 여부 확인 작업을 백그라운드에서 수행
+        CoroutineScope(Dispatchers.IO).launch {
+            while (true) {
+                // 결제 완료 여부 확인
+                val response = try {
+                    repository.checkCharge(sharedPreferences.getLong("userId", -1L))
+                } catch (e: Exception) {
+                    // 에러 처리
+                    handlePaymentError("결제에 실패했습니다")
+                    return@launch
+                }
+
+                Log.d("ChargePasswordInputScreen", "response.data: ${response}")
+
+                if (response.data) {
+                    // 결제가 아직 완료되지 않음, 1초 후 다시 시도
+                    Log.d("ChargePasswordInputScreen", "블록체인 진행중: ${response.message}")
+                    delay(1000) // 1초 대기
+                } else {
+                    // 결제 완료, 메인 스레드에서 로딩 상태 종료
+                    Log.d("ChargePasswordInputScreen", "결제 완료: ${response.message}")
+                    withContext(Dispatchers.Main) {
+                        _isLoading.value = false
+                    }
+                    return@launch // 루프 종료
                 }
             }
         }
     }
 
-    suspend fun handlePaymentResult(){
-        withContext(Dispatchers.Main) {
-            goScreen(ScreenType.CHARGECONFIRM)
-        }
-    }
-
     suspend fun handlePaymentError(error: String){
+        _isLoading.value = false
         withContext(Dispatchers.Main) {
-            Toast.makeText(context, "결제에 실패했습니다", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
             initializePassword()
         }
     }

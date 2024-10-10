@@ -148,7 +148,28 @@ class MainViewModel(application: Application, private val context: Context) : Ba
     // 화면이 돌아왔을 때 호출
     // 모든 기능 시작
     fun onResumeAll() {
-        UpdateUserInfo()
+        CoroutineScope(Dispatchers.IO).launch {
+            // API 호출
+            val response = try {
+                repository.getUserInfo(userId)
+            } catch (e: Exception) {
+                // 에러처리
+                null
+            }
+
+            // 응답 처리
+            if (response?.success == true) {
+                editor.putLong("balance", response.data?.currentMoney!!)
+                editor.putLong("userId", response.data?.id!!)
+                editor.putString("userName", response.data?.username!!)
+                editor.putString("name", response.data?.name!!)
+
+                editor.apply()
+
+                _balance.value = sharedPreferences.getLong("balance", 0L)
+            }
+
+        }
 
         isFCMActive = true
     }
@@ -324,7 +345,7 @@ class MainViewModel(application: Application, private val context: Context) : Ba
 
         kioskLoadingJob?.cancel()  // 이전 작업이 있으면 취소
         kioskLoadingJob = CoroutineScope(Dispatchers.Main).launch {
-            delay(20000)
+            delay(60000)
             onKioskLoadingTimeout()  // 타임아웃 시 실행할 함수 호출
         }
     }
