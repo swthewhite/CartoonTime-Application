@@ -24,6 +24,7 @@ import com.alltimes.cartoontime.ui.handler.NumPadClickHandler
 import com.alltimes.cartoontime.ui.handler.PointPadClickHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -143,27 +144,29 @@ class ChargeViewModel(application: Application, private val context: Context) : 
         }
     }
 
-    suspend fun handlePaymentResult(){
-        // 서버에 결제 완료 여부 확인
+    suspend fun handlePaymentResult() {
         CoroutineScope(Dispatchers.IO).launch {
-            // 결제 완료 여부 확인
-            val response = try {
-                repository.checkCharge(sharedPreferences.getLong("userId", -1L))
-            } catch (e: Exception) {
-                // 에러 처리
-                handlePaymentError("결제에 실패했습니다")
-                return@launch
-            }
-
-            if (response.success) {
-                // 결제 완료
-                _isLoading.value = false
-                withContext(Dispatchers.Main) {
-                    goScreen(ScreenType.CHARGECONFIRM)
+            while (true) {
+                // 결제 완료 여부 확인
+                val response = try {
+                    repository.checkCharge(sharedPreferences.getLong("userId", -1L))
+                } catch (e: Exception) {
+                    // 에러 처리
+                    handlePaymentError("결제에 실패했습니다")
+                    return@launch
                 }
-            } else {
-                // 결제 실패
-                handlePaymentError(response.message)
+
+                if (response.data) {
+                    // 결제가 아직 완료되지 않음, 1초 후 다시 시도
+                    delay(1000) // 1초 대기
+                } else {
+                    // 결제 완료, 메인 스레드에서 화면 전환 처리
+                    withContext(Dispatchers.Main) {
+                        _isLoading.value = false
+                        goScreen(ScreenType.CHARGECONFIRM)
+                    }
+                    return@launch // 루프 종료
+                }
             }
         }
     }
