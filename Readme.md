@@ -13,37 +13,64 @@ CartoonTime은 Alltime에서 제공하는 다양한 기능을 포함한 안드�
 
 ## 기능
 
+## 기능
+
 ### 간편 회원가입
 
-전화번호 하나로 진행되는 회원가입은 블록체인을 활용해 더욱 안전하게 관리됩니다.
-
-![회원가입](/images/signup.gif)
+<div style="display: flex; align-items: center;">
+    <div style="flex: 1; text-align: center;">
+        <img src="/images/signup.gif" alt="회원가입" width="150px" height="300px">
+    </div>
+    <div style="flex: 2; text-align: left;">
+        전화번호 하나로 진행되는 회원가입은 블록체인을 활용해 더욱 안전하게 관리됩니다.
+    </div>
+</div>
 
 ### 입/퇴실
 
-휴대폰의 다양한 센서를 활용해 모션을 인식하고 특정 모션으로 UWB를 활성화 한 후 키오스크와 연결해 자동으로 입퇴실을 진행합니다. UWB 기능이 꼭 필요하기 때문에 만약 단말기가 UWB를 지원하지 않는다면 애플리케이션을 이용하실 수 없습니다.
-
-![입실](/images/entrance.gif)
-![퇴실](/images/exit.gif)
+<div style="display: flex; align-items: center;">
+    <div style="flex: 1; text-align: center;">
+        <img src="/images/entrance.gif" alt="입실" width="150px" height="300px">
+        <img src="/images/exit.gif" alt="퇴실" width="150px" height="300px">
+    </div>
+    <div style="flex: 2; text-align: left;">
+        휴대폰의 다양한 센서를 활용해 모션을 인식하고 특정 모션으로 UWB를 활성화 한 후 키오스크와 연결해 자동으로 입퇴실을 진행합니다. UWB 기능이 꼭 필요하기 때문에 만약 단말기가 UWB를 지원하지 않는다면 애플리케이션을 이용하실 수 없습니다.
+    </div>
+</div>
 
 ### 충전
 
-카카오페이 API를 연동하여 쉽게 포인트를 충전할 수 있도록 구현하였습니다. 이 또한, 블록체인 기술을 활용하여 간편함을 추구하면서 보안을 강화하였습니다.
-
-![충전](/images/charge.gif)
+<div style="display: flex; align-items: center;">
+    <div style="flex: 1; text-align: center;">
+        <img src="/images/charge.gif" alt="충전" width="150px" height="300px">
+    </div>
+    <div style="flex: 2; text-align: left;">
+        카카오페이 API를 연동하여 쉽게 포인트를 충전할 수 있도록 구현하였습니다. 이 또한, 블록체인 기술을 활용하여 간편함을 추구하면서 보안을 강화하였습니다.
+    </div>
+</div>
 
 ### 송금/입금
 
-UWB와 BLE를 사용하여 근거리에서 신뢰성있는 송금 기능을 구현하였습니다. 
-
-![송금](/images/send.gif)
-![입금](/images/receive.gif)
+<div style="display: flex; align-items: center;">
+    <div style="flex: 1; text-align: center;">
+        <img src="/images/send.gif" alt="송금" width="150px" height="300px">
+        <img src="/images/receive.gif" alt="입금" width="150px" height="300px">
+    </div>
+    <div style="flex: 2; text-align: left;">
+        UWB와 BLE를 사용하여 근거리에서 신뢰성있는 송금 기능을 구현하였습니다. 
+    </div>
+</div>
 
 ### 추천, 실내 내비게이션
 
-네이버 웹툰을 동적 크롤링하여 사용자의 취향을 분석합니다. 특정 웹툰의 전체 회차수 대비 읽은 회차수를 통해 점수를 부여하고 이를 활용합니다.
-
-![추천](/images/recommend&nav.gif)
+<div style="display: flex; align-items: center;">
+    <div style="flex: 1; text-align: center;">
+        <img src="/images/recommend&nav.gif" alt="추천" width="150px" height="300px">
+    </div>
+    <div style="flex: 2; text-align: left;">
+        네이버 웹툰을 동적 크롤링하여 사용자의 취향을 분석합니다. 특정 웹툰의 전체 회차수 대비 읽은 회차수를 통해 점수를 부여하고 이를 활용합니다.
+    </div>
+</div>
 
 ### 각속도, 자기계, 자이로 센서
 
