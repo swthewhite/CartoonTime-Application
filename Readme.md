@@ -72,9 +72,6 @@ fun calculateTargetDirection(current: Location, target: Location): Float {
     }
 ```
 
-다음은 `README.md` 파일에 적합한 한글 요약입니다. 코드 블록도 포함해 설명을 보완했습니다.
-
----
 
 ### UWB 통신 모듈
 
